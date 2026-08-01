@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cahier des charges - Orbit</title>
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/landing.css" />
+  <style>
+    body { background: var(--bg-elev-1); }
+
+    .cdc-toolbar {
+      position: sticky;
+      top: 60px;
+      z-index: 50;
+      background: var(--white);
+      border: 1px solid var(--black);
+      border-radius: var(--r-md);
+      padding: var(--s-3) var(--s-5);
+      margin-bottom: var(--s-5);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--s-3);
+      box-shadow: 4px 4px 0 var(--black);
+    }
+
+    .cdc-doc {
+      background: var(--white);
+      border: 2px solid var(--black);
+      border-radius: var(--r-md);
+      padding: var(--s-12);
+      box-shadow: 8px 8px 0 var(--black);
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    @media print {
+      .cdc-toolbar, .navbar, .footer { display: none !important; }
+      body { background: white; }
+      .cdc-doc { box-shadow: none; border: none; padding: 0; max-width: 100%; }
+      .page-break { page-break-before: always; }
+    }
+
+    .cdc-cover {
+      text-align: center;
+      padding: var(--s-12) 0;
+      border-bottom: 4px solid var(--black);
+      margin-bottom: var(--s-12);
+    }
+
+    .cdc-cover-tag {
+      display: inline-block;
+      padding: 6px 16px;
+      background: var(--black);
+      color: var(--white);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      border-radius: var(--r-sm);
+      margin-bottom: var(--s-6);
+    }
+
+    .cdc-cover-title {
+      font-size: 72px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 0.95;
+      margin-bottom: var(--s-4);
+    }
+
+    .cdc-cover-title .orange { background: var(--orange); color: var(--white); padding: 0 8px; border: 2px solid var(--black); display: inline-block; }
+
+    .cdc-cover-subtitle {
+      font-size: var(--fs-xl);
+      color: var(--text-secondary);
+      margin-bottom: var(--s-8);
+    }
+
+    .cdc-cover-meta {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--s-4);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .cdc-meta-card {
+      padding: var(--s-4);
+      border: 1px solid var(--black);
+      border-radius: var(--r-sm);
+      background: var(--bg-elev-1);
+    }
+
+    .cdc-meta-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-bottom: 4px;
+    }
+
+    .cdc-meta-value {
+      font-weight: 700;
+      font-size: var(--fs-base);
+    }
+
+    .cdc-section {
+      margin-bottom: var(--s-12);
+      padding-bottom: var(--s-10);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .cdc-section:last-child { border-bottom: none; }
+
+    .cdc-h1 {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      margin-bottom: var(--s-5);
+      display: flex;
+      align-items: baseline;
+      gap: var(--s-3);
+    }
+
+    .cdc-h1 .num {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 700;
+      background: var(--black);
+      color: var(--white);
+      padding: 4px 10px;
+      border-radius: var(--r-sm);
+      letter-spacing: 0.1em;
+    }
+
+    .cdc-h2 {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: var(--s-6) 0 var(--s-3);
+      color: var(--text-primary);
+      border-left: 4px solid var(--orange);
+      padding-left: var(--s-3);
+    }
+
+    .cdc-h3 {
+      font-size: 15px;
+      font-weight: 700;
+      margin: var(--s-4) 0 var(--s-2);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-primary);
+    }
+
+    .cdc-p {
+      color: var(--text-primary);
+      line-height: 1.7;
+      margin-bottom: var(--s-3);
+      font-size: 14px;
+    }
+
+    .cdc-list {
+      list-style: none;
+      margin: var(--s-3) 0;
+      padding-left: 0;
+    }
+
+    .cdc-list li {
+      padding: 6px 0 6px 24px;
+      position: relative;
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .cdc-list li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--orange);
+      font-weight: 800;
+    }
+
+    .cdc-info {
+      padding: var(--s-4);
+      background: var(--lime);
+      border: 1px solid var(--black);
+      border-radius: var(--r-sm);
+      margin: var(--s-3) 0;
+      font-size: 13px;
+    }
+
+    .cdc-info.black { background: var(--black); color: var(--white); }
+    .cdc-info.orange { background: var(--orange); color: var(--white); }
+    .cdc-info.mauve { background: var(--mauve); }
+
+    .cdc-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: var(--s-3) 0;
+      font-size: 13px;
+      border: 1px solid var(--black);
+      border-radius: var(--r-sm);
+      overflow: hidden;
+    }
+
+    .cdc-table th {
+      background: var(--black);
+      color: var(--white);
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .cdc-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: top;
+    }
+
+    .cdc-table tr:last-child td { border-bottom: none; }
+    .cdc-table tr:hover { background: var(--lime-soft); }
+
+    .cdc-table .num-cell { font-family: var(--font-mono); font-weight: 700; color: var(--orange); }
+
+    .cdc-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .cdc-tag.crit { background: var(--orange); color: var(--white); }
+    .cdc-tag.high { background: var(--black); color: var(--white); }
+    .cdc-tag.med { background: var(--mauve); color: var(--black); }
+    .cdc-tag.low { background: var(--bg-elev-1); color: var(--text-primary); border: 1px solid var(--black); }
+
+    .cdc-feature {
+      padding: var(--s-4);
+      border: 1px solid var(--black);
+      border-radius: var(--r-sm);
+      margin: var(--s-3) 0;
+      background: var(--white);
+    }
+
+    .cdc-feature-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--s-3);
+      flex-wrap: wrap;
+      gap: var(--s-2);
+    }
+
+    .cdc-feature-name {
+      font-size: var(--fs-lg);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .cdc-feature-num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--black);
+      color: var(--white);
+      padding: 4px 8px;
+      border-radius: 3px;
+    }
+
+    .cdc-feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-3);
+      font-size: 13px;
+    }
+
+    @media (max-width: 640px) {
+      .cdc-feature-grid { grid-template-columns: 1fr; }
+    }
+
+    .cdc-feature-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-tertiary);
+      margin-bottom: 2px;
+    }
+
+    .cdc-feature-value {
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    .cdc-actor {
+      padding: var(--s-4);
+      border: 1px solid var(--black);
+      border-radius: var(--r-sm);
+      background: var(--white);
+    }
+
+    .cdc-actor-head {
+      display: flex;
+      align-items: center;
+      gap: var(--s-3);
+      margin-bottom: var(--s-3);
+    }
+
+    .cdc-actor-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--r-sm);
+      background: var(--orange);
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+    }
+
+    .cdc-actor-icon.green { background: var(--lime); color: var(--black); }
+    .cdc-actor-icon.mauve { background: var(--mauve); color: var(--black); }
+    .cdc-actor-icon.blue { background: var(--blue); color: var(--white); }
+    .cdc-actor-icon.black { background: var(--black); }
+
+    .cdc-actor-name { font-weight: 800; font-size: var(--fs-base); }
+    .cdc-actor-role { font-size: 11px; color: var(--text-tertiary); font-family: var(--font-mono); }
+
+    .cdc-actor-needs {
+      list-style: none;
+      padding: 0;
+      font-size: 12px;
+    }
+
+    .cdc-actor-needs li {
+      padding: 3px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cdc-actor-needs li::before {
+      content: '✓';
+      color: var(--orange);
+      font-weight: 800;
+    }
+
+    .cdc-tech-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--s-3);
+    }
+
+    @media (max-width: 768px) { .cdc-tech-grid { grid-template-columns: 1fr; } }
+
+    .cdc-tech {
+      padding: var(--s-4);
+      border: 1px solid var(--black);
+      border-radius: var(--r-sm);
+      background: var(--white);
+    }
+
+    .cdc-tech-layer {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--orange);
+      margin-bottom: var(--s-2);
+    }
+
+    .cdc-tech-name {
+      font-weight: 800;
+      font-size: var(--fs-md);
+      margin-bottom: var(--s-2);
+    }
+
+    .cdc-tech-list {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .cdc-tech-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 2px 6px;
+      background: var(--bg-elev-1);
+      border: 1px solid var(--black);
+      border-radius: 3px;
+      font-weight: 600;
+    }
+
+    .cdc-constraint {
+      display: flex;
+      gap: var(--s-3);
+      padding: var(--s-3);
+      border-left: 4px solid var(--orange);
+      background: var(--bg-elev-1);
+      margin: var(--s-2) 0;
+    }
+
+    .cdc-constraint-num {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      color: var(--orange);
+      flex-shrink: 0;
+    }
+
+    .cdc-constraint-content { flex: 1; font-size: 13px; line-height: 1.5; }
+
+    .cdc-constraint strong { display: block; margin-bottom: 2px; }
+
+    .cdc-pagenum {
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-tertiary);
+      margin-top: var(--s-8);
+      padding-top: var(--s-4);
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .cdc-meta-info {
+      display: flex;
+      gap: var(--s-6);
+      flex-wrap: wrap;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+    }
+
+    .cdc-meta-info span strong { color: var(--text-primary); margin-left: 4px; }
+
+    .cdc-cover-version {
+      margin-top: var(--s-6);
+      display: inline-block;
+      padding: 4px 12px;
+      background: var(--lime);
+      border: 1px solid var(--black);
+      border-radius: 3px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-loader">
+    <div class="loader-ring"></div>
+    <div class="loader-text">CHARGEMENT</div>
+  </div>
+
+  <nav class="navbar">
+    <div class="container" style="padding: 0;">
+      <div class="navbar-inner">
+        <a href="index.html" class="brand">
+          <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          <span class="brand-name">Club<span>Hub</span></span>
+        </a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Accueil</a>
+          <a href="clubs.html" class="nav-link">Annuaire</a>
+          <a href="events.html" class="nav-link">Événements</a>
+          <a href="docs.html" class="nav-link">Documentation</a>
+          <a href="cahier-des-charges.html" class="nav-link active">Cahier des charges</a>
+        </div>
+        <div class="nav-actions">
+          <a href="login.html" class="btn btn-primary btn-sm">Connexion</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main style="padding: var(--s-6) 0 var(--s-12);">
+    <div class="container" style="max-width: 980px;">
+
+      <!-- Toolbar -->
+      <div class="cdc-toolbar">
+        <div>
+          <div class="text-mono" style="font-size: 10px; color: var(--orange); letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700;">DOCUMENT PROJET</div>
+          <strong style="font-size: var(--fs-lg);">Cahier des charges · Orbit</strong>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn btn-secondary btn-sm" onclick="window.print()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Imprimer / PDF
+          </button>
+          <a href="docs.html" class="btn btn-primary btn-sm">Voir la doc technique</a>
+        </div>
+      </div>
+
+      <!-- Document -->
+      <div class="cdc-doc">
+
+        <!-- Cover -->
+        <div class="cdc-cover">
+          <div class="cdc-cover-tag">Document de cadrage</div>
+          <h1 class="cdc-cover-title">
+            <span class="orange">CAHIER</span><br/>
+            DES CHARGES
+          </h1>
+          <p class="cdc-cover-subtitle">Plateforme de gestion des inscriptions aux clubs universitaires</p>
+          <div class="cdc-cover-meta">
+            <div class="cdc-meta-card">
+              <div class="cdc-meta-label">Projet</div>
+              <div class="cdc-meta-value">Orbit</div>
+            </div>
+            <div class="cdc-meta-card">
+              <div class="cdc-meta-label">Type</div>
+              <div class="cdc-meta-value">Application web & mobile</div>
+            </div>
+            <div class="cdc-meta-card">
+              <div class="cdc-meta-label">Version</div>
+              <div class="cdc-meta-value">1.0.0</div>
+            </div>
+          </div>
+          <div class="cdc-meta-info" style="justify-content: center; margin-top: var(--s-6);">
+            <span>Date : <strong>Juillet 2026</strong></span>
+            <span>Statut : <strong>Validé</strong></span>
+            <span>Confidentialité : <strong>Interne</strong></span>
+          </div>
+          <div class="cdc-cover-version">v1.0.0 · DOCUMENT FINAL</div>
+        </div>
+
+        <!-- Section 1 -->
+        <section class="cdc-section">
+          <h2 class="cdc-h1"><span class="num">01</span> Informations générales</h2>
+
+          <h3 class="cdc-h2">1.1 — Identité du projet</h3>
+          <table class="cdc-table">
+            <tbody>
+              <tr><th style="width: 30%;">Titre du projet</th><td><strong>Orbit</strong> — Plateforme de gestion des inscriptions aux clubs universitaires</td></tr>
+              <tr><th>Numéro du groupe</th><td>GROUPE 04 — Promotion 2026</td></tr>
+              <tr><th>Filière</th><td>Licence / Master Informatique — Université</td></tr>
+              <tr><th>Année universitaire</th><td>2025 — 2026</td></tr>
+              <tr><th>Encadrant pédagogique</th><td>Mme RAZAFINDRAKOTO Lala (Maître de conférences)</td></tr>
+            </tbody>
+          </table>
+
+          <h3 class="cdc-h2">1.2 — Équipe projet</h3>
+          <table class="cdc-table">
+            <thead>
+              <tr><th style="width: 8%;">#</th><th>NIE</th><th>Nom & Prénom(s)</th><th>Rôle dans le projet</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="num-cell">01</td>
+                <td class="text-mono" style="font-size: 12px;">NIE-2023A0042</td>
+                <td><strong>RAKOTOMALALA Kiady Navalona Franky</strong></td>
+                <td>Chef de projet · Architecte logiciel · Backend lead</td>
+              </tr>
+              <tr>
+                <td class="num-cell">02</td>
+                <td class="text-mono" style="font-size: 12px;">NIE-2023A0067</td>
+                <td><strong>RANDRIANASOLO RAVONY Manda Roan</strong></td>
+                <td>Designer UI/UX · Frontend lead · QA / Tests</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Section 2 -->
+        <section class="cdc-section">
+          <h2 class="cdc-h1"><span class="num">02</span> Contexte et justification</h2>
+
+          <h3 class="cdc-h2">2.1 — Contexte général</h3>
+          <p class="cdc-p">L'université accueille chaque année plus de 12 000 étudiants répartis dans 8 facultés et une trentaine de clubs étudiants. Ces clubs (culturels, sportifs, techniques, entrepreneuriaux) jouent un rôle fondamental dans le développement personnel, social et professionnel des apprenants : engagement citoyen, travail d'équipe, expression de talents, créativité, et renforcement de compétences transversales essentielles dans le monde professionnel.</p>
+          <p class="cdc-p">L'enquête annuelle de la vie étudiante (2024-2025) révèle que <strong>78% des étudiants</strong> souhaitent s'investir dans au moins un club, mais que <strong>seulement 41%</strong> franchissent effectivement le pas, principalement en raison de processus d'inscription perçus comme longs, opaques et décourageants.</p>
+
+          <h3 class="cdc-h2">2.2 — Problématique rencontrée</h3>
+          <p class="cdc-p">La gestion actuelle des inscriptions aux clubs repose sur des processus manuels, hétérogènes et décentralisés :</p>
+          <ul class="cdc-list">
+            <li>Formulaires papier distribués en période de rentrée, archivés dans des classeurs physiques souvent perdus</li>
+            <li>Fichiers Excel partagés entre membres du bureau, sources d'erreurs de saisie et de doublons</li>
+            <li>Google Forms éphémères, liens expirés, étudiants ne sachant pas s'ils sont effectivement inscrits</li>
+            <li>Informations diffusées par bouche-à-oreille, affichage papier, WhatsApp — sans canal officiel centralisé</li>
+            <li>Aucune vue consolidée pour l'administration et la gouvernance de la vie associative</li>
+            <li>Difficultés majeures pour les étudiants internationaux et en situation de handicap (accessibilité, langue)</li>
+          </ul>
+
+          <div class="cdc-info black">
+            <strong>Impact concret mesuré :</strong> 47% des responsables de club déclarent perdre plus de 5 heures par mois en gestion administrative au détriment de leur mission pédagogique et associative.
+          </div>
+
+          <h3 class="cdc-h2">2.3 — Importance du projet</h3>
+          <p class="cdc-p">Le projet <strong>Orbit</strong> répond à un besoin institutionnel stratégique en :</p>
+          <ul class="cdc-list">
+            <li><strong>Fluidifiant l'expérience étudiante</strong> : inscription en moins de 2 minutes depuis un mobile</li>
+            <li><strong>Dématérialisant les processus</strong> : suppression des formulaires papier, centralisation des données</li>
+            <li><strong>Renforçant la visibilité</strong> : annuaire interactif, agenda intelligent, notifications push</li>
+            <strong>Outillant la gouvernance</strong> : tableaux de bord, statistiques fiables, exports RGPD</li>
+            <li><strong>Améliorant l'inclusion</strong> : interface multilingue, accessibilité WCAG 2.1 AA, compatibilité lecteurs d'écran</li>
+            <li><strong>Valorisant la vie associative</strong> : système de points, gamification, reconnaissance de l'engagement</li>
+          </ul>
+
+          <h3 class="cdc-h2">2.4 — Étude préalable : 20 entretiens utilisateurs</h3>
+          <p class="cdc-p">Une étude qualitative a été menée auprès de 20 personnes concernées (étudiants L1 à M2, responsables de clubs, administratifs, DSI, BDE, étudiants internationaux et en situation de handicap). Les résultats confirment la nécessité du projet et ont permis d'identifier <strong>4 archétypes principaux</strong> :</p>
+          <div class="cdc-info">
+            <strong>Persona 1 — L1 néo-bachelier :</strong> « Je veux m'inscrire depuis mon téléphone, sans me déplacer. »<br/>
+            <strong>Persona 2 — L3 actif multi-clubs :</strong> « Un espace perso pour voir mes inscriptions et participations. »<br/>
+            <strong>Persona 3 — Étudiante internationale :</strong> « Une présentation claire des clubs, avec photos et thèmes. »<br/>
+            <strong>Persona 4 — Responsable de club :</strong> « Gérer les membres et exporter les données simplement. »
+          </div>
+        </section>
+
+        <!-- Section 3 -->
+        <section class="cdc-section page-break">
+          <h2 class="cdc-h1"><span class="num">03</span> Objectifs du projet</h2>
+
+          <h3 class="cdc-h2">3.1 — Objectif général</h3>
+          <p class="cdc-p">Concevoir, développer et déployer une plateforme numérique centralisée dédiée à la gestion des inscriptions aux clubs universitaires, accessible via le web et le mobile, sécurisée, accessible et conforme au RGPD.</p>
+
+          <h3 class="cdc-h2">3.2 — Objectifs stratégiques</h3>
+          <ul class="cdc-list">
+            <li><strong>OS1 — Engagement étudiant :</strong> augmenter le taux d'inscription effective aux clubs de 41% à 70% en 12 mois</li>
+            <li><strong>OS2 — Efficacité administrative :</strong> réduire le temps de gestion des responsables de club de 80% (de 5h à 1h/mois)</li>
+            <li><strong>OS3 — Gouvernance de la donnée :</strong> centraliser 100% des données d'inscription dans un système unique, conforme RGPD</li>
+            <li><strong>OS4 — Inclusion :</strong> atteindre WCAG 2.1 niveau AA et supporter 4 langues minimum (FR, EN, ES, ZH)</li>
+            <li><strong>OS5 — Interopérabilité :</strong> intégration native avec l'ENT universitaire (SSO SAML 2.0)</li>
+          </ul>
+
+          <h3 class="cdc-h2">3.3 — Objectifs opérationnels (SMART)</h3>
+          <table class="cdc-table">
+            <thead><tr><th>#</th><th>Objectif</th><th>Indicateur</th><th>Cible</th><th>Échéance</th></tr></thead>
+            <tbody>
+              <tr><td class="num-cell">OO1</td><td>Inscription en moins de 2 minutes</td><td>Temps moyen d'inscription</td><td>≤ 120 secondes</td><td>V1 (T2 2026)</td></tr>
+              <tr><td class="num-cell">OO2</td><td>Notification push pour chaque événement</td><td>Taux de délivrance</td><td>≥ 95%</td><td>V2 (T3 2026)</td></tr>
+              <tr><td class="num-cell">OO3</td><td>Disponibilité 24/7</td><td>SLA uptime</td><td>≥ 99.9%</td><td>V3 (T4 2026)</td></tr>
+              <tr><td class="num-cell">OO4</td><td>Synchronisation calendrier externe</td><td>Compatibilité iCal/Google Cal</td><td>100%</td><td>V3 (T4 2026)</td></tr>
+              <tr><td class="num-cell">OO5</td><td>Export RGPD conforme</td><td>Formats supportés</td><td>CSV / Excel / PDF / JSON</td><td>V3 (T4 2026)</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Section 4 -->
+        <section class="cdc-section">
+          <h2 class="cdc-h1"><span class="num">04</span> Analyse des besoins</h2>
+
+          <h3 class="cdc-h2">4.1 — Besoins fonctionnels</h3>
+          <p class="cdc-p">15 besoins fonctionnels ont été identifiés et priorisés selon la méthode MoSCoW. Le détail complet (acteur, données, contraintes, résultats) figure en section 5.</p>
+
+          <h3 class="cdc-h2">4.2 — Besoins non fonctionnels</h3>
+          <ul class="cdc-list">
+            <li><strong>Performance :</strong> p95 &lt; 200ms · FCP &lt; 1.5s sur 4G · 5 000 utilisateurs simultanés</li>
+            <li><strong>Sécurité :</strong> TLS 1.3 · AES-256 · MFA · Anti-XSS/CSRF/SQLi · CSP/HSTS</li>
+            <li><strong>Conformité :</strong> RGPD complet · Hébergement souverain (UE) · WCAG 2.1 AA · RGESN</li>
+            <li><strong>Évolutivité :</strong> Architecture micro-services · CI/CD · Observabilité (logs, métriques, traces)</li>
+            <li><strong>Disponibilité :</strong> SLA 99.9% · Sauvegardes 3-2-1 chiffrées · Plan de reprise d'activité</li>
+          </ul>
+
+          <h3 class="cdc-h2">4.3 — Besoins d'interface</h3>
+          <ul class="cdc-list">
+            <li>Application web responsive (desktop, tablette, mobile)</li>
+            <li>Application mobile native iOS et Android (React Native)</li>
+            <li>Progressive Web App (PWA) pour installation sans store</li>
+            <li>Interface multilingue : FR (principal), EN, ES, ZH</li>
+            <li>Compatibilité lecteurs d'écran (NVDA, JAWS, VoiceOver)</li>
+          </ul>
+        </section>
+
+        <!-- Section 5 -->
+        <section class="cdc-section page-break">
+          <h2 class="cdc-h1"><span class="num">05</span> Description détaillée des fonctionnalités</h2>
+
+          <p class="cdc-p">15 fonctionnalités détaillées, priorisées par criticité. Pour chacune : titre, description, données manipulées, acteurs concernés, résultats attendus, contraintes techniques.</p>
+
+          <div class="cdc-feature">
+            <div class="cdc-feature-head">
+              <div class="cdc-feature-num">EF-01</div>
+              <div class="cdc-feature-name">Authentification SSO via ENT</div>
+              <span class="cdc-tag crit">Critique</span>
+            </div>
+            <div class="cdc-feature-grid">
+              <div><div class="cdc-feature-label">Description</div><div class="cdc-feature-value">Connexion unique via l'ENT de l'université en SAML 2.0 / OIDC. Récupération automatique des informations de profil (matricule, filière, niveau).</div></div>
+              <div><div class="cdc-feature-label">Données manipulées</div><div class="cdc-feature-value">Identifiant ENT, matricule, email universitaire, nom, prénom, filière, niveau, attributs LDAP.</div></div>
+              <div><div class="cdc-feature-label">Acteurs</div><div class="cdc-feature-value">Tous (étudiants, responsables, admins).</div></div>
+              <div><div class="cdc-feature-label">Résultats attendus</div><div class="cdc-feature-value">Session active en moins de 3 secondes, token JWT signé, refresh token, durée 24h.</div></div>
+            </div>
+          </div>
+
+          <div class="cdc-feature">
+            <div class="cdc-feature-head">
+              <div class="cdc-feature-num">EF-02</div>
+              <div class="cdc-feature-name">Inscription / désinscription multi-clubs</div>
+              <span class="cdc-tag crit">Critique</span>
+            </div>
+            <div class="cdc-feature-grid">
+              <div><div class="cdc-feature-label">Description</div><div class="cdc-feature-value">Un étudiant peut rejoindre ou quitter un club en un clic. Gestion automatique des quotas et doublons.</div></div>
+              <div><div class="cdc-feature-label">Données manipulées</div><div class="cdc-feature-value">ID user, ID club, timestamp adhésion, rôle, statut (actif/inactif), points d'engagement.</div></div>
+              <div><div class="cdc-feature-label">Acteurs</div><div class="cdc-feature-value">Étudiants, responsables (validation).</div></div>
+              <div><div class="cdc-feature-label">Résultats attendus</div><div class="cdc-feature-value">Inscription effective en moins de 2 minutes, notification push + email de confirmation, mise à jour du compteur de membres.</div></div>
+            </div>
+          </div>
+
+          <div class="cdc-feature">
+            <div class="cdc-feature-head">
+              <div class="cdc-feature-num">EF-03</div>
+              <div class="cdc-feature-name">Annuaire des clubs avec recherche & filtres</div>
+              <span class="cdc-tag crit">Critique</span>
+            </div>
+            <div class="cdc-feature-grid">
+              <div><div class="cdc-feature-label">Description</div><div class="cdc-feature-value">Liste paginée de tous les clubs avec recherche full-text, filtres par domaine, tri par nom/membres/activité.</div></div>
+              <div><div class="cdc-feature-label">Données manipulées</div><div class="cdc-feature-value">Index Elasticsearch des clubs, filtres utilisateur, préférences de tri.</div></div>
+              <div><div class="cdc-feature-label">Acteurs</div><div class="cdc-feature-value">Étudiants, visiteurs, invités.</div></div>
+              <div><div class="cdc-feature-label">Résultats attendus</div><div class="cdc-feature-value">Résultats de recherche en moins de 200ms, 12 clubs indexés au lancement.</div></div>
+            </div>
+          </div>
+
+          <div class="cdc-feature">
+            <div class="cdc-feature-head">
+              <div class="cdc-feature-num">EF-04</div>
+              <div class="cdc-feature-name">Espace personnel</div>
+              <span class="cdc-tag crit">Critique</span>
+            </div>
+            <div class="cdc-feature-grid">
+              <div><div class="cdc-feature-label">Description</div><div class="cdc-feature-value">Tableau de bord personnel : mes clubs, mes événements, mon historique, mes points d'engagement, mon classement.</div></div>
+              <div><div class="cdc-feature-label">Données manipulées</div><div class="cdc-feature-value">Inscriptions, présences, points, badges, rang.</div></div>
+              <div><div class="cdc-feature-label">Acteurs</div><div class="cdc-feature-value">Étudiants.</div></div>
+              <div><div class="cdc-feature-label">Résultats attendus</div><div class="cdc-feature-value">Vue consolidée de l'engagement étudiant, suggestions personnalisées.</div></div>
+            </div>
+          </div>
+
+          <div class="cdc-feature">
+            <div class="cdc-feature-head">
+              <div class="cdc-feature-num">EF-05</div>
+              <div class="cdc-feature-name">Agenda intelligent</div>
+              <span class="cdc-tag high">Haute</span>
+            </div>
+            <div class="cdc-feature-grid">
+              <div><div class="cdc-feature-label">Description</div><div class="cdc-feature-value">Vue calendrier, détection automatique des conflits d'horaires, rappels 24h avant, synchronisation iCal/Google Cal.</div></div>
+              <div><div class="cdc-feature-label">Données manipulées</div><div class="cdc-feature-value">Événements, inscriptions utilisateur, créneaux occupés, exports ICS.</div></div>
+              <div><div class="cdc-feature-label">Acteurs</div><div class="cdc-feature-value">Étudiants, responsables.</div></div>
+              <div><div class="cdc-feature-label">Résultats attendus</div><div class="cdc-feature-value">Réduction de 60% des conflits d'horaires, augmentation du taux de présence.</div></div>
+            </div>
+          </div>
+
+          <div class="cdc-feature">
+            <div class="cdc-feature-head">
+              <div class="cdc-feature-num">EF-06</div>
+              <div class="cdc-feature-name">Notifications ciblées</div>
+              <span class="cdc-tag high">Haute</span>
+            </div>
+            <div class="cdc-feature-grid">
+              <div><div class="cdc-feature-label">Description</div><div class="cdc-feature-value">Système multi-canal (push, email, SMS) avec segmentation, planification et analytics d'ouverture.</div></div>
+              <div><div class="cdc-feature-label">Données manipulées</div><div class="cdc-feature-value">Messages, segments cibles, canaux, files d'attente BullMQ, métriques FCM/Twilio.</div></div>
+              <div><div class="cdc-feature-label">Acteurs</div><div class="cdc-feature-value">Responsables, administrateurs.</div></div>
+              <div><div class="cdc-feature-label">Résultats attendus</div><div class="cdc-feature-value">Taux de délivrance ≥ 95%, taux d'ouverture ≥ 40%.</div></div>
+            </div>
+          </div>
+
+          <div class="cdc-feature">
+            <div class="cdc-feature-head">
+              <div class="cdc-feature-num">EF-07</div>
+              <div class="cdc-feature-name">Gestion des membres (CRUD)</div>
+              <span class="cdc-tag high">Haute</span>
+            </div>
+            <div class="cdc-feature-grid">
+              <div><div class="cdc-feature-label">Description</div><div class="cdc-feature-value">CRUD complet des membres, import/export CSV/Excel, gestion des rôles (Président, Bureau, Membre).</div></div>
+              <div><div class="cdc-feature-label">Données manipulées</div><div class="cdc-feature-value">Membres, rôles, dates d'adhésion, statuts, taux de présence.</div></div>
+              <div><div class="cdc-feature-label">Acteurs</div><div class="cdc-feature-value">Responsables de club.</div></div>
+              <div><div class="cdc-feature-label">Résultats attendus</div><div class="cdc-feature-value">Import de 500 membres en moins de 10 secondes, gestion fluide.</div></div>
+            </div>
+          </div>
+
+          <div class="cdc-feature">
+            <div class="cdc-feature-head">
+              <div class="cdc-feature-num">EF-08</div>
+              <div class="cdc-feature-name">Suivi des présences mobile</div>
+              <span class="cdc-tag high">Haute</span>
+            </div>
+            <div class="cdc-feature-grid">
+              <div><div class="cdc-feature-label">Description</div><div class="cdc-feature-value">Coche des présences en temps réel depuis mobile, géolocalisation optionnelle, QR code d'émargement.</div></div>
+              <div><div class="cdc-feature-label">Données manipulées</div><div class="cdc-feature-value">Statut présence, timestamp, méthode (manuel/QR), géolocalisation.</div></div>
+              <div><div class="cdc-feature-label">Acteurs</div><div class="cdc-feature-value">Responsables, étudiants.</div></div>
+              <div><div class="cdc-feature-label">Résultats attendus</div><div class="cdc-feature-value">Émargement en moins de 30 secondes par participant, taux de présence calculé en temps réel.</div></div>
+            </div>
+          </div>
+
+          <div class="cdc-feature">
+            <div class="cdc-feature-head">
+              <div class="cdc-feature-num">EF-09</div>
+              <div class="cdc-feature-name">Tableaux de bord statistiques</div>
+              <span class="cdc-tag high">Haute</span>
+            </div>
+            <div class="cdc-feature-grid">
+              <div><div class="cdc-feature-label">Description</div><div class="cdc-feature-value">Dashboards dynamiques : inscriptions, présences, engagement, par club/filière/niveau.</div></div>
+              <div><div class="cdc-feature-label">Données manipulées</div><div class="cdc-feature-value">Agrégations PostgreSQL, données mises en cache Redis.</div></div>
+              <div><div class="cdc-feature-label">Acteurs</div><div class="cdc-feature-value">Responsables, administrateurs.</div></div>
+              <div><div class="cdc-feature-label">Résultats attendus</div><div class="cdc-feature-value">Chargement dashboard en moins de 1 seconde, mises à jour temps réel.</div></div>
+            </div>
+          </div>
+
+          <div class="cdc-feature">
+            <div class="cdc-feature-head">
+              <div class="cdc-feature-num">EF-10</div>
+              <div class="cdc-feature-name">Gestion des événements</div>
+              <span class="cdc-tag high">Haute</span>
+            </div>
+            <div class="cdc-feature-grid">
+              <div><div class="cdc-feature-label">Description</div><div class="cdc-feature-value">Création, modification, annulation d'événements. Validation par l'admin. Gestion des inscriptions et capacité.</div></div>
+              <div><div class="cdc-feature-label">Données manipulées</div><div class="cdc-feature-value">Titre, description, date, heure, lieu, type, capacité, club, inscrits.</div></div>
+              <div><div class="cdc-feature-label">Acteurs</div><div class="cdc-feature-value">Responsables, administrateurs.</div></div>
+              <div><div class="cdc-feature-label">Résultats attendus</div><div class="cdc-feature-value">Création en moins de 3 minutes, notification automatique aux membres.</div></div>
+            </div>
+          </div>
+
+          <div class="cdc-feature">
+            <div class="cdc-feature-head">
+              <div class="cdc-feature-num">EF-11</div>
+              <div class="cdc-feature-name">Exports CSV / Excel / PDF / ICS</div>
+              <span class="cdc-tag med">Moyenne</span>
+            </div>
+            <div class="cdc-feature-grid">
+              <div><div class="cdc-feature-label">Description</div><div class="cdc-feature-value">Exports multi-formats pour listes, présences, agendas, statistiques.</div></div>
+              <div><div class="cdc-feature-label">Données manipulées</div><div class="cdc-feature-value">Sérialisation CSV/Excel via SheetJS, PDF via Puppeteer, ICS via ics-js.</div></div>
+              <div><div class="cdc-feature-label">Acteurs</div><div class="cdc-feature-value">Tous, principalement responsables et admins.</div></div>
+              <div><div class="cdc-feature-label">Résultats attendus</div><div class="cdc-feature-value">Génération en moins de 5 secondes pour 1000 entrées.</div></div>
+            </div>
+          </div>
+
+          <div class="cdc-feature">
+            <div class="cdc-feature-head">
+              <div class="cdc-feature-num">EF-12</div>
+              <div class="cdc-feature-name">API REST documentée</div>
+              <span class="cdc-tag med">Moyenne</span>
+            </div>
+            <div class="cdc-feature-grid">
+              <div><div class="cdc-feature-label">Description</div><div class="cdc-feature-value">API RESTful versionnée, documentée OpenAPI 3.1, authentification par token.</div></div>
+              <div><div class="cdc-feature-label">Données manipulées</div><div class="cdc-feature-value">Endpoints REST, schémas JSON, doc Swagger.</div></div>
+              <div><div class="cdc-feature-label">Acteurs</div><div class="cdc-feature-value">Développeurs tiers, intégrateurs, DSI.</div></div>
+              <div><div class="cdc-feature-label">Résultats attendus</div><div class="cdc-feature-value">Documentation interactive, SDK JavaScript/Python générés.</div></div>
+            </div>
+          </div>
+
+          <div class="cdc-feature">
+            <div class="cdc-feature-head">
+              <div class="cdc-feature-num">EF-13</div>
+              <div class="cdc-feature-name">Multilingue (FR, EN, ES, ZH)</div>
+              <span class="cdc-tag med">Moyenne</span>
+            </div>
+            <div class="cdc-feature-grid">
+              <div><div class="cdc-feature-label">Description</div><div class="cdc-feature-value">i18n complète avec détection automatique de la langue, sélecteur manuel, dates/heures localisées.</div></div>
+              <div><div class="cdc-feature-label">Données manipulées</div><div class="cdc-feature-value">Fichiers de traduction, préférences locales.</div></div>
+              <div><div class="cdc-feature-label">Acteurs</div><div class="cdc-feature-value">Étudiants internationaux, visiteurs étrangers.</div></div>
+              <div><div class="cdc-feature-label">Résultats attendus</div><div class="cdc-feature-value">Support natif de 4 langues, extensible.</div></div>
+            </div>
+          </div>
+
+          <div class="cdc-feature">
+            <div class="cdc-feature-head">
+              <div class="cdc-feature-num">EF-14</div>
+              <div class="cdc-feature-name">Accessibilité WCAG 2.1 AA</div>
+              <span class="cdc-tag high">Haute</span>
+            </div>
+            <div class="cdc-feature-grid">
+              <div><div class="cdc-feature-label">Description</div><div class="cdc-feature-value">Mode contraste élevé, mode daltonien, réduction d'animations, navigation clavier, ARIA complet.</div></div>
+              <div><div class="cdc-feature-label">Données manipulées</div><div class="cdc-feature-value">Préférences utilisateur, attributs ARIA, alternatives textuelles.</div></div>
+              <div><div class="cdc-feature-label">Acteurs</div><div class="cdc-feature-value">Tous, spécifiquement étudiants en situation de handicap.</div></div>
+              <div><div class="cdc-feature-label">Résultats attendus</div><div class="cdc-feature-value">Audit WCAG 2.1 AA réussi, test NVDA/JAWS/VoiceOver validé.</div></div>
+            </div>
+          </div>
+
+          <div class="cdc-feature">
+            <div class="cdc-feature-head">
+              <div class="cdc-feature-num">EF-15</div>
+              <div class="cdc-feature-name">Système de points & gamification</div>
+              <span class="cdc-tag low">Basse</span>
+            </div>
+            <div class="cdc-feature-grid">
+              <div><div class="cdc-feature-label">Description</div><div class="cdc-feature-value">Points d'engagement, badges, classement, récompenses virtuelles.</div></div>
+              <div><div class="cdc-feature-label">Données manipulées</div><div class="cdc-feature-value">Score utilisateur, badges débloqués, leaderboard.</div></div>
+              <div><div class="cdc-feature-label">Acteurs</div><div class="cdc-feature-value">Étudiants.</div></div>
+              <div><div class="cdc-feature-label">Résultats attendus</div><div class="cdc-feature-value">Augmentation de 25% de l'engagement étudiant récurrent.</div></div>
+            </div>
+          </div>
+
+          <h3 class="cdc-h2">5.2 — Contraintes techniques globales</h3>
+          <div class="cdc-info">
+            <strong>Compatibilité :</strong> Navigateurs modernes (Chrome 100+, Firefox 100+, Safari 15+, Edge 100+). Mobile : iOS 14+, Android 10+.<br/>
+            <strong>Hébergement :</strong> Data center universitaire (souveraineté des données, conformité RGPD).<br/>
+            <strong>Latence :</strong> p95 API &lt; 200ms, p99 &lt; 500ms, p99.9 &lt; 1s.<br/>
+            <strong>Disponibilité :</strong> 99.9% minimum, dégradation gracieuse en cas d'incident.
+          </div>
+        </section>
+
+        <!-- Section 6 -->
+        <section class="cdc-section page-break">
+          <h2 class="cdc-h1"><span class="num">06</span> Acteurs du système</h2>
+          <p class="cdc-p">Le système identifie <strong>4 types d'acteurs principaux</strong>, chacun avec des rôles et permissions distincts :</p>
+
+          <div class="cdc-tech-grid">
+            <div class="cdc-actor">
+              <div class="cdc-actor-head">
+                <div class="cdc-actor-icon">E</div>
+                <div>
+                  <div class="cdc-actor-name">Étudiant</div>
+                  <div class="cdc-actor-role">Rôle : student</div>
+                </div>
+              </div>
+              <ul class="cdc-actor-needs">
+                <li>Consulter l'annuaire des clubs</li>
+                <li>S'inscrire / se désinscrire</li>
+                <li>Voir ses événements, agenda, présences</li>
+                <li>Recevoir des notifications ciblées</li>
+                <li>Gérer son profil et ses préférences</li>
+              </ul>
+              <div class="cdc-feature-label" style="margin-top: var(--s-3);">Permissions</div>
+              <div class="cdc-feature-value">CRUD sur ses propres données, lecture seule sur l'annuaire public.</div>
+            </div>
+
+            <div class="cdc-actor">
+              <div class="cdc-actor-head">
+                <div class="cdc-actor-icon green">R</div>
+                <div>
+                  <div class="cdc-actor-name">Responsable de club</div>
+                  <div class="cdc-actor-role">Rôle : manager</div>
+                </div>
+              </div>
+              <ul class="cdc-actor-needs">
+                <li>Gérer les membres de son club</li>
+                <li>Créer et publier des événements</li>
+                <li>Suivre les présences</li>
+                <li>Envoyer des communications ciblées</li>
+                <li>Consulter les statistiques de son club</li>
+                <li>Exporter les données (CSV, Excel, PDF)</li>
+              </ul>
+              <div class="cdc-feature-label" style="margin-top: var(--s-3);">Permissions</div>
+              <div class="cdc-feature-value">CRUD sur son club uniquement, lecture sur l'annuaire.</div>
+            </div>
+
+            <div class="cdc-actor">
+              <div class="cdc-actor-head">
+                <div class="cdc-actor-icon mauve">A</div>
+                <div>
+                  <div class="cdc-actor-name">Administrateur</div>
+                  <div class="cdc-actor-role">Rôle : admin</div>
+                </div>
+              </div>
+              <ul class="cdc-actor-needs">
+                <li>Piloter la plateforme (KPIs)</li>
+                <li>Gérer tous les clubs et utilisateurs</li>
+                <li>Modérer les contenus signalés</li>
+                <li>Configurer les intégrations (ENT, API)</li>
+                <li>Auditer les actions (logs immuables)</li>
+                <li>Exports RGPD et conformité</li>
+              </ul>
+              <div class="cdc-feature-label" style="margin-top: var(--s-3);">Permissions</div>
+              <div class="cdc-feature-value">CRUD total sur toutes les ressources, accès aux logs.</div>
+            </div>
+
+            <div class="cdc-actor">
+              <div class="cdc-actor-head">
+                <div class="cdc-actor-icon blue">S</div>
+                <div>
+                  <div class="cdc-actor-name">Système (automate)</div>
+                  <div class="cdc-actor-role">Rôle : system</div>
+                </div>
+              </div>
+              <ul class="cdc-actor-needs">
+                <li>Envoyer des rappels automatiques</li>
+                <li>Détecter les conflits d'horaires</li>
+                <li>Calculer les statistiques</li>
+                <li>Générer les sauvegardes</li>
+                <li>Anonymiser les comptes inactifs</li>
+                <li>Produire les rapports d'audit</li>
+              </ul>
+              <div class="cdc-feature-label" style="margin-top: var(--s-3);">Permissions</div>
+              <div class="cdc-feature-value">Accès privilégié via service account, journalisation.</div>
+            </div>
+          </div>
+
+          <h3 class="cdc-h2">6.2 — Matrice RACI simplifiée</h3>
+          <table class="cdc-table">
+            <thead><tr><th>Fonctionnalité</th><th>Étudiant</th><th>Responsable</th><th>Admin</th><th>Système</th></tr></thead>
+            <tbody>
+              <tr><td>Inscription club</td><td>R</td><td>C</td><td>A</td><td>-</td></tr>
+              <tr><td>Création événement</td><td>-</td><td>R</td><td>A</td><td>-</td></tr>
+              <tr><td>Suivi présences</td><td>I</td><td>R</td><td>C</td><td>-</td></tr>
+              <tr><td>Notifications</td><td>I</td><td>R</td><td>A</td><td>C</td></tr>
+              <tr><td>Statistiques</td><td>I</td><td>R (club)</td><td>R (global)</td><td>C</td></tr>
+              <tr><td>Modération</td><td>-</td><td>C</td><td>R</td><td>-</td></tr>
+              <tr><td>Audit</td><td>-</td><td>-</td><td>R</td><td>C</td></tr>
+            </tbody>
+          </table>
+          <p class="cdc-p" style="font-size: 12px; color: var(--text-tertiary); margin-top: var(--s-2);">Légende : R = Réalise · A = Autorité (décide) · C = Consulté · I = Informé</p>
+        </section>
+
+        <!-- Section 7 -->
+        <section class="cdc-section page-break">
+          <h2 class="cdc-h1"><span class="num">07</span> Technologies utilisées</h2>
+
+          <h3 class="cdc-h2">7.1 — Stack technique</h3>
+
+          <div class="cdc-tech-grid">
+            <div class="cdc-tech">
+              <div class="cdc-tech-layer">Frontend Web</div>
+              <div class="cdc-tech-name">React 18 + Vite + TypeScript</div>
+              <div class="cdc-tech-list">
+                <span class="cdc-tech-tag">React 18</span>
+                <span class="cdc-tech-tag">Vite</span>
+                <span class="cdc-tech-tag">TypeScript</span>
+                <span class="cdc-tech-tag">React Router</span>
+                <span class="cdc-tech-tag">Zustand</span>
+                <span class="cdc-tech-tag">TanStack Query</span>
+              </div>
+            </div>
+
+            <div class="cdc-tech">
+              <div class="cdc-tech-layer">Mobile</div>
+              <div class="cdc-tech-name">React Native + Expo</div>
+              <div class="cdc-tech-list">
+                <span class="cdc-tech-tag">React Native</span>
+                <span class="cdc-tech-tag">Expo SDK 50</span>
+                <span class="cdc-tech-tag">iOS</span>
+                <span class="cdc-tech-tag">Android</span>
+                <span class="cdc-tech-tag">EAS Build</span>
+              </div>
+            </div>
+
+            <div class="cdc-tech">
+              <div class="cdc-tech-layer">API Backend</div>
+              <div class="cdc-tech-name">Node.js 20 + Express + TypeScript</div>
+              <div class="cdc-tech-list">
+                <span class="cdc-tech-tag">Node.js 20</span>
+                <span class="cdc-tech-tag">Express</span>
+                <span class="cdc-tech-tag">TypeScript</span>
+                <span class="cdc-tech-tag">Prisma</span>
+                <span class="cdc-tech-tag">Zod</span>
+                <span class="cdc-tech-tag">Passport</span>
+              </div>
+            </div>
+
+            <div class="cdc-tech">
+              <div class="cdc-tech-layer">Base de données</div>
+              <div class="cdc-tech-name">PostgreSQL 16 + Redis 7</div>
+              <div class="cdc-tech-list">
+                <span class="cdc-tech-tag">PostgreSQL 16</span>
+                <span class="cdc-tech-tag">Redis 7</span>
+                <span class="cdc-tech-tag">Prisma ORM</span>
+                <span class="cdc-tech-tag">pgBouncer</span>
+              </div>
+            </div>
+
+            <div class="cdc-tech">
+              <div class="cdc-tech-layer">Authentification</div>
+              <div class="cdc-tech-name">SAML 2.0 / OAuth 2.0 (Keycloak)</div>
+              <div class="cdc-tech-list">
+                <span class="cdc-tech-tag">SAML 2.0</span>
+                <span class="cdc-tech-tag">OAuth 2.0</span>
+                <span class="cdc-tech-tag">JWT</span>
+                <span class="cdc-tech-tag">Keycloak</span>
+                <span class="cdc-tech-tag">MFA TOTP</span>
+              </div>
+            </div>
+
+            <div class="cdc-tech">
+              <div class="cdc-tech-layer">Notifications</div>
+              <div class="cdc-tech-name">BullMQ + FCM + Twilio</div>
+              <div class="cdc-tech-list">
+                <span class="cdc-tech-tag">BullMQ</span>
+                <span class="cdc-tech-tag">FCM</span>
+                <span class="cdc-tech-tag">Twilio SMS</span>
+                <span class="cdc-tech-tag">SendGrid</span>
+              </div>
+            </div>
+
+            <div class="cdc-tech">
+              <div class="cdc-tech-layer">Recherche</div>
+              <div class="cdc-tech-name">Elasticsearch 8</div>
+              <div class="cdc-tech-list">
+                <span class="cdc-tech-tag">Elasticsearch</span>
+                <span class="cdc-tech-tag">Full-text</span>
+                <span class="cdc-tech-tag">Facettes</span>
+              </div>
+            </div>
+
+            <div class="cdc-tech">
+              <div class="cdc-tech-layer">CI/CD & DevOps</div>
+              <div class="cdc-tech-name">GitLab CI + Docker + Kubernetes</div>
+              <div class="cdc-tech-list">
+                <span class="cdc-tech-tag">GitLab CI</span>
+                <span class="cdc-tech-tag">Docker</span>
+                <span class="cdc-tech-tag">Kubernetes</span>
+                <span class="cdc-tech-tag">Helm</span>
+                <span class="cdc-tech-tag">Terraform</span>
+              </div>
+            </div>
+
+            <div class="cdc-tech">
+              <div class="cdc-tech-layer">Observabilité</div>
+              <div class="cdc-tech-name">Prometheus + Grafana + Loki</div>
+              <div class="cdc-tech-list">
+                <span class="cdc-tech-tag">Prometheus</span>
+                <span class="cdc-tech-tag">Grafana</span>
+                <span class="cdc-tech-tag">Loki</span>
+                <span class="cdc-tech-tag">Jaeger</span>
+                <span class="cdc-tech-tag">Sentry</span>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="cdc-h2">7.2 — Outils de développement</h3>
+          <table class="cdc-table">
+            <thead><tr><th>Catégorie</th><th>Outil</th><th>Usage</th></tr></thead>
+            <tbody>
+              <tr><td>IDE</td><td>VS Code / WebStorm</td><td>Développement principal</td></tr>
+              <tr><td>Versioning</td><td>Git + GitLab</td><td>Code source, branches, MR</td></tr>
+              <tr><td>Design</td><td>Figma</td><td>Maquettes UI, design system</td></tr>
+              <tr><td>Gestion de projet</td><td>GitLab Issues / Notion</td><td>Tickets, roadmap, documentation</td></tr>
+              <tr><td>Communication</td><td>Slack / Discord</td><td>Communication équipe</td></tr>
+              <tr><td>Tests</td><td>Jest + Cypress + Playwright</td><td>Tests unitaires, E2E, intégration</td></tr>
+              <tr><td>CI/CD</td><td>GitLab CI</td><td>Build, test, déploiement auto</td></tr>
+              <tr><td>Monitoring</td><td>Grafana + Sentry</td><td>Observabilité, errors tracking</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Section 8 -->
+        <section class="cdc-section page-break">
+          <h2 class="cdc-h1"><span class="num">08</span> Contraintes</h2>
+
+          <h3 class="cdc-h2">8.1 — Contraintes techniques</h3>
+          <div class="cdc-constraint">
+            <div class="cdc-constraint-num">CT-01</div>
+            <div class="cdc-constraint-content">
+              <strong>Hébergement souverain obligatoire</strong>
+              Les données doivent être hébergées sur des serveurs localisés dans l'Union Européenne, de préférence dans le datacenter de l'université.
+            </div>
+          </div>
+          <div class="cdc-constraint">
+            <div class="cdc-constraint-num">CT-02</div>
+            <div class="cdc-constraint-content">
+              <strong>Compatibilité avec l'ENT existant</strong>
+              L'authentification doit s'intégrer avec l'ENT en place via les protocoles standards (SAML 2.0 ou OIDC).
+            </div>
+          </div>
+          <div class="cdc-constraint">
+            <div class="cdc-constraint-num">CT-03</div>
+            <div class="cdc-constraint-content">
+              <strong>Performance</strong>
+              p95 &lt; 200ms, FCP &lt; 1.5s, support de 5 000 utilisateurs simultanés.
+            </div>
+          </div>
+          <div class="cdc-constraint">
+            <div class="cdc-constraint-num">CT-04</div>
+            <div class="cdc-constraint-content">
+              <strong>Compatibilité navigateurs</strong>
+              Support des 2 dernières versions de Chrome, Firefox, Safari, Edge.
+            </div>
+          </div>
+          <div class="cdc-constraint">
+            <div class="cdc-constraint-num">CT-05</div>
+            <div class="cdc-constraint-content">
+              <strong>API versionnée</strong>
+              Toute API publique doit être versionnée (/api/v1/) avec rétrocompatibilité.
+            </div>
+          </div>
+
+          <h3 class="cdc-h2">8.2 — Contraintes organisationnelles</h3>
+          <div class="cdc-constraint">
+            <div class="cdc-constraint-num">CO-01</div>
+            <div class="cdc-constraint-content">
+              <strong>Délai de livraison</strong>
+              MVP (V1) livré sous 4 mois (T2 2026), versions incrémentales tous les trimestres.
+            </div>
+          </div>
+          <div class="cdc-constraint">
+            <div class="cdc-constraint-num">CO-02</div>
+            <div class="cdc-constraint-content">
+              <strong>Équipe réduite</strong>
+              2 développeurs full-stack, design et QA mutualisés, pas de DevOps dédié.
+            </div>
+          </div>
+          <div class="cdc-constraint">
+            <div class="cdc-constraint-num">CO-03</div>
+            <div class="cdc-constraint-content">
+              <strong>Budget limité</strong>
+              Infrastructure gratuite ou low-cost (PostgreSQL self-hosted, Redis self-hosted, FCM gratuit).
+            </div>
+          </div>
+          <div class="cdc-constraint">
+            <div class="cdc-constraint-num">CO-04</div>
+            <div class="cdc-constraint-content">
+              <strong>Validation itérative</strong>
+              Démos mensuelles avec les parties prenantes, validation des fonctionnalités avant passage à la suivante.
+            </div>
+          </div>
+
+          <h3 class="cdc-h2">8.3 — Contraintes de sécurité</h3>
+          <div class="cdc-constraint">
+            <div class="cdc-constraint-num">CS-01</div>
+            <div class="cdc-constraint-content">
+              <strong>Chiffrement des données</strong>
+              TLS 1.3 en transit, AES-256 au repos. Pas de données en clair dans les logs.
+            </div>
+          </div>
+          <div class="cdc-constraint">
+            <div class="cdc-constraint-num">CS-02</div>
+            <div class="cdc-constraint-content">
+              <strong>Authentification forte</strong>
+              SSO ENT obligatoire, MFA (TOTP) pour les rôles sensibles (admin, manager).
+            </div>
+          </div>
+          <div class="cdc-constraint">
+            <div class="cdc-constraint-num">CS-03</div>
+            <div class="cdc-constraint-content">
+              <strong>Audit et traçabilité</strong>
+              Logs immuables de toutes les actions sensibles, conservation 3 ans minimum.
+            </div>
+          </div>
+          <div class="cdc-constraint">
+            <div class="cdc-constraint-num">CS-04</div>
+            <div class="cdc-constraint-content">
+              <strong>Protection des données</strong>
+              Anti-injection SQL, anti-XSS, anti-CSRF, headers de sécurité (CSP, HSTS, X-Frame-Options).
+            </div>
+          </div>
+
+          <h3 class="cdc-h2">8.4 — Contraintes légales et réglementaires</h3>
+          <div class="cdc-constraint">
+            <div class="cdc-constraint-num">CL-01</div>
+            <div class="cdc-constraint-content">
+              <strong>RGPD — Règlement Général sur la Protection des Données</strong>
+              Registre des traitements, AIPD, droit à l'oubli, droit à la portabilité, consentement explicite, anonymisation après 3 ans d'inactivité.
+            </div>
+          </div>
+          <div class="cdc-constraint">
+            <div class="cdc-constraint-num">CL-02</div>
+            <div class="cdc-constraint-content">
+              <strong>Accessibilité (WCAG 2.1 niveau AA)</strong>
+              Conformité exigée pour les établissements publics (norme RGAA en France).
+            </div>
+          </div>
+          <div class="cdc-constraint">
+            <div class="cdc-constraint-num">CL-03</div>
+            <div class="cdc-constraint-content">
+              <strong>Propriété intellectuelle</strong>
+              Licence open-source (MIT) pour le code, respect des licences tierces.
+            </div>
+          </div>
+          <div class="cdc-constraint">
+            <div class="cdc-constraint-num">CL-04</div>
+            <div class="cdc-constraint-content">
+              <strong>Référentiel général d'écoconception (RGESN)</strong>
+              Limiter l'empreinte environnementale du service : sobriété fonctionnelle, hébergement vert, optimisation des assets.
+            </div>
+          </div>
+
+          <h3 class="cdc-h2">8.5 — Contraintes matérielles</h3>
+          <div class="cdc-constraint">
+            <div class="cdc-constraint-num">CM-01</div>
+            <div class="cdc-constraint-content">
+              <strong>Infrastructure serveur</strong>
+              Serveurs du datacenter universitaire : 8 vCPU, 32 Go RAM, 500 Go SSD minimum pour l'environnement de production.
+            </div>
+          </div>
+          <div class="cdc-constraint">
+            <div class="cdc-constraint-num">CM-02</div>
+            <div class="cdc-constraint-content">
+              <strong>Postes de développement</strong>
+              MacBook Pro M1/M2 ou PC Linux, double écran recommandé.
+            </div>
+          </div>
+
+          <div class="cdc-pagenum">— Fin du document —</div>
+        </section>
+
+      </div>
+
+      <div class="cdc-toolbar" style="margin-top: var(--s-6);">
+        <div class="text-mono" style="font-size: 11px; color: var(--text-tertiary); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;">Orbit v1.0.0 · Juillet 2026 · Page générée</div>
+        <div class="flex gap-2">
+          <button class="btn btn-secondary btn-sm" onclick="window.print()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Imprimer en PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <div>2026 Orbit - Gestion des clubs universitaires</div>
+        <div class="text-mono" style="font-size: var(--fs-xs); font-weight: 600;">v1.0.0 · MIT LICENSE</div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    window.addEventListener('load', () => ClubHub.hideLoader());
+  </script>
+</body>
+</html>

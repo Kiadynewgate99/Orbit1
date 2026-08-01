@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="assets/logo-orbit.svg" />
+  <title>Administration - Orbit</title>
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+<body>
+  <div class="page-loader">
+    <div class="loader-ring"></div>
+    <div class="loader-text">CHARGEMENT</div>
+  </div>
+
+  <div class="app-shell-mount"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    window.addEventListener('load', () => ClubHub.hideLoader());
+
+    const user = ClubHub.Auth.require('admin');
+    if (!user) throw new Error('Unauthorized');
+
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab') || 'overview';
+
+    const pageTitleMap = {
+      overview: 'Pilotage de la plateforme',
+      clubs: 'Tous les clubs',
+      users: 'Utilisateurs',
+      stats: 'Statistiques',
+      integrations: 'Intégrations',
+      audit: 'Journal d\'audit',
+    };
+
+    const renderOverview = () => `
+      <div class="stats-grid">
+        <div class="stat-card stat-card-orange">
+          <div>
+            <div class="stat-label">Clubs actifs</div>
+            <span class="stat-trend">+ 2 ce semestre</span>
+          </div>
+          <div class="stat-value">${CLUBHUB.CLUBS.length}</div>
+        </div>
+        <div class="stat-card stat-card-lime">
+          <div>
+            <div class="stat-label">Étudiants inscrits</div>
+            <span class="stat-trend" style="background: rgba(0,0,0,0.1);">+ 18% ce mois</span>
+          </div>
+          <div class="stat-value">847</div>
+        </div>
+        <div class="stat-card stat-card-white">
+          <div>
+            <div class="stat-label">Événements</div>
+            <span class="stat-trend" style="background: var(--lime); color: var(--black);">+ 24% ce semestre</span>
+          </div>
+          <div class="stat-value">${CLUBHUB.EVENTS.length}</div>
+        </div>
+      </div>
+
+      <div class="grid" style="grid-template-columns: 2fr 1fr; gap: var(--s-5); margin-bottom: var(--s-5);">
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3 class="chart-title">Activité de la plateforme (12 mois)</h3>
+            <div class="flex gap-2">
+              <span class="badge badge-orange" style="font-size: 10px;">● Inscriptions</span>
+              <span class="badge" style="background: var(--mauve); font-size: 10px;">● Présences</span>
+            </div>
+          </div>
+          <div class="chart-bars">
+            ${[60, 70, 65, 80, 85, 75, 90, 95, 88, 92, 100, 85].map((h, i) => `
+              <div class="chart-bar-wrap">
+                <div class="chart-bar ${i % 3 === 0 ? 'orange' : ''}" style="height: ${h}%;"></div>
+                <div class="chart-bar-label">${['J','F','M','A','M','J','J','A','S','O','N','D'][i]}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size: var(--fs-base); font-weight: 800; margin-bottom: var(--s-4);">Top 5 clubs</h3>
+          ${[...CLUBHUB.CLUBS].sort((a, b) => b.members - a.members).slice(0, 5).map((club, i) => `
+            <div class="flex items-center gap-3" style="padding: var(--s-3) 0; border-bottom: 1px solid var(--border-subtle);">
+              <div class="text-mono" style="width: 24px; color: var(--text-tertiary); font-weight: 800;">#${i + 1}</div>
+              <div class="avatar" style="background: ${club.color}; color: var(--white);">${club.icon}</div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: var(--fs-sm); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${club.name}</div>
+                <div class="text-mono" style="font-size: 10px; color: var(--text-tertiary); font-weight: 600;">${club.events} événements</div>
+              </div>
+              <strong class="text-mono" style="font-size: var(--fs-sm); color: var(--orange); font-weight: 800;">${club.members}</strong>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size: var(--fs-base); font-weight: 800; margin-bottom: var(--s-4);">Journal d'audit</h3>
+        <div class="table-wrap" style="border: none;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Horodatage</th>
+                <th>Utilisateur</th>
+                <th>Action</th>
+                <th>Cible</th>
+                <th>IP</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="text-mono" style="font-size: var(--fs-xs); font-weight: 600;">2026-07-19 11:42</td><td>Hery RAKOTONIAINA</td><td><span class="badge badge-orange">Création</span></td><td>Club Musique</td><td class="text-mono" style="font-size: var(--fs-xs);">10.42.1.15</td></tr>
+              <tr><td class="text-mono" style="font-size: var(--fs-xs); font-weight: 600;">2026-07-19 10:15</td><td>Sarah ANDRIANARIVO</td><td><span class="badge">Validation</span></td><td>Événement "Débat IA"</td><td class="text-mono" style="font-size: var(--fs-xs);">10.42.1.42</td></tr>
+              <tr><td class="text-mono" style="font-size: var(--fs-xs); font-weight: 600;">2026-07-19 09:23</td><td>Système</td><td><span class="badge">Auto</span></td><td>Sauvegarde DB (3.2 GB)</td><td class="text-mono" style="font-size: var(--fs-xs);">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    const renderClubs = () => `
+      <div class="card">
+        <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3); margin-bottom: var(--s-4);">
+          <div>
+            <strong style="font-size: var(--fs-lg);">Gestion des clubs</strong>
+            <span class="text-muted" style="font-size: var(--fs-sm);"> ${CLUBHUB.CLUBS.length} clubs · ${CLUBHUB.CLUBS.reduce((a, c) => a + c.members, 0)} membres</span>
+          </div>
+          <button class="btn btn-orange btn-sm">+ Créer un club</button>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th><input type="checkbox" class="checkbox" /></th>
+                <th>Club</th>
+                <th>Domaine</th>
+                <th>Responsable</th>
+                <th>Membres</th>
+                <th>Événements</th>
+                <th>Statut</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${CLUBHUB.CLUBS.map(club => `
+                <tr>
+                  <td><input type="checkbox" class="checkbox" /></td>
+                  <td>
+                    <div class="member-cell">
+                      <div class="avatar" style="background: ${club.color}; color: var(--white);">${club.icon}</div>
+                      <div class="member-info">
+                        <strong>${club.name}</strong>
+                        <span>Depuis ${club.founded}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>${CLUBHUB.CLUB_CATEGORIES.find(c => c.id === club.domain)?.label || ''}</td>
+                  <td>${club.president}</td>
+                  <td><strong>${club.members}</strong></td>
+                  <td>${club.events}</td>
+                  <td><span class="badge badge-lime">Actif</span></td>
+                  <td><a href="club.html?id=${club.id}" class="btn-icon">${CLUBHUB.ICONS.eye.replace('<svg ', '<svg width="14" height="14" ')}</a></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    const renderUsers = () => `
+      <div class="stats-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: var(--s-5);">
+        <div class="stat-card stat-card-orange">
+          <div>
+            <div class="stat-label">Étudiants</div>
+            <span class="stat-trend">+ 42 ce mois</span>
+          </div>
+          <div class="stat-value">847</div>
+        </div>
+        <div class="stat-card stat-card-lime">
+          <div>
+            <div class="stat-label">Responsables</div>
+            <span class="stat-trend" style="background: rgba(0,0,0,0.1);">+ 2 ce mois</span>
+          </div>
+          <div class="stat-value">${CLUBHUB.CLUBS.length * 2}</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3); margin-bottom: var(--s-4);">
+          <strong style="font-size: var(--fs-lg);">Tous les utilisateurs</strong>
+          <div class="flex gap-2">
+            <button class="btn btn-secondary btn-sm">Importer (CSV)</button>
+            <button class="btn btn-orange btn-sm">Exporter</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>Utilisateur</th><th>Email</th><th>Rôle</th><th>Filière</th><th>Dernière connexion</th><th>Statut</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="member-cell">
+                    <div class="avatar avatar-orange">MA</div>
+                    <div class="member-info"><strong>Mika ANDRIAMATOA</strong><span>2023A0025</span></div>
+                  </div>
+                </td>
+                <td class="text-mono" style="font-size: var(--fs-xs);">mika@univ.mg</td>
+                <td><span class="badge">Étudiant</span></td>
+                <td>Info · L2</td>
+                <td class="text-mono" style="font-size: var(--fs-xs);">il y a 5 min</td>
+                <td><span class="badge badge-lime">En ligne</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="member-cell">
+                    <div class="avatar" style="background: var(--mauve);">SA</div>
+                    <div class="member-info"><strong>Sarah ANDRIANARIVO</strong><span>2022A0042</span></div>
+                  </div>
+                </td>
+                <td class="text-mono" style="font-size: var(--fs-xs);">sarah@univ.mg</td>
+                <td><span class="badge badge-orange">Responsable</span></td>
+                <td>Droit · L3</td>
+                <td class="text-mono" style="font-size: var(--fs-xs);">il y a 2h</td>
+                <td><span class="badge">Actif</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="member-cell">
+                    <div class="avatar" style="background: var(--blue); color: var(--white);">HR</div>
+                    <div class="member-info"><strong>Hery RAKOTONIAINA</strong><span>2018A0001</span></div>
+                  </div>
+                </td>
+                <td class="text-mono" style="font-size: var(--fs-xs);">hery@univ.mg</td>
+                <td><span class="badge badge-dark">Admin</span></td>
+                <td>Informatique</td>
+                <td class="text-mono" style="font-size: var(--fs-xs);">il y a 1j</td>
+                <td><span class="badge">Actif</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    const renderStats = () => `
+      <div class="grid grid-2" style="gap: var(--s-5);">
+        <div class="chart-card">
+          <h3 class="chart-title" style="margin-bottom: var(--s-4);">Inscriptions annuelles</h3>
+          <div class="chart-bars">
+            ${[120, 145, 180, 220, 195, 280, 350, 420, 380, 480, 520, 610].map((h, i) => `
+              <div class="chart-bar-wrap">
+                <div class="chart-bar orange" style="height: ${h / 6.1}%;"></div>
+                <div class="chart-bar-label">${['J','F','M','A','M','J','J','A','S','O','N','D'][i]}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title" style="margin-bottom: var(--s-4);">Taux d'engagement par filière</h3>
+          <div class="flex flex-col gap-3" style="margin-top: var(--s-4);">
+            ${[
+              { label: 'Informatique', val: 92, color: 'var(--orange)' },
+              { label: 'STAPS', val: 88, color: 'var(--lime)' },
+              { label: 'Droit', val: 76, color: 'var(--mauve)' },
+              { label: 'Lettres', val: 71, color: 'var(--blue)' },
+              { label: 'Biologie', val: 68, color: 'var(--orange)' },
+            ].map(f => `
+              <div>
+                <div class="flex justify-between" style="margin-bottom: 4px;">
+                  <span style="font-size: var(--fs-sm); font-weight: 600;">${f.label}</span>
+                  <span class="text-mono" style="font-size: var(--fs-sm); font-weight: 700;">${f.val}%</span>
+                </div>
+                <div class="progress"><div class="progress-bar" style="width: ${f.val}%; background: ${f.color};"></div></div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+
+    const renderAudit = () => {
+      // seed de logs d'audit
+      const logs = [
+        { created_at: '2026-07-26 14:23:12', user_name: 'Sarah ANDRIANARIVO', user_matricule: 'SA', action: 'CREATE', target_type: 'event', target_id: 5, ip: '10.42.1.42', metadata: { title: 'Atelier Python pour debutants' } },
+        { created_at: '2026-07-26 13:10:55', user_name: 'Mika ANDRIAMATOA',   user_matricule: 'MA', action: 'JOIN_CLUB', target_type: 'club', target_id: 5, ip: '10.42.1.15', metadata: { club: 'Club Robotique' } },
+        { created_at: '2026-07-26 11:45:01', user_name: 'Hery RAKOTONIAINA',   user_matricule: 'HR', action: 'LOGIN', target_type: 'user', target_id: 3, ip: '10.42.1.1', metadata: null },
+        { created_at: '2026-07-26 10:30:42', user_name: 'Sarah ANDRIANARIVO',  user_matricule: 'SA', action: 'UPDATE', target_type: 'event', target_id: 2, ip: '10.42.1.42', metadata: { field: 'capacity' } },
+        { created_at: '2026-07-25 22:15:00', user_name: 'Systeme',             user_matricule: '-',  action: 'AUTO', target_type: 'backup', target_id: null, ip: '-', metadata: { size: '3.2 GB' } },
+        { created_at: '2026-07-25 18:42:30', user_name: 'Mika ANDRIAMATOA',    user_matricule: 'MA', action: 'PRESENCE', target_type: 'event', target_id: 5, ip: '10.42.1.15', metadata: { method: 'qr' } },
+        { created_at: '2026-07-25 17:00:11', user_name: 'Hery RAKOTONIAINA',   user_matricule: 'HR', action: 'DELETE', target_type: 'event', target_id: 8, ip: '10.42.1.1', metadata: { title: 'Workshop annule' } },
+        { created_at: '2026-07-25 14:20:00', user_name: 'Sarah ANDRIANARIVO',  user_matricule: 'SA', action: 'LOGIN', target_type: 'user', target_id: 2, ip: '10.42.1.42', metadata: null },
+        { created_at: '2026-07-25 09:00:00', user_name: 'Systeme',             user_matricule: '-',  action: 'AUTO', target_type: 'cron', target_id: null, ip: '-', metadata: { job: 'send_reminders' } },
+      ];
+      return `
+        <div class="card">
+          <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3); margin-bottom: var(--s-4);">
+            <div>
+              <h3 style="font-size: var(--fs-lg); font-weight: 800;">Journal d'audit</h3>
+              <p class="text-muted" style="font-size: var(--fs-sm);">Toutes les actions sensibles sont loggees de maniere immutable. Conforme RGPD.</p>
+            </div>
+            <div class="flex gap-2">
+              <select class="select" style="max-width: 160px;">
+                <option>Toutes actions</option>
+                <option>LOGIN</option>
+                <option>CREATE</option>
+                <option>UPDATE</option>
+                <option>DELETE</option>
+                <option>JOIN_CLUB</option>
+                <option>PRESENCE</option>
+              </select>
+              <input class="input" placeholder="Rechercher utilisateur..." style="max-width: 240px;" />
+              <button class="btn btn-primary btn-sm">Filtrer</button>
+              <button class="btn btn-secondary btn-sm">Exporter .csv</button>
+            </div>
+          </div>
+          <table class="cdc-table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+              <tr style="background: var(--black); color: var(--white);">
+                <th style="padding: 10px 12px; text-align: left;">Horodatage</th>
+                <th style="padding: 10px 12px; text-align: left;">Utilisateur</th>
+                <th style="padding: 10px 12px; text-align: left;">Action</th>
+                <th style="padding: 10px 12px; text-align: left;">Cible</th>
+                <th style="padding: 10px 12px; text-align: left;">IP</th>
+                <th style="padding: 10px 12px; text-align: left;">Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${logs.map(l => `
+                <tr style="border-bottom: 1px solid var(--border-subtle);">
+                  <td style="padding: 10px 12px; font-family: var(--font-mono); font-size: 12px;">${l.created_at}</td>
+                  <td style="padding: 10px 12px;"><strong>${l.user_name}</strong><br/><span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary);">${l.user_matricule}</span></td>
+                  <td style="padding: 10px 12px;"><span class="badge ${l.action === 'DELETE' ? 'badge-orange' : l.action === 'CREATE' || l.action === 'LOGIN' ? 'badge-lime' : 'badge-dark'}">${l.action}</span></td>
+                  <td style="padding: 10px 12px; font-size: 12px;">${l.target_type}${l.target_id ? ' #' + l.target_id : ''}</td>
+                  <td style="padding: 10px 12px; font-family: var(--font-mono); font-size: 11px;">${l.ip}</td>
+                  <td style="padding: 10px 12px; font-size: 12px; color: var(--text-secondary);">${l.metadata ? JSON.stringify(l.metadata) : '—'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <div class="flex items-center justify-between" style="margin-top: var(--s-4); padding-top: var(--s-3); border-top: 1px solid var(--border-subtle); font-size: 12px; color: var(--text-tertiary);">
+            <div>Affichage 1-9 sur 247 logs</div>
+            <div class="flex gap-2">
+              <button class="btn btn-secondary btn-sm">Precedent</button>
+              <button class="btn btn-secondary btn-sm">Suivant</button>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
+    const renderIntegrations = () => `
+      <div class="grid grid-2" style="gap: var(--s-5);">
+        ${[
+          { name: 'ENT Universitaire', desc: 'SSO via SAML 2.0', status: 'Connecté', color: 'var(--orange)' },
+          { name: 'Microsoft 365', desc: 'Calendrier et contacts', status: 'Connecté', color: 'var(--blue)' },
+          { name: 'Google Workspace', desc: 'SSO + agenda', status: 'Connecté', color: 'var(--lime)' },
+          { name: 'Slack / Teams', desc: 'Notifications internes', status: 'Déconnecté', color: 'var(--mauve)' },
+          { name: 'API Mobile', desc: 'iOS / Android', status: 'Connecté', color: 'var(--blue)' },
+          { name: 'Webhooks', desc: 'Intégrations tierces', status: 'Configuré', color: 'var(--orange)' },
+        ].map(int => `
+          <div class="card" style="display: flex; align-items: center; gap: var(--s-4);">
+            <div style="width: 48px; height: 48px; border-radius: var(--r-sm); background: ${int.color}; color: var(--white); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 18px; font-weight: 800;">${int.name[0]}</div>
+            <div style="flex: 1; min-width: 0;">
+              <strong style="display: block; font-size: var(--fs-base);">${int.name}</strong>
+              <span style="font-size: 11px; color: var(--text-tertiary);">${int.desc}</span>
+            </div>
+            <span class="badge ${int.status === 'Connecté' ? 'badge-lime' : int.status === 'Déconnecté' ? 'badge-orange' : 'badge-dark'}">${int.status}</span>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="card" style="margin-top: var(--s-5);">
+        <h3 style="font-size: var(--fs-base); font-weight: 800; margin-bottom: var(--s-2);">API publique</h3>
+        <p class="text-muted" style="font-size: var(--fs-sm); margin-bottom: var(--s-4);">Endpoints REST documentés pour les intégrations tierces.</p>
+        <div style="background: var(--bg-elev-1); border: 1px solid var(--black); border-radius: var(--r-sm); padding: var(--s-4); font-family: var(--font-mono); font-size: var(--fs-xs); line-height: 1.8; color: var(--text-secondary);">
+          <div><span style="color: var(--orange); font-weight: 700;">GET</span>    /api/v1/clubs                 <span style="color: var(--text-tertiary);">— Liste des clubs</span></div>
+          <div><span style="color: var(--orange); font-weight: 700;">GET</span>    /api/v1/clubs/:id             <span style="color: var(--text-tertiary);">— Détails d'un club</span></div>
+          <div><span style="color: var(--lime); font-weight: 700;">POST</span>   /api/v1/clubs/:id/join        <span style="color: var(--text-tertiary);">— Inscription</span></div>
+          <div><span style="color: var(--blue); font-weight: 700;">DELETE</span> /api/v1/clubs/:id/leave       <span style="color: var(--text-tertiary);">— Désinscription</span></div>
+          <div><span style="color: var(--orange); font-weight: 700;">GET</span>    /api/v1/events                <span style="color: var(--text-tertiary);">— Agenda des événements</span></div>
+        </div>
+      </div>
+    `;
+
+    const content = {
+      overview: renderOverview(),
+      clubs: renderClubs(),
+      users: renderUsers(),
+      stats: renderStats(),
+      integrations: renderIntegrations(),
+      audit: renderAudit(),
+    }[tab] || renderOverview();
+
+    ClubHub.renderShell({
+      active: tab,
+      role: 'admin',
+      content,
+      pageTitle: pageTitleMap[tab] || 'Administration',
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="assets/logo-orbit.svg" />
+  <title>Événements - Orbit</title>
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <style>
+    .event-row-block {
+      background: var(--white);
+      border: 1px solid var(--black);
+      border-radius: var(--r-sm);
+      padding: 0;
+      display: flex;
+      transition: all var(--t-base);
+      margin-bottom: var(--s-3);
+    }
+    .event-row-block:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--black); }
+    .event-row-block.accent { background: var(--lime); }
+  </style>
+</head>
+<body>
+  <div class="page-loader">
+    <div class="loader-ring"></div>
+    <div class="loader-text">CHARGEMENT</div>
+  </div>
+
+  <div class="app-shell-mount"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    window.addEventListener('load', () => ClubHub.hideLoader());
+
+    const u = ClubHub.Auth.current();
+    const myEvents = u?.events || [];
+
+    const content = `
+      <div class="card" style="margin-bottom: var(--s-5); padding: var(--s-5);">
+        <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3);">
+          <div>
+            <div class="text-mono" style="font-size: 11px; color: var(--orange); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;">AGENDA</div>
+            <strong style="font-size: var(--fs-2xl);">${CLUBHUB.EVENTS.length} événements planifiés</strong>
+            <div class="text-muted" style="font-size: var(--fs-sm); margin-top: 2px;">${CLUBHUB.EVENTS.filter(e => e.attendees > e.maxAttendees * 0.7).length} bientôt complets</div>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-secondary btn-sm">Exporter (.ics)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-input toolbar-left">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="event-search" placeholder="Rechercher un événement..." />
+        </div>
+        <select class="select" id="event-type" style="max-width: 180px;">
+          <option value="all">Tous les types</option>
+          <option value="Atelier">Atelier</option>
+          <option value="Conférence">Conférence</option>
+          <option value="Hackathon">Hackathon</option>
+          <option value="Compétition">Compétition</option>
+          <option value="Débat">Débat</option>
+        </select>
+        <select class="select" id="event-club" style="max-width: 200px;">
+          <option value="all">Tous les clubs</option>
+          ${CLUBHUB.CLUBS.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="grid" style="grid-template-columns: 2fr 1fr; gap: var(--s-5);">
+        <div>
+          <div id="events-container"></div>
+        </div>
+
+        <div>
+          <div class="card" style="margin-bottom: var(--s-4);">
+            <div class="flex items-center justify-between" style="margin-bottom: var(--s-4);">
+              <h3 style="font-size: var(--fs-base); font-weight: 800;">Juillet 2026</h3>
+              <div class="flex gap-1">
+                <button class="btn-icon">‹</button>
+                <button class="btn-icon">›</button>
+              </div>
+            </div>
+            <div class="calendar-header">
+              <div class="calendar-header-cell">L</div>
+              <div class="calendar-header-cell">M</div>
+              <div class="calendar-header-cell">M</div>
+              <div class="calendar-header-cell">J</div>
+              <div class="calendar-header-cell">V</div>
+              <div class="calendar-header-cell">S</div>
+              <div class="calendar-header-cell">D</div>
+            </div>
+            <div class="calendar" id="mini-calendar"></div>
+          </div>
+
+          <div class="card" style="background: var(--orange); color: var(--white); border-color: var(--black);">
+            <div class="flex items-center gap-3" style="margin-bottom: var(--s-3);">
+              <div style="width: 36px; height: 36px; border-radius: var(--r-sm); background: var(--white); color: var(--orange); display: flex; align-items: center; justify-content: center; font-weight: 800;">!</div>
+              <div>
+                <strong style="font-size: var(--fs-sm); display: block;">Conflit détecté</strong>
+                <span style="font-size: 11px; color: rgba(255,255,255,0.8);">2 événements le 28 juillet</span>
+              </div>
+            </div>
+            <p style="font-size: var(--fs-xs); line-height: 1.5; margin-bottom: var(--s-3);">
+              Le système a détecté un chevauchement entre le Hackathon IA et l'Atelier Python.
+            </p>
+            <button class="btn btn-sm btn-full" style="background: var(--white); color: var(--orange);">Voir les conflits</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    ClubHub.renderShell({
+      active: 'events',
+      role: 'student',
+      content,
+      pageTitle: 'Événements',
+      pageSubtitle: 'Découvrez les prochaines activités et planifiez votre engagement.',
+    });
+
+    const cal = document.getElementById('mini-calendar');
+    const eventDates = CLUBHUB.EVENTS.map(e => new Date(e.date).getDate());
+    const today = 19;
+    let calHTML = '';
+    for (let i = 0; i < 1; i++) calHTML += '<div class="calendar-day muted">29</div>';
+    for (let d = 1; d <= 31; d++) {
+      const hasEvent = eventDates.includes(d);
+      const isToday = d === today;
+      calHTML += `<div class="calendar-day ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''}">${d}</div>`;
+    }
+    for (let i = 1; i <= 3; i++) calHTML += `<div class="calendar-day muted">${i}</div>`;
+    cal.innerHTML = calHTML;
+
+    const container = document.getElementById('events-container');
+    const search = document.getElementById('event-search');
+    const typeSel = document.getElementById('event-type');
+    const clubSel = document.getElementById('event-club');
+
+    const renderEvents = () => {
+      const q = (search.value || '').toLowerCase();
+      const list = CLUBHUB.EVENTS.filter(e => {
+        const matchesType = typeSel.value === 'all' || e.type === typeSel.value;
+        const matchesClub = clubSel.value === 'all' || e.clubId === clubSel.value;
+        const matchesSearch = !q || e.title.toLowerCase().includes(q) || e.description.toLowerCase().includes(q);
+        return matchesType && matchesClub && matchesSearch;
+      }).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      if (list.length === 0) {
+        container.innerHTML = `<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/></svg></div><div class="empty-title">Aucun événement trouvé</div><div class="empty-text">Modifiez vos filtres.</div></div>`;
+        return;
+      }
+
+      const isSubscribed = (evtId) => myEvents.includes(evtId);
+
+      container.innerHTML = list.map(evt => {
+        const d = ClubHub.formatDate(evt.date, { short: true });
+        const club = CLUBHUB.CLUBS.find(c => c.id === evt.clubId);
+        const fillRate = Math.round((evt.attendees / evt.maxAttendees) * 100);
+        const isFull = evt.attendees >= evt.maxAttendees;
+        return `
+          <div class="event-row-block ${isSubscribed(evt.id) ? 'accent' : ''}">
+            <div style="flex: 1;">
+              <div class="event-row-header" style="background: ${club.color}; color: var(--black);">
+                <span>${d.day} ${d.month.toUpperCase()}</span>
+                <span>${evt.time} · ${evt.duration}min · ${evt.location}</span>
+              </div>
+              <div class="event-row-content">
+                <div class="flex items-center gap-2" style="margin-bottom: 4px;">
+                  <span class="badge badge-orange">${evt.type}</span>
+                  ${fillRate > 80 ? '<span class="badge badge-amber" style="background: var(--lime);">Bientôt complet</span>' : ''}
+                </div>
+                <div class="event-title">${evt.title}</div>
+                <div class="event-meta">
+                  <span class="event-meta-item">${club?.name || ''}</span>
+                </div>
+              </div>
+            </div>
+            <div style="padding: var(--s-4); display: flex; align-items: center; gap: var(--s-3);">
+              <div style="text-align: right; min-width: 80px;">
+                <div class="text-mono" style="font-size: 11px; color: var(--text-tertiary); font-weight: 600;">${evt.attendees}/${evt.maxAttendees}</div>
+                <div class="progress" style="width: 80px; margin-top: 4px;">
+                  <div class="progress-bar" style="width: ${fillRate}%; background: var(--orange);"></div>
+                </div>
+              </div>
+              <button class="btn ${isSubscribed(evt.id) ? 'btn-secondary' : 'btn-orange'} btn-sm" onclick="${isSubscribed(evt.id) ? `unsubscribeEvent('${evt.id}')` : `subscribeEvent('${evt.id}')`}">
+                ${isSubscribed(evt.id) ? 'Inscrit ✓' : isFull ? 'Complet' : "S'inscrire"}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    };
+
+    function subscribeEvent(id) {
+      const u = ClubHub.Auth.current();
+      if (!u) { window.location.href = 'login.html'; return; }
+      if (!u.events.includes(id)) u.events.push(id);
+      ClubHub.STORAGE.set('current_user', u);
+      ClubHub.toast('Inscription confirmée', 'Rappel 24h avant', 'success');
+      renderEvents();
+    }
+
+    function unsubscribeEvent(id) {
+      const u = ClubHub.Auth.current();
+      u.events = u.events.filter(e => e !== id);
+      ClubHub.STORAGE.set('current_user', u);
+      ClubHub.toast('Désinscription', '', 'info');
+      renderEvents();
+    }
+
+    search.addEventListener('input', renderEvents);
+    typeSel.addEventListener('change', renderEvents);
+    clubSel.addEventListener('change', renderEvents);
+    renderEvents();
+  </script>
+</body>
+</html>

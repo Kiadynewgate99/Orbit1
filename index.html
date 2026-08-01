@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orbit - Plateforme de gestion des clubs universitaires</title>
+  <link rel="icon" href="assets/logo-orbit.svg" />
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/landing.css" />
+</head>
+<body>
+  <div class="page-loader">
+    <div class="loader-ring"></div>
+    <div class="loader-text">CHARGEMENT</div>
+  </div>
+
+  <div class="app-shell-mount"></div>
+    <!-- Navbar style Webflow dark + Orbit logo -->
+  <nav class="navbar">
+    <div class="container" style="padding: 0;">
+      <div class="navbar-inner">
+        <a href="index.html" class="brand">
+          <div class="brand-mark">
+            <svg viewBox="0 0 32 32" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="32" height="32" rx="6" fill="#FF4502"/>
+              <circle cx="16" cy="16" r="4" fill="#FFFFFF"/>
+              <ellipse cx="16" cy="16" rx="13" ry="5" stroke="#FFFFFF" stroke-width="2" transform="rotate(-30 16 16)"/>
+              <circle cx="6" cy="9" r="1.5" fill="#C2FF01"/>
+            </svg>
+          </div>
+          <span class="brand-name">Orbit<span>.</span></span>
+        </a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link active">Accueil</a>
+          <a href="clubs.html" class="nav-link">Annuaire</a>
+          <a href="events.html" class="nav-link">Événements</a>
+          <a href="agenda.html" class="nav-link">Agenda</a>
+          <a href="leaderboard.html" class="nav-link">Classement</a>
+          <a href="map.html" class="nav-link">Carte</a>
+        </div>
+        <div class="nav-actions">
+          <button class="nav-icon-btn" id="theme-toggle" title="Basculer theme" onclick="ClubHub.Theme.toggle()">
+            <svg id="theme-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+            </svg>
+          </button>
+          <a href="login.html" class="btn btn-primary btn-sm" style="margin-right: 8px;">Connexion</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container">
+        <div class="hero-grid">
+          <div class="fade-in">
+            <h1 class="hero-title">
+              Bonjour.<br/>
+              Je suis <span class="accent">Mika</span>.<br/>
+              Je gère les <span class="lime">clubs</span>.
+            </h1>
+            <p class="hero-description">
+              Plateforme de gestion centralisée pour les clubs universitaires.
+              Tout simplement, sans les formulaires papier et les fichiers Excel perdus.
+            </p>
+            <div class="hero-cta">
+              <a href="login.html" class="btn btn-orange btn-lg">
+                Se connecter maintenant
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </a>
+              <a href="clubs.html" class="btn btn-secondary btn-lg">Explorer les clubs</a>
+            </div>
+            <div class="hero-stats">
+              <div>
+                <div class="hero-stat-value accent">12</div>
+                <div class="hero-stat-label">Clubs actifs</div>
+              </div>
+              <div>
+                <div class="hero-stat-value">847</div>
+                <div class="hero-stat-label">Étudiants inscrits</div>
+              </div>
+              <div>
+                <div class="hero-stat-value">287</div>
+                <div class="hero-stat-label">Événements</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-visual fade-in" data-delay="2">
+            <div class="hero-visual-header">
+              <span class="hero-visual-dot" style="background: var(--orange);"></span>
+              <span class="hero-visual-dot" style="background: var(--lime);"></span>
+              <span class="hero-visual-dot" style="background: var(--mauve);"></span>
+              <span class="hero-visual-title">clubhub.fr/dashboard</span>
+            </div>
+            <div class="hero-visual-body">
+              <div class="hero-mock-stat">
+                <div>
+                  <div class="hero-mock-stat-label">Membres actifs</div>
+                  <div class="hero-mock-stat-value">847</div>
+                </div>
+                <span class="badge badge-lime">+18%</span>
+              </div>
+              <div class="hero-mock-stats-row">
+                <div class="hero-mock-stat-light">
+                  <div class="hero-mock-stat-light-label">Événements</div>
+                  <div class="hero-mock-stat-light-value">11</div>
+                </div>
+                <div class="hero-mock-stat-light">
+                  <div class="hero-mock-stat-light-label">Clubs</div>
+                  <div class="hero-mock-stat-light-value">12</div>
+                </div>
+              </div>
+              <div class="hero-mock-charts">
+                <div class="hero-mock-chart">
+                  <div class="hero-mock-chart-title">
+                    <span>Inscriptions / semaine</span>
+                    <span class="hero-mock-chart-tab">Week</span>
+                    <span class="hero-mock-chart-tab outline">Month</span>
+                  </div>
+                  <div class="hero-mock-bars">
+                    <div class="hero-mock-bar" style="height: 30%;"></div>
+                    <div class="hero-mock-bar" style="height: 65%;"></div>
+                    <div class="hero-mock-bar" style="height: 45%;"></div>
+                    <div class="hero-mock-bar active" style="height: 90%;"></div>
+                    <div class="hero-mock-bar" style="height: 70%;"></div>
+                    <div class="hero-mock-bar" style="height: 55%;"></div>
+                    <div class="hero-mock-bar" style="height: 35%;"></div>
+                  </div>
+                </div>
+                <div class="hero-mock-chart">
+                  <div class="hero-mock-chart-title">
+                    <span>Par source</span>
+                  </div>
+                  <div class="hero-mock-donut">
+                    <svg viewBox="0 0 36 36">
+                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--bg-elev-2)" stroke-width="3" stroke-dasharray="60 100" transform="rotate(-90 18 18)"/>
+                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="#ff4502" stroke-width="3" stroke-dasharray="25 100" stroke-dashoffset="-60" transform="rotate(-90 18 18)"/>
+                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="#c2ff01" stroke-width="3" stroke-dasharray="15 100" stroke-dashoffset="-85" transform="rotate(-90 18 18)"/>
+                      <text x="18" y="18" text-anchor="middle" font-family="Inter" font-size="6" font-weight="800" dy="2">60%</text>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Statistiques -->
+    <section class="section" style="padding-top: 0;">
+      <div class="container">
+        <div class="stats-banner reveal">
+          <div class="stat-block">
+            <div class="stat-number" data-count="12">0</div>
+            <div class="stat-caption">Clubs référencés</div>
+          </div>
+          <div class="stat-block accent">
+            <div class="stat-number" data-count="847">0</div>
+            <div class="stat-caption">Membres actifs</div>
+          </div>
+          <div class="stat-block lime">
+            <div class="stat-number" data-count="287">0</div>
+            <div class="stat-caption">Événements organisés</div>
+          </div>
+          <div class="stat-block blue">
+            <div class="stat-number" data-count="98" data-suffix="%">0</div>
+            <div class="stat-caption">Taux de satisfaction</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Fonctionnalités -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-eyebrow">FONCTIONNALITÉS</span>
+          <h2 class="section-title">Un écosystème complet<br/>pour la vie associative</h2>
+          <p class="section-subtitle">Du parcours étudiant à la gouvernance administrative, Orbit connecte tous les acteurs.</p>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card reveal">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            </div>
+            <h3 class="feature-title">Inscription en ligne</h3>
+            <p class="feature-description">Inscription instantanée à un ou plusieurs clubs depuis n'importe quel appareil. Plus de formulaires papier.</p>
+          </div>
+
+          <div class="feature-card reveal">
+            <div class="feature-icon lime">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <h3 class="feature-title">Agenda intelligent</h3>
+            <p class="feature-description">Détection automatique des conflits d'horaires, rappels 24h avant, synchronisation calendriers.</p>
+          </div>
+
+          <div class="feature-card reveal">
+            <div class="feature-icon mauve">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            </div>
+            <h3 class="feature-title">Notifications ciblées</h3>
+            <p class="feature-description">Push, email, SMS. Communication personnalisée selon vos centres d'intérêt et engagement.</p>
+          </div>
+
+          <div class="feature-card reveal">
+            <div class="feature-icon blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
+            <h3 class="feature-title">Statistiques temps réel</h3>
+            <p class="feature-description">Tableaux de bord dynamiques pour les responsables : taux de présence, fréquentation, engagement.</p>
+          </div>
+
+          <div class="feature-card reveal">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <h3 class="feature-title">SSO & Sécurité</h3>
+            <p class="feature-description">Connexion via l'ENT universitaire, conformité RGPD, chiffrement des données, hébergement souverain.</p>
+          </div>
+
+          <div class="feature-card reveal">
+            <div class="feature-icon lime">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+            </div>
+            <h3 class="feature-title">Accessibilité & i18n</h3>
+            <p class="feature-description">Interface multilingue, compatible lecteurs d'écran, mode contraste élevé, design inclusif.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Aperçu clubs -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-eyebrow">DÉCOUVERTE</span>
+          <h2 class="section-title">12 clubs prêts à vous accueillir</h2>
+          <p class="section-subtitle">Technologie, sport, culture, entrepreneuriat. Trouvez ce qui vous correspond.</p>
+        </div>
+
+        <div class="grid grid-3" id="clubs-preview"></div>
+
+        <div class="text-center" style="margin-top: var(--s-8);">
+          <a href="clubs.html" class="btn btn-secondary btn-lg">
+            Voir tous les clubs
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Personae -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-eyebrow">CONÇU POUR TOUS</span>
+          <h2 class="section-title">Chaque profil, ses usages</h2>
+          <p class="section-subtitle">Notre plateforme répond aux besoins identifiés à travers 20 entretiens utilisateurs.</p>
+        </div>
+
+        <div class="personas-grid">
+          <div class="persona-card reveal">
+            <div class="persona-avatar orange">◈</div>
+            <div class="persona-name">L1 / Lycéen</div>
+            <div class="persona-role">Découverte</div>
+            <p class="persona-quote">"Je veux m'inscrire depuis mon téléphone, sans me déplacer."</p>
+            <ul class="persona-needs">
+              <li>Inscription mobile rapide</li>
+              <li>Découverte des clubs</li>
+              <li>Information centralisée</li>
+            </ul>
+          </div>
+
+          <div class="persona-card reveal">
+            <div class="persona-avatar mauve">◇</div>
+            <div class="persona-name">L3 / Actif</div>
+            <div class="persona-role">Multi-clubs</div>
+            <p class="persona-quote">"Un espace perso pour voir mes inscriptions et participations."</p>
+            <ul class="persona-needs">
+              <li>Espace personnel complet</li>
+              <li>Historique participations</li>
+              <li>Vue multi-clubs unifiée</li>
+            </ul>
+          </div>
+
+          <div class="persona-card reveal">
+            <div class="persona-avatar blue">◯</div>
+            <div class="persona-name">International</div>
+            <div class="persona-role">Erasmus</div>
+            <p class="persona-quote">"Une présentation claire des clubs, avec photos et thèmes."</p>
+            <ul class="persona-needs">
+              <li>Interface multilingue</li>
+              <li>Annuaire visuel riche</li>
+              <li>Parrainage étudiant</li>
+            </ul>
+          </div>
+
+          <div class="persona-card reveal">
+            <div class="persona-avatar">◆</div>
+            <div class="persona-name">Responsable</div>
+            <div class="persona-role">Bureau club</div>
+            <p class="persona-quote">"Gérer les membres et exporter les données simplement."</p>
+            <ul class="persona-needs">
+              <li>Gestion des membres</li>
+              <li>Suivi des présences</li>
+              <li>Exports CSV / Excel</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Architecture -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-eyebrow">ARCHITECTURE</span>
+          <h2 class="section-title">Une stack moderne et souveraine</h2>
+          <p class="section-subtitle">Technologies open-source, hébergement local, conformité RGPD et interopérabilité ENT.</p>
+        </div>
+
+        <div class="grid grid-3">
+          <div class="card reveal">
+            <h3 class="card-title" style="margin-bottom: var(--s-3);">Backend</h3>
+            <p class="text-muted" style="font-size: var(--fs-sm); margin-bottom: var(--s-4);">API REST Node.js / Express, base PostgreSQL, Redis pour le cache, files BullMQ pour les notifications asynchrones.</p>
+            <div class="flex gap-2" style="flex-wrap: wrap;">
+              <span class="badge">Node.js</span>
+              <span class="badge">PostgreSQL</span>
+              <span class="badge">Redis</span>
+              <span class="badge">JWT</span>
+            </div>
+          </div>
+
+          <div class="card reveal">
+            <h3 class="card-title" style="margin-bottom: var(--s-3);">Frontend</h3>
+            <p class="text-muted" style="font-size: var(--fs-sm); margin-bottom: var(--s-4);">Application web responsive React 18 + Vite, application mobile React Native, design system tokens partagés.</p>
+            <div class="flex gap-2" style="flex-wrap: wrap;">
+              <span class="badge">React 18</span>
+              <span class="badge">Vite</span>
+              <span class="badge">React Native</span>
+              <span class="badge">PWA</span>
+            </div>
+          </div>
+
+          <div class="card reveal">
+            <h3 class="card-title" style="margin-bottom: var(--s-3);">Sécurité</h3>
+            <p class="text-muted" style="font-size: var(--fs-sm); margin-bottom: var(--s-4);">SSO ENT via SAML/OAuth, chiffrement AES-256, audit logs, anonymisation RGPD, sauvegardes chiffrées 3-2-1.</p>
+            <div class="flex gap-2" style="flex-wrap: wrap;">
+              <span class="badge badge-orange">SSO</span>
+              <span class="badge badge-orange">RGPD</span>
+              <span class="badge badge-orange">AES-256</span>
+              <span class="badge badge-orange">OAuth 2</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Final -->
+    <section class="section">
+      <div class="container">
+        <div class="cta-section reveal">
+          <h2 class="cta-title">Prêt à dynamiser<br/>la vie associative ?</h2>
+          <p class="cta-subtitle">Accédez à la démo interactive avec 3 profils de test : étudiant, responsable, administrateur.</p>
+          <div class="cta-buttons">
+            <a href="login.html" class="btn btn-lg" style="background: var(--white); color: var(--black);">
+              Tester la démo
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+            <a href="docs.html" class="btn btn-secondary btn-lg">Voir la documentation</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a href="index.html" class="brand">
+            <div class="brand-mark">${'<'}</div>
+            <span class="brand-name">Club<span>Hub</span></span>
+          </a>
+          <p class="footer-tagline">Plateforme de gestion des clubs universitaires. Dématérialisation, centralisation et automatisation de la vie associative.</p>
+          <div class="footer-social">
+            <a href="#" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+            <a href="#" aria-label="Twitter"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg></a>
+            <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+          </div>
+        </div>
+
+        <div>
+          <div class="footer-title">Plateforme</div>
+          <div class="footer-links">
+            <a href="clubs.html">Annuaire des clubs</a>
+            <a href="events.html">Événements</a>
+            <a href="login.html">Connexion</a>
+            <a href="docs.html">Documentation</a>
+          </div>
+        </div>
+
+        <div>
+          <div class="footer-title">Ressources</div>
+          <div class="footer-links">
+            <a href="docs.html#personas">Personas</a>
+            <a href="docs.html#use-cases">Cas d'utilisation</a>
+            <a href="docs.html#database">Modèle de données</a>
+            <a href="docs.html#security">Sécurité & RGPD</a>
+          </div>
+        </div>
+
+        <div>
+          <div class="footer-title">Projet</div>
+          <div class="footer-links">
+            <a href="#">À propos</a>
+            <a href="#">Équipe</a>
+            <a href="#">Contact</a>
+            <a href="#">Mentions légales</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>2026 Orbit - Gestion des clubs universitaires</div>
+        <div class="text-mono" style="font-size: var(--fs-xs); font-weight: 600;">v1.0.0 · MIT LICENSE</div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    window.addEventListener('load', () => ClubHub.hideLoader());
+    ClubHub.renderNavbar('home');
+    ClubHub.setupReveal();
+
+    // Compteurs
+    const animateCounters = () => {
+      document.querySelectorAll('[data-count]').forEach(el => {
+        const target = parseInt(el.dataset.count);
+        const suffix = el.dataset.suffix || '';
+        const duration = 1500;
+        const start = performance.now();
+        const tick = (now) => {
+          const t = Math.min((now - start) / duration, 1);
+          const eased = 1 - Math.pow(1 - t, 3);
+          el.textContent = Math.round(target * eased) + suffix;
+          if (t < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      });
+    };
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { animateCounters(); obs.unobserve(e.target); } });
+    }, { threshold: 0.3 });
+    document.querySelectorAll('[data-count]').forEach(el => obs.observe(el));
+
+    // Replace template placeholders for footer only
+    document.querySelectorAll('.footer .brand-mark').forEach(el => {
+      el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>';
+    });
+    document.querySelectorAll('.public-action-btn').forEach((btn, i) => {
+      if (i === 0) btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>';
+      else btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span class="dot"></span>';
+    });
+
+    // Clubs preview
+    const previewClubs = CLUBHUB.CLUBS.slice(0, 6);
+    const container = document.getElementById('clubs-preview');
+    if (container) {
+      container.innerHTML = previewClubs.map(club => `
+        <a href="club.html?id=${club.id}" class="club-card">
+          <div class="club-card-header">
+            <span>${club.id}.html</span>
+            <span>◉</span>
+          </div>
+          <div class="club-card-body">
+            <div class="club-card-icon" style="background: ${club.color};">${club.icon}</div>
+            <div class="club-card-name">${club.name}</div>
+            <div class="club-card-domain">${CLUBHUB.CLUB_CATEGORIES.find(c => c.id === club.domain)?.label || ''}</div>
+            <div class="club-card-desc">${club.description}</div>
+            <div class="club-card-tags">
+              ${club.tags.slice(0, 2).map(t => `<span class="badge">${t}</span>`).join('')}
+            </div>
+            <div class="club-card-footer">
+              <span>◉ ${club.members} membres</span>
+              <span>◷ ${club.events} événements</span>
+            </div>
+          </div>
+        </a>
+      `).join('');
+    }
+  </script>
+</body>
+</html>

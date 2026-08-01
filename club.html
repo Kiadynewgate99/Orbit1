@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="assets/logo-orbit.svg" />
+  <title>Fiche club - Orbit</title>
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <style>
+    .club-hero {
+      background: var(--black);
+      color: var(--white);
+      border: 2px solid var(--black);
+      border-radius: var(--r-md);
+      padding: var(--s-8);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: var(--s-5);
+      box-shadow: 6px 6px 0 var(--orange);
+    }
+    .club-hero-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: var(--r-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: var(--s-4);
+      border: 2px solid var(--black);
+    }
+  </style>
+</head>
+<body>
+  <div class="page-loader">
+    <div class="loader-ring"></div>
+    <div class="loader-text">CHARGEMENT</div>
+  </div>
+
+  <div class="app-shell-mount"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    window.addEventListener('load', () => ClubHub.hideLoader());
+
+    const params = new URLSearchParams(window.location.search);
+    const clubId = params.get('id') || 'club-001';
+    const club = CLUBHUB.CLUBS.find(c => c.id === clubId) || CLUBHUB.CLUBS[0];
+    const category = CLUBHUB.CLUB_CATEGORIES.find(c => c.id === club.domain);
+    const clubEvents = CLUBHUB.EVENTS.filter(e => e.clubId === club.id);
+
+    const memberSample = [
+      { name: 'Andry RAKOTONIAINA', role: 'Président', avatar: 'AR' },
+      { name: 'Tiana ANDRIANJAKA', role: 'Vice-présidente', avatar: 'TA' },
+      { name: 'Hery RAZANAKOTO', role: 'Secrétaire', avatar: 'HR' },
+      { name: 'Mihary RAZAFINDRAKOTO', role: 'Trésorier', avatar: 'MR' },
+    ];
+
+    const content = `
+      <div class="club-hero">
+        <a href="clubs.html" class="text-mono" style="font-size: 11px; color: var(--lime); margin-bottom: var(--s-3); display: inline-block; font-weight: 700; letter-spacing: 0.1em;">← RETOUR À L'ANNUAIRE</a>
+        <div class="club-hero-icon" style="background: ${club.color};">${club.icon}</div>
+        <div class="text-mono" style="font-size: 11px; color: var(--lime); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; margin-bottom: var(--s-2);">${category?.label || ''}</div>
+        <h1 style="font-size: clamp(32px, 4vw, 48px); margin-bottom: var(--s-3); letter-spacing: -0.04em; font-weight: 900;">${club.name}</h1>
+        <p style="color: rgba(255,255,255,0.8); font-size: var(--fs-md); max-width: 700px; line-height: 1.6; margin-bottom: var(--s-5);">${club.longDescription}</p>
+
+        <div class="flex gap-2" style="flex-wrap: wrap; margin-bottom: var(--s-5);">
+          <span class="badge badge-lime">● Inscriptions ouvertes</span>
+          <span class="badge" style="background: var(--white); color: var(--black);">${club.members} membres</span>
+          <span class="badge" style="background: var(--white); color: var(--black);">${club.events} événements / an</span>
+          <span class="badge" style="background: var(--white); color: var(--black);">Depuis ${club.founded}</span>
+        </div>
+
+        <div class="flex gap-3" style="flex-wrap: wrap;">
+          <button class="btn btn-orange btn-lg" onclick="joinClub('${club.id}')">
+            + S'inscrire au club
+          </button>
+          <button class="btn btn-lg" style="background: var(--white); color: var(--black);">♡ Favoris</button>
+        </div>
+      </div>
+
+      <div class="grid" style="grid-template-columns: 2fr 1fr; gap: var(--s-5);">
+        <div>
+          <div class="tabs">
+            <button class="tab active">À propos</button>
+            <button class="tab">Événements (${clubEvents.length})</button>
+            <button class="tab">Membres (${club.members})</button>
+          </div>
+
+          <div class="card" style="margin-bottom: var(--s-4);">
+            <h2 style="font-size: var(--fs-xl); font-weight: 800; margin-bottom: var(--s-4);">À propos du club</h2>
+            <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: var(--s-4);">${club.longDescription}</p>
+            <h3 style="font-size: var(--fs-base); font-weight: 700; margin-bottom: var(--s-3);">Activités principales</h3>
+            <div class="grid grid-2" style="gap: var(--s-3);">
+              ${club.activities.map(act => `
+                <div class="flex items-center gap-3" style="padding: var(--s-3); background: var(--bg-elev-1); border: 1px solid var(--border-subtle); border-radius: var(--r-sm);">
+                  <div style="width: 28px; height: 28px; border-radius: var(--r-sm); background: var(--lime); border: 1px solid var(--black); display: flex; align-items: center; justify-content: center; font-weight: 800;">✓</div>
+                  <span style="font-size: var(--fs-sm);">${act}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 style="font-size: var(--fs-xl); font-weight: 800; margin-bottom: var(--s-4);">Mots-clés</h2>
+            <div class="flex gap-2" style="flex-wrap: wrap;">
+              ${club.tags.map(tag => `<span class="chip">#${tag}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card" style="margin-bottom: var(--s-4);">
+            <h3 style="font-size: var(--fs-base); font-weight: 800; margin-bottom: var(--s-4);">Informations</h3>
+            <div class="flex flex-col gap-3">
+              ${[
+                { icon: 'user', label: 'Responsable', value: club.president },
+                { icon: 'mail', label: 'Email', value: club.email },
+                { icon: 'map', label: 'Lieu', value: club.location },
+                { icon: 'clock', label: 'Réunion', value: club.meeting },
+              ].map(info => `
+                <div class="flex items-start gap-3">
+                  <div style="width: 32px; height: 32px; border-radius: var(--r-sm); background: var(--black); color: var(--white); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    ${CLUBHUB.ICONS[info.icon].replace('<svg ', '<svg width="14" height="14" ')}
+                  </div>
+                  <div>
+                    <div class="text-mono" style="font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">${info.label}</div>
+                    <div style="font-size: var(--fs-sm); font-weight: 600;">${info.value}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 style="font-size: var(--fs-base); font-weight: 800; margin-bottom: var(--s-4);">Bureau</h3>
+            <div class="flex flex-col gap-2">
+              ${memberSample.map(m => `
+                <div class="member-row">
+                  <div class="avatar" style="background: ${club.color}; color: var(--white);">${m.avatar}</div>
+                  <div class="member-info">
+                    <div class="member-name">${m.name}</div>
+                    <div class="member-role">${m.role}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    ClubHub.renderShell({
+      active: 'clubs',
+      role: 'student',
+      content,
+      pageTitle: club.name,
+    });
+
+    function joinClub(clubId) {
+      const u = ClubHub.Auth.current();
+      if (!u) { ClubHub.toast('Connexion requise', '', 'warning'); setTimeout(() => window.location.href = 'login.html', 1200); return; }
+      ClubHub.toast('Inscription réussie', '', 'success');
+    }
+  </script>
+</body>
+</html>

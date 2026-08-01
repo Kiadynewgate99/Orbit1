@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="assets/logo-orbit.svg" />
+  <title>Notifications - Orbit</title>
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+<body>
+  <div class="page-loader">
+    <div class="loader-ring"></div>
+    <div class="loader-text">CHARGEMENT</div>
+  </div>
+
+  <div class="app-shell-mount"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    window.addEventListener('load', () => ClubHub.hideLoader());
+
+    const user = ClubHub.Auth.require();
+    if (!user) throw new Error('Unauthorized');
+
+    const content = `
+      <div class="card">
+        <div class="flex items-center justify-between" style="margin-bottom: var(--s-4);">
+          <h2 style="font-size: var(--fs-lg); font-weight: 800;">Notifications</h2>
+          <div class="flex gap-2">
+            <button class="btn btn-secondary btn-sm">Tout marquer comme lu</button>
+          </div>
+        </div>
+
+        <div class="text-mono" style="font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.15em; text-transform: uppercase; margin: var(--s-3) 0 var(--s-2); font-weight: 700;">Aujourd'hui</div>
+
+        <div class="notification unread">
+          <div class="notification-icon success">✓</div>
+          <div class="notification-content">
+            <div class="notification-title">Inscription confirmée</div>
+            <div class="notification-message">Vous êtes maintenant membre du Club Robotique.</div>
+            <div class="notification-time">Il y a 2 minutes</div>
+          </div>
+        </div>
+
+        <div class="notification unread">
+          <div class="notification-icon event">◷</div>
+          <div class="notification-content">
+            <div class="notification-title">Nouvel événement : Atelier Python</div>
+            <div class="notification-message">Le Club Informatique a publié un nouvel atelier.</div>
+            <div class="notification-time">Il y a 1 heure</div>
+          </div>
+        </div>
+
+        <div class="notification unread">
+          <div class="notification-icon warning">!</div>
+          <div class="notification-content">
+            <div class="notification-title">Rappel : Débat IA & éthique</div>
+            <div class="notification-message">L'événement commence dans 2 jours (23 juillet à 14h).</div>
+            <div class="notification-time">Il y a 3 heures</div>
+          </div>
+        </div>
+
+        <div class="text-mono" style="font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.15em; text-transform: uppercase; margin: var(--s-5) 0 var(--s-2); font-weight: 700;">Cette semaine</div>
+
+        <div class="notification">
+          <div class="notification-icon info">i</div>
+          <div class="notification-content">
+            <div class="notification-title">Nouveau club disponible</div>
+            <div class="notification-message">Le Club Langues & Cultures vient d'ouvrir ses inscriptions.</div>
+            <div class="notification-time">Hier</div>
+          </div>
+        </div>
+
+        <div class="notification">
+          <div class="notification-icon success">★</div>
+          <div class="notification-content">
+            <div class="notification-title">+50 points d'engagement</div>
+            <div class="notification-message">Vous avez gagné 50 points pour votre participation.</div>
+            <div class="notification-time">Il y a 3 jours</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    ClubHub.renderShell({
+      active: 'notifications',
+      role: 'student',
+      content,
+      pageTitle: 'Notifications',
+      pageSubtitle: 'Toutes vos alertes et communications en un seul endroit.',
+    });
+  </script>
+</body>
+</html>

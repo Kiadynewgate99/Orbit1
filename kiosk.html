@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="assets/logo-orbit.svg" />
+  <title>Orbit Kiosk - Mode ecran d'accueil</title>
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <style>
+    body { background: #000; overflow: hidden; }
+    .kiosk { height: 100vh; display: grid; grid-template-rows: 80px 1fr 80px; gap: 0; }
+    .kiosk-header { background: var(--orange); color: var(--white); display: flex; align-items: center; padding: 0 var(--s-8); border-bottom: 4px solid var(--black); }
+    .kiosk-body { display: grid; grid-template-columns: 1.2fr 1fr; gap: 0; overflow: hidden; }
+    .kiosk-left { background: var(--white); padding: var(--s-12); display: flex; flex-direction: column; justify-content: center; border-right: 4px solid var(--black); }
+    .kiosk-right { background: #0a0a0a; color: var(--white); padding: var(--s-12); display: flex; flex-direction: column; justify-content: center; }
+    .kiosk-footer { background: var(--lime); color: var(--black); display: flex; align-items: center; justify-content: space-between; padding: 0 var(--s-8); font-family: var(--font-mono); font-weight: 700; border-top: 4px solid var(--black); }
+    .kiosk-display { font-size: 200px; font-weight: 900; letter-spacing: -0.05em; line-height: 0.9; color: var(--black); }
+    .kiosk-display .accent { background: var(--orange); color: var(--white); padding: 0 16px; }
+    .kiosk-club-card { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); padding: var(--s-4); margin-bottom: var(--s-3); border-radius: var(--r-md); display: flex; align-items: center; gap: var(--s-4); }
+    .kiosk-club-card .kc-icon { width: 60px; height: 60px; border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; flex-shrink: 0; }
+    .kiosk-marquee { display: inline-block; animation: marquee 30s linear infinite; }
+    @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    .kiosk-pulse { animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+  </style>
+</head>
+<body>
+  <div class="kiosk">
+    <div class="kiosk-header">
+      <svg viewBox="0 0 32 32" width="40" height="40" fill="none" style="margin-right: 12px;">
+        <rect width="32" height="32" rx="6" fill="#FFFFFF"/>
+        <circle cx="16" cy="16" r="4" fill="#FF4502"/>
+        <ellipse cx="16" cy="16" rx="13" ry="5" stroke="#FF4502" stroke-width="2" transform="rotate(-30 16 16)"/>
+      </svg>
+      <h1 style="font-size: 24px; font-weight: 900; letter-spacing: -0.02em;">ORBIT</h1>
+      <div style="margin-left: auto; display: flex; gap: 24px; align-items: center;">
+        <span style="font-family: var(--font-mono); font-size: 14px; font-weight: 700;" id="kiosk-clock">--:--:--</span>
+        <span style="background: var(--black); color: var(--lime); padding: 4px 12px; font-family: var(--font-mono); font-size: 12px; font-weight: 700; border-radius: 4px;">KIOSK MODE</span>
+      </div>
+    </div>
+
+    <div class="kiosk-body">
+      <div class="kiosk-left">
+        <div class="text-mono" style="font-size: 16px; color: var(--orange); letter-spacing: 0.2em; font-weight: 800; margin-bottom: var(--s-4);">VIE ASSOCIATIVE</div>
+        <div class="kiosk-display">
+          <span class="accent" id="rotator-1">12</span><br/>
+          <span id="rotator-2">CLUBS</span>
+        </div>
+        <p style="font-size: 22px; margin-top: var(--s-6); color: var(--text-secondary); max-width: 600px;">
+          Decouvrez les clubs de l'universite, inscrivez-vous en 2 minutes, et faites vivre vos idees.
+        </p>
+      </div>
+      <div class="kiosk-right">
+        <div class="text-mono" style="font-size: 14px; color: var(--lime); letter-spacing: 0.2em; font-weight: 800; margin-bottom: var(--s-4);">CLUBS A LA UNE</div>
+        <div id="kiosk-clubs-list"></div>
+      </div>
+    </div>
+
+    <div class="kiosk-footer">
+      <div class="kiosk-marquee" style="white-space: nowrap; display: flex; gap: 64px;">
+        <span>★ HACKATHON IA & EDUCATION — 28 JUILLET</span>
+        <span>★ ATELIER PYTHON — 22 JUILLET</span>
+        <span>★ DEBAT IA & ETHIQUE — 23 JUILLET</span>
+        <span>★ PITCH NIGHT #5 — 29 JUILLET</span>
+        <span>★ CONCERT CHORALE — 27 JUILLET</span>
+        <span>★ HACKATHON IA & EDUCATION — 28 JUILLET</span>
+        <span>★ ATELIER PYTHON — 22 JUILLET</span>
+        <span>★ DEBAT IA & ETHIQUE — 23 JUILLET</span>
+        <span>★ PITCH NIGHT #5 — 29 JUILLET</span>
+        <span>★ CONCERT CHORALE — 27 JUILLET</span>
+      </div>
+      <div class="kiosk-pulse" style="display: flex; align-items: center; gap: 8px;">
+        <span style="width: 8px; height: 8px; background: var(--orange); border-radius: 50%;"></span>
+        <span style="font-size: 12px;">EN DIRECT</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script>
+    // Horloge live
+    const updateClock = () => {
+      const d = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      document.getElementById('kiosk-clock').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+    };
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Clubs affichés en rotation
+    const clubs = (window.CLUBHUB && window.CLUBHUB.CLUBS) || [
+      { name: 'Club Informatique',     short: 'CI', cat: 'tech', color: '#ff4502' },
+      { name: 'Club Debat',            short: 'CD', cat: 'debats', color: '#dcb8ff' },
+      { name: 'Club Arts Martiaux',    short: 'AM', cat: 'sport', color: '#c2ff01' },
+      { name: 'Club Environnement',    short: 'CE', cat: 'environnement', color: '#10ffa1' },
+      { name: 'Club Robotique',        short: 'CR', cat: 'tech', color: '#ff4502' },
+      { name: 'Club Theatre',          short: 'CT', cat: 'culture', color: '#dcb8ff' },
+    ];
+
+    const list = document.getElementById('kiosk-clubs-list');
+    list.innerHTML = clubs.map(c => `
+      <div class="kiosk-club-card">
+        <div class="kc-icon" style="background: ${c.color}; color: ${c.cat==='sport' || c.cat==='environnement' || c.cat==='culture' || c.cat==='debats' ? '#000' : '#fff'};">${c.short}</div>
+        <div>
+          <div style="font-size: 22px; font-weight: 800;">${c.name}</div>
+          <div class="text-mono" style="font-size: 12px; opacity: 0.6;">${c.cat.toUpperCase()}</div>
+        </div>
+      </div>
+    `).join('');
+
+    // Rotator de chiffres
+    const rotators = [
+      ['12', 'CLUBS'],
+      ['847', 'ETUDIANTS'],
+      ['287', 'EVENTS'],
+      ['709', 'INSCRIPTIONS'],
+    ];
+    let idx = 0;
+    setInterval(() => {
+      idx = (idx + 1) % rotators.length;
+      document.getElementById('rotator-1').textContent = rotators[idx][0];
+      document.getElementById('rotator-2').textContent = rotators[idx][1];
+    }, 4000);
+
+    // Plein ecran auto
+    document.addEventListener('keydown', e => {
+      if (e.key === 'F11' || e.key === 'f' || e.key === 'Escape') {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+      }
+    });
+  </script>
+</body>
+</html>

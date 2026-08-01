@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="assets/logo-orbit.svg" />
+  <title>Carte du campus - Orbit</title>
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <style>
+    .campus-svg { width: 100%; height: auto; display: block; background: var(--bg-elev-1); border: 2px solid var(--black); border-radius: var(--r-md); }
+    .bldg { fill: var(--white); stroke: var(--black); stroke-width: 2; transition: all var(--t-fast); }
+    .bldg.tech { fill: var(--orange); }
+    .bldg.culture { fill: var(--mauve); }
+    .bldg.sport { fill: var(--lime); }
+    .bldg.entrepreneuriat { fill: var(--blue); }
+    .bldg.environnement { fill: #10ffa1; }
+    .bldg.debats { fill: var(--mauve); }
+    .bldg.benevolat { fill: var(--blue); }
+    .bldg.langues { fill: var(--orange); }
+    .bldg:hover { stroke-width: 4; transform: scale(1.05); }
+    .bldg.active { stroke: var(--orange); stroke-width: 5; }
+    .bldg-label { font-family: var(--font-mono); font-size: 11px; font-weight: 800; fill: var(--black); text-anchor: middle; pointer-events: none; }
+    .bldg-label.inverse { fill: var(--white); }
+    .campus-path { fill: none; stroke: var(--black); stroke-width: 2; stroke-dasharray: 4 4; }
+    .map-pin { fill: var(--orange); stroke: var(--black); stroke-width: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="page-loader"><div class="loader-ring"></div><div class="loader-text">CHARGEMENT</div></div>
+  <div class="app-shell-mount"></div>
+  <script src="js/data.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    window.addEventListener('load', () => ClubHub.hideLoader());
+    const user = ClubHub.Auth.require();
+
+    // 12 batiments sur le campus avec coords SVG
+    const buildings = [
+      { id: 'club-001', name: 'Club Informatique',  short: 'CI', x: 180, y: 120, w: 100, h: 80, cat: 'tech' },
+      { id: 'club-002', name: 'Club Debat & Eloquence', short: 'CD', x: 320, y: 120, w: 100, h: 80, cat: 'debats' },
+      { id: 'club-003', name: 'Club Arts Martiaux',   short: 'AM', x: 460, y: 120, w: 100, h: 80, cat: 'sport' },
+      { id: 'club-004', name: 'Club Environnement',   short: 'CE', x: 600, y: 120, w: 100, h: 80, cat: 'environnement' },
+      { id: 'club-005', name: 'Club Robotique',       short: 'CR', x: 740, y: 120, w: 100, h: 80, cat: 'tech' },
+      { id: 'club-006', name: 'Club Theatre & Impro', short: 'CT', x: 880, y: 120, w: 100, h: 80, cat: 'culture' },
+      { id: 'club-007', name: 'Club Entrepreneuriat', short: 'CE', x: 180, y: 280, w: 100, h: 80, cat: 'entrepreneuriat' },
+      { id: 'club-008', name: 'Club Photo & Video',   short: 'CP', x: 320, y: 280, w: 100, h: 80, cat: 'culture' },
+      { id: 'club-009', name: 'Club Musique',         short: 'CM', x: 460, y: 280, w: 100, h: 80, cat: 'culture' },
+      { id: 'club-010', name: 'Club Foot & Basket',   short: 'FB', x: 600, y: 280, w: 100, h: 80, cat: 'sport' },
+      { id: 'club-011', name: 'Club Benevolat',       short: 'BS', x: 740, y: 280, w: 100, h: 80, cat: 'benevolat' },
+      { id: 'club-012', name: 'Club Langues',         short: 'LC', x: 880, y: 280, w: 100, h: 80, cat: 'langues' },
+    ];
+
+    const filterCat = (cat) => buildings.filter(b => b.cat === cat);
+
+    const svgMap = `
+      <svg class="campus-svg" viewBox="0 0 1080 460" xmlns="http://www.w3.org/2000/svg">
+        <!-- fond campus -->
+        <rect x="0" y="0" width="1080" height="460" fill="#f5f5f5"/>
+        <!-- chemins -->
+        <path class="campus-path" d="M 50 50 L 1030 50 L 1030 410 L 50 410 Z"/>
+        <path class="campus-path" d="M 230 50 L 230 410"/>
+        <path class="campus-path" d="M 510 50 L 510 410"/>
+        <path class="campus-path" d="M 820 50 L 820 410"/>
+        <line class="campus-path" x1="50" y1="230" x2="1030" y2="230"/>
+        <!-- Titre -->
+        <text x="540" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="800" fill="#000">UNIVERSITE — CARTE DES CLUBS</text>
+        ${buildings.map(b => `
+          <g class="bldg-grp" data-id="${b.id}">
+            <rect class="bldg ${b.cat}" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="4"/>
+            <text class="bldg-label" x="${b.x + b.w/2}" y="${b.y + b.h/2 + 4}">${b.short}</text>
+            <circle class="map-pin" cx="${b.x + b.w - 10}" cy="${b.y + 10}" r="5"/>
+          </g>
+        `).join('')}
+        <!-- Legende -->
+        <g transform="translate(50, 380)">
+          <rect x="0" y="0" width="980" height="60" fill="#ffffff" stroke="#000" stroke-width="1" rx="4"/>
+          <text x="10" y="20" font-family="JetBrains Mono" font-size="10" font-weight="700" fill="#000">LEGENDE</text>
+          <rect x="10" y="28" width="14" height="14" fill="#ff4502"/><text x="28" y="40" font-size="10" fill="#000">Tech</text>
+          <rect x="80" y="28" width="14" height="14" fill="#dcb8ff"/><text x="98" y="40" font-size="10" fill="#000">Culture</text>
+          <rect x="160" y="28" width="14" height="14" fill="#c2ff01"/><text x="178" y="40" font-size="10" fill="#000">Sport</text>
+          <rect x="230" y="28" width="14" height="14" fill="#0044ff"/><text x="248" y="40" font-size="10" fill="#000">Entrepreneuriat</text>
+          <rect x="340" y="28" width="14" height="14" fill="#10ffa1"/><text x="358" y="40" font-size="10" fill="#000">Environnement</text>
+          <rect x="470" y="28" width="14" height="14" fill="#dcb8ff"/><text x="488" y="40" font-size="10" fill="#000">Debats</text>
+          <rect x="550" y="28" width="14" height="14" fill="#0044ff"/><text x="568" y="40" font-size="10" fill="#000">Benevolat</text>
+          <rect x="650" y="28" width="14" height="14" fill="#ff4502"/><text x="668" y="40" font-size="10" fill="#000">Langues</text>
+        </g>
+      </svg>
+    `;
+
+    const content = `
+      <div class="card">
+        <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3);">
+          <div>
+            <div class="text-mono" style="font-size: 11px; color: var(--orange); letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700;">CARTE INTERACTIVE</div>
+            <h2 style="font-size: var(--fs-2xl); font-weight: 900; letter-spacing: -0.02em;">Campus des clubs</h2>
+            <p class="text-muted" style="font-size: var(--fs-sm);">Cliquez sur un batiment pour voir les details du club.</p>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-primary btn-sm" data-cat="all" onclick="filterMap('all')">Tous</button>
+            <button class="btn btn-secondary btn-sm" data-cat="tech" onclick="filterMap('tech')">Tech</button>
+            <button class="btn btn-secondary btn-sm" data-cat="culture" onclick="filterMap('culture')">Culture</button>
+            <button class="btn btn-secondary btn-sm" data-cat="sport" onclick="filterMap('sport')">Sport</button>
+          </div>
+        </div>
+        <div style="margin-top: var(--s-4);" id="map-container">${svgMap}</div>
+      </div>
+
+      <div class="grid grid-3" style="margin-top: var(--s-5);">
+        ${buildings.slice(0, 6).map(b => `
+          <div class="card" data-cat="${b.cat}" style="display: flex; gap: var(--s-3); align-items: center;">
+            <div style="width: 48px; height: 48px; border-radius: var(--r-sm); background: var(--${b.cat === 'tech' ? 'orange' : b.cat === 'sport' ? 'lime' : b.cat === 'culture' ? 'mauve' : b.cat === 'environnement' ? 'green' : 'blue'}); color: var(--black); display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0;">${b.short}</div>
+            <div>
+              <strong style="font-size: var(--fs-sm); display: block;">${b.name}</strong>
+              <span class="text-mono" style="font-size: 10px; color: var(--text-tertiary);">${b.cat.toUpperCase()}</span>
+            </div>
+            <a href="club.html?id=${b.id}" class="btn btn-primary btn-sm" style="margin-left: auto;">Voir</a>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    ClubHub.renderShell({ active: 'map', role: 'student', content, pageTitle: 'Carte du campus' });
+  </script>
+</body>
+</html>

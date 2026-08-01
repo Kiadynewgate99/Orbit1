@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="assets/logo-orbit.svg" />
+  <title>Documentation - Orbit</title>
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/landing.css" />
+</head>
+<body>
+  <div class="page-loader">
+    <div class="loader-ring"></div>
+    <div class="loader-text">CHARGEMENT</div>
+  </div>
+
+  <nav class="navbar">
+    <div class="container" style="padding: 0;">
+      <div class="navbar-inner">
+        <a href="index.html" class="brand">
+          <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          <span class="brand-name">Club<span>Hub</span></span>
+        </a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Accueil</a>
+          <a href="clubs.html" class="nav-link">Annuaire</a>
+          <a href="events.html" class="nav-link">Événements</a>
+          <a href="docs.html" class="nav-link active">Documentation</a>
+          <a href="cahier-des-charges.html" class="nav-link">Cahier des charges</a>
+        </div>
+        <div class="nav-actions">
+          <a href="login.html" class="btn btn-primary btn-sm">Connexion</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main style="padding: var(--s-8) 0;">
+    <div class="container">
+
+      <section class="section" style="text-align: center; padding: var(--s-8) 0;">
+        <div class="section-eyebrow" style="margin-bottom: var(--s-4);">Documentation technique</div>
+        <h1 class="section-title" style="font-size: 56px;">Tout ce que vous devez savoir <span style="color: var(--orange);">sur Orbit</span></h1>
+        <p class="section-subtitle" style="max-width: 640px; margin: 0 auto;">Architecture, personas, modèles de données, conformité RGPD, API REST et guides d'utilisation.</p>
+      </section>
+
+      <section class="section" style="padding-top: var(--s-5);">
+        <div class="grid grid-3">
+
+          <a href="cahier-des-charges.html" class="card file-card" style="text-decoration: none; background: var(--orange); color: var(--white);">
+            <div class="file-card-tag" style="background: var(--white); color: var(--black);">SPEC</div>
+            <div class="file-card-title" style="color: var(--white);">Cahier des charges</div>
+            <div class="file-card-meta" style="color: var(--white); opacity: 0.9;">8 sections · 15 fonctionnalités · 1.0.0</div>
+            <div class="file-card-corner"></div>
+          </a>
+
+          <div class="card file-card" style="background: var(--white);">
+            <div class="file-card-tag">PERSONAS</div>
+            <div class="file-card-title">4 archétypes utilisateurs</div>
+            <div class="file-card-meta">Neo-L1 · Multi-L3 · Internationale · Responsable</div>
+            <div class="file-card-corner"></div>
+          </div>
+
+          <div class="card file-card" style="background: var(--white);">
+            <div class="file-card-tag">UML</div>
+            <div class="file-card-title">Diagrammes de classes</div>
+            <div class="file-card-meta">Modélisation Merise + diagrammes UML</div>
+            <div class="file-card-corner"></div>
+          </div>
+
+          <div class="card file-card" style="background: var(--white);">
+            <div class="file-card-tag">RGPD</div>
+            <div class="file-card-title">Conformité & registre</div>
+            <div class="file-card-meta">AIPD · Finalités · Conservation · Sous-traitants</div>
+            <div class="file-card-corner"></div>
+          </div>
+
+          <div class="card file-card" style="background: var(--white);">
+            <div class="file-card-tag">API</div>
+            <div class="file-card-title">API REST v1</div>
+            <div class="file-card-meta">OpenAPI 3.1 · 47 endpoints · Auth Bearer</div>
+            <div class="file-card-corner"></div>
+          </div>
+
+          <div class="card file-card" style="background: var(--white);">
+            <div class="file-card-tag">ARCHI</div>
+            <div class="file-card-title">Architecture technique</div>
+            <div class="file-card-meta">React · Node.js · PostgreSQL · Redis · K8s</div>
+            <div class="file-card-corner"></div>
+          </div>
+
+          <div class="card file-card" style="background: var(--white);">
+            <div class="file-card-tag">WIREFRAME</div>
+            <div class="file-card-title">Maquettes & design system</div>
+            <div class="file-card-meta">Figma · 84 écrans · Tokens partagés</div>
+            <div class="file-card-corner"></div>
+          </div>
+
+          <div class="card file-card" style="background: var(--white);">
+            <div class="file-card-tag">TEST</div>
+            <div class="file-card-title">Stratégie de tests</div>
+            <div class="file-card-meta">Unitaire · Intégration · E2E · A11y</div>
+            <div class="file-card-corner"></div>
+          </div>
+
+          <div class="card file-card" style="background: var(--white);">
+            <div class="file-card-tag">DEPLOY</div>
+            <div class="file-card-title">Déploiement & CI/CD</div>
+            <div class="file-card-meta">GitLab CI · Docker · K8s · Observabilité</div>
+            <div class="file-card-corner"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" style="padding: var(--s-8) 0;">
+        <div class="card" style="padding: var(--s-8);">
+          <div class="section-eyebrow" style="margin-bottom: var(--s-4);">Stack technique</div>
+          <h2 class="section-title" style="text-align: left; font-size: 36px;">Une architecture moderne et souveraine</h2>
+          <p class="section-subtitle" style="text-align: left; max-width: 700px;">Cluster K8s auto-hébergé, 9 services micro-services, observabilité complète.</p>
+
+          <div class="grid grid-4" style="margin-top: var(--s-6);">
+            <div style="padding: var(--s-3); border: 1px solid var(--black); border-radius: var(--r-sm); background: var(--bg-elev-1);">
+              <div class="text-mono" style="font-size: 10px; color: var(--orange); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">FRONTEND</div>
+              <div style="font-weight: 800; margin-top: 4px;">React 18</div>
+              <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">Vite · TS · RN</div>
+            </div>
+            <div style="padding: var(--s-3); border: 1px solid var(--black); border-radius: var(--r-sm); background: var(--bg-elev-1);">
+              <div class="text-mono" style="font-size: 10px; color: var(--orange); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">BACKEND</div>
+              <div style="font-weight: 800; margin-top: 4px;">Node.js 20</div>
+              <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">Express · Prisma</div>
+            </div>
+            <div style="padding: var(--s-3); border: 1px solid var(--black); border-radius: var(--r-sm); background: var(--bg-elev-1);">
+              <div class="text-mono" style="font-size: 10px; color: var(--orange); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">DATA</div>
+              <div style="font-weight: 800; margin-top: 4px;">PostgreSQL 16</div>
+              <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">Redis 7 · ES 8</div>
+            </div>
+            <div style="padding: var(--s-3); border: 1px solid var(--black); border-radius: var(--r-sm); background: var(--bg-elev-1);">
+              <div class="text-mono" style="font-size: 10px; color: var(--orange); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">INFRA</div>
+              <div style="font-weight: 800; margin-top: 4px;">Kubernetes</div>
+              <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">Docker · Helm</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <div>2026 Orbit - Gestion des clubs universitaires</div>
+        <div class="text-mono" style="font-size: var(--fs-xs); font-weight: 600;">v1.0.0 · MIT LICENSE</div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>window.addEventListener('load', () => ClubHub.hideLoader());</script>
+</body>
+</html>

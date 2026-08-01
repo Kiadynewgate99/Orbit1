@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Creer un compte - Orbit</title>
+    <link rel="icon" href="assets/logo-orbit.svg" />
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/landing.css" />
+  <style>
+    .signup-card { max-width: 480px; margin: var(--s-8) auto; background: var(--white); border: 2px solid var(--black); border-radius: var(--r-md); box-shadow: 8px 8px 0 var(--orange); padding: var(--s-8); }
+    .signup-card h1 { font-size: 28px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: var(--s-1); }
+    .signup-card .subtitle { color: var(--text-secondary); margin-bottom: var(--s-6); font-size: var(--fs-sm); }
+    .field { margin-bottom: var(--s-4); }
+    .field label { display: block; font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-tertiary); margin-bottom: 4px; }
+    .field .input { width: 100%; }
+    .field-2col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); }
+    .error { color: var(--orange); font-size: 12px; margin-top: 4px; font-weight: 600; }
+    .success-banner { background: var(--lime); border: 2px solid var(--black); padding: var(--s-3); margin-bottom: var(--s-4); font-weight: 700; font-size: var(--fs-sm); display: none; }
+  </style>
+</head>
+<body>
+  <div class="page-loader"><div class="loader-ring"></div><div class="loader-text">CHARGEMENT</div></div>
+
+  <div class="signup-card">
+    <div class="flex items-center gap-2" style="margin-bottom: var(--s-6);">
+      <svg viewBox="0 0 32 32" width="40" height="40" fill="none">
+        <rect width="32" height="32" rx="6" fill="#FF4502"/>
+        <circle cx="16" cy="16" r="4" fill="#FFFFFF"/>
+        <ellipse cx="16" cy="16" rx="13" ry="5" stroke="#FFFFFF" stroke-width="2" transform="rotate(-30 16 16)"/>
+      </svg>
+      <span style="font-size: 20px; font-weight: 800;">Orbit<span style="color: var(--orange);">.</span></span>
+    </div>
+
+    <h1>Creer un compte</h1>
+    <p class="subtitle">Rejoignez Orbit en 30 secondes.</p>
+
+    <div class="success-banner" id="ok-banner">Compte cree ! Redirection vers votre dashboard...</div>
+
+    <form id="signup-form" onsubmit="event.preventDefault(); doSignup();">
+      <div class="field-2col">
+        <div class="field">
+          <label>Matricule</label>
+          <input class="input" id="matricule" placeholder="MA" maxlength="10" required style="text-transform: uppercase; font-family: var(--font-mono);" />
+        </div>
+        <div class="field">
+          <label>Avatar</label>
+          <input class="input" id="name" placeholder="Mika ANDRIAMATOA" required />
+        </div>
+      </div>
+      <div class="field">
+        <label>Email universitaire</label>
+        <input class="input" id="email" type="email" placeholder="prenom.nom@u.fr" required />
+      </div>
+      <div class="field">
+        <label>Mot de passe</label>
+        <input class="input" id="password" type="password" placeholder="6 caracteres minimum" minlength="6" required />
+      </div>
+      <div class="field-2col">
+        <div class="field">
+          <label>Filiere</label>
+          <select class="input" id="filiere">
+            <option>L1 Info</option><option>L2 Info</option><option>L3 Info</option>
+            <option>M1 Info</option><option>M2 Info</option>
+            <option>L1 STAPS</option><option>L1 Droit</option>
+            <option>L1 LEA</option><option>L1 Lettres</option>
+            <option>L1 SVT</option><option>L1 Eco-Gestion</option>
+            <option>Autre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Niveau</label>
+          <select class="input" id="niveau">
+            <option>L1</option><option>L2</option><option>L3</option><option>M1</option><option>M2</option><option>Doctorat</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="err-msg" class="error" style="margin-bottom: var(--s-3);"></div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; padding: var(--s-4); font-size: var(--fs-md); font-weight: 800;">
+        Creer mon compte
+      </button>
+
+      <p style="text-align: center; margin-top: var(--s-4); font-size: var(--fs-sm); color: var(--text-secondary);">
+        Deja un compte ? <a href="login.html" style="color: var(--orange); font-weight: 700;">Se connecter</a>
+      </p>
+    </form>
+
+    <div style="margin-top: var(--s-6); padding-top: var(--s-4); border-top: 1px solid var(--border-subtle); font-size: 11px; color: var(--text-tertiary); text-align: center;">
+      En creant un compte, vous acceptez que vos donnees soient traitees conformement au RGPD. Vous pouvez supprimer votre compte a tout moment.
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    window.addEventListener('load', () => ClubHub.hideLoader());
+
+    async function doSignup() {
+      const errBox = document.getElementById('err-msg');
+      const okBox = document.getElementById('ok-banner');
+      errBox.textContent = '';
+      okBox.style.display = 'none';
+
+      const data = {
+        matricule: document.getElementById('matricule').value.trim().toUpperCase(),
+        name: document.getElementById('name').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value,
+        filiere: document.getElementById('filiere').value,
+        niveau: document.getElementById('niveau').value,
+      };
+
+      try {
+        const r = await ClubHubAPI.login(data.matricule, data.password); // pas utilise, juste init
+        // si l'API n'est pas dispo, on bascule en mode mock local
+        const isLive = ClubHubAPI.isLive();
+
+        if (isLive) {
+          // reel : POST /api/register
+          const resp = await fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+          const j = await resp.json();
+          if (!j.ok) throw new Error(j.error);
+          localStorage.setItem('clubhub_token', j.data.token);
+          localStorage.setItem('clubhub_current_user', JSON.stringify(j.data.user));
+          okBox.style.display = 'block';
+          setTimeout(() => window.location.href = 'dashboard.html', 1200);
+        } else {
+          // mode mock : on stocke en localStorage
+          if (localStorage.getItem('orbit_user_' + data.matricule)) {
+            throw new Error('Ce matricule existe deja (mode demo)');
+          }
+          const u = {
+            ...data,
+            avatar: data.name.substring(0, 2).toUpperCase(),
+            role: 'student',
+            clubs: [],
+            events: [],
+            managedClub: null,
+            loggedInAt: new Date().toISOString(),
+          };
+          delete u.password;
+          localStorage.setItem('orbit_user_' + data.matricule, JSON.stringify(u));
+          localStorage.setItem('clubhub_current_user', JSON.stringify(u));
+          okBox.textContent = 'Compte cree (mode demo local) ! Redirection...';
+          okBox.style.display = 'block';
+          setTimeout(() => window.location.href = 'dashboard.html', 1200);
+        }
+      } catch (e) {
+        errBox.textContent = e.message;
+      }
+    }
+  </script>
+</body>
+</html>

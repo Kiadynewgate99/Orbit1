@@ -1,0 +1,22 @@
+# ClubHub API - URL rewriting
+# Place ce fichier dans /api/ a cote de index.php
+
+RewriteEngine On
+
+# Verifier que le fichier/dossier n'existe pas deja
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# /api/login  -> /api/index.php?route=login
+RewriteRule ^([a-z]+)$ index.php?route=$1 [L,QSA]
+
+# Options de cache (desactive pour l'API)
+<IfModule mod_headers.c>
+    Header set Cache-Control "no-store, no-cache, must-revalidate"
+</IfModule>
+
+# Securite : bloquer l'acces aux fichiers .htaccess et sensibles
+<FilesMatch "\.(env|sql|md|json|log)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>

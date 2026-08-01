@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paramètres - Orbit</title>
+    <link rel="icon" href="assets/logo-orbit.svg" />
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+<body>
+  <div class="page-loader">
+    <div class="loader-ring"></div>
+    <div class="loader-text">CHARGEMENT</div>
+  </div>
+
+  <div class="app-shell-mount"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    window.addEventListener('load', () => {
+      ClubHub.hideLoader();
+      // init le switch du dark mode selon l'etat actuel
+      const sw = document.getElementById('theme-toggle-page');
+      if (sw) sw.checked = ClubHub.Theme.get() === 'dark';
+    });
+
+    const user = ClubHub.Auth.require();
+    if (!user) throw new Error('Unauthorized');
+
+    const content = `
+      <div class="grid" style="grid-template-columns: 240px 1fr; gap: var(--s-5);">
+        <div>
+          <div class="card" style="position: sticky; top: 100px; padding: var(--s-3);">
+            <nav style="display: flex; flex-direction: column; gap: 2px;">
+              ${['Compte', 'Notifications', 'Confidentialité', 'Accessibilité', 'Langue & région'].map((s, i) => `
+                <a href="#${s.toLowerCase()}" class="sidebar-link ${i === 0 ? 'active' : ''}" style="text-decoration: none;">
+                  <span style="font-size: 14px;">●</span>
+                  <span>${s}</span>
+                </a>
+              `).join('')}
+            </nav>
+          </div>
+        </div>
+
+        <div>
+          <div class="card" style="margin-bottom: var(--s-4);">
+            <h2 style="font-size: var(--fs-xl); font-weight: 800; margin-bottom: var(--s-4);">Compte</h2>
+            <div class="flex flex-col gap-3">
+              <div>
+                <label class="label">Adresse email principale</label>
+                <input class="input" type="email" value="${user.email || 'mika@univ.mg'}" />
+              </div>
+              <div>
+                <label class="label">Mot de passe</label>
+                <button class="btn btn-secondary" style="width: 100%; justify-content: space-between;">
+                  <span>••••••••••••</span>
+                  <span style="font-size: var(--fs-xs); color: var(--orange); font-weight: 700;">Modifier</span>
+                </button>
+              </div>
+              <div class="switch-row">
+                <div class="switch-row-label">
+                  <div class="switch-row-title">Double authentification</div>
+                  <div class="switch-row-desc">Code SMS ou application</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked />
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom: var(--s-4);">
+            <h2 style="font-size: var(--fs-xl); font-weight: 800; margin-bottom: var(--s-4);">Notifications</h2>
+            <div class="switch-row">
+              <div class="switch-row-label">
+                <div class="switch-row-title">Notifications push (App)</div>
+                <div class="switch-row-desc">Alertes en temps réel</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked />
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+            <div class="switch-row">
+              <div class="switch-row-label">
+                <div class="switch-row-title">Email</div>
+                <div class="switch-row-desc">Récapitulatifs et confirmations</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked />
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+            <div class="switch-row">
+              <div class="switch-row-label">
+                <div class="switch-row-title">SMS</div>
+                <div class="switch-row-desc">Événements importants uniquement</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" />
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+            <div class="switch-row">
+              <div class="switch-row-label">
+                <div class="switch-row-title">Rappels d'événements (24h avant)</div>
+                <div class="switch-row-desc">Pour ne rien manquer</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked />
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+            <div class="switch-row">
+              <div class="switch-row-label">
+                <div class="switch-row-title">Mode "Ne pas déranger"</div>
+                <div class="switch-row-desc">Entre 22h et 8h</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked />
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom: var(--s-4); background: var(--orange); color: var(--white); border-color: var(--black);">
+            <h2 style="font-size: var(--fs-xl); font-weight: 800; margin-bottom: var(--s-2); color: var(--white);">Apparence</h2>
+            <p style="font-size: var(--fs-sm); color: var(--white); opacity: 0.9; margin-bottom: var(--s-4);">Basculez entre le mode clair et sombre. Le choix est enregistre et applique partout.</p>
+            <div class="switch-row" style="background: rgba(0,0,0,0.1); padding: var(--s-3); border-radius: var(--r-sm);">
+              <div class="switch-row-label">
+                <div class="switch-row-title" style="color: var(--white);">Mode sombre</div>
+                <div class="switch-row-desc" style="color: var(--white); opacity: 0.85;">Fond noir, texte clair, contrastes eleves</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="theme-toggle-page" onchange="ClubHub.Theme.set(this.checked ? 'dark' : 'light')" />
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom: var(--s-4);">
+            <h2 style="font-size: var(--fs-xl); font-weight: 800; margin-bottom: var(--s-4);">Accessibilité</h2>
+            <div class="switch-row">
+              <div class="switch-row-label">
+                <div class="switch-row-title">Mode contraste élevé</div>
+                <div class="switch-row-desc">Augmente le contraste pour une meilleure lisibilité</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" />
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+            <div class="switch-row">
+              <div class="switch-row-label">
+                <div class="switch-row-title">Réduction des animations</div>
+                <div class="switch-row-desc">Désactive les transitions et effets visuels</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" />
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+            <div class="switch-row">
+              <div class="switch-row-label">
+                <div class="switch-row-title">Lecteur d'écran optimisé</div>
+                <div class="switch-row-desc">ARIA labels enrichis et navigation clavier</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked />
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 style="font-size: var(--fs-xl); font-weight: 800; margin-bottom: var(--s-4);">Langue & région</h2>
+            <div class="grid grid-2" style="gap: var(--s-3);">
+              <div>
+                <label class="label">Langue de l'interface</label>
+                <select class="select">
+                  <option>Français (FR)</option>
+                  <option>English (EN)</option>
+                  <option>Español (ES)</option>
+                  <option>中文 (ZH)</option>
+                </select>
+              </div>
+              <div>
+                <label class="label">Fuseau horaire</label>
+                <select class="select">
+                  <option>Europe/Paris (UTC+1)</option>
+                  <option>Indian/Antananarivo (UTC+3)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    ClubHub.renderShell({
+      active: 'settings',
+      role: 'student',
+      content,
+      pageTitle: 'Paramètres',
+      pageSubtitle: 'Personnalisez votre expérience sur la plateforme.',
+    });
+  </script>
+</body>
+</html>

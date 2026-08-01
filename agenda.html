@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mon agenda - Orbit</title>
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <style>
+    .agenda-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+      background: var(--black);
+      border: 1px solid var(--black);
+      border-radius: var(--r-sm);
+      overflow: hidden;
+    }
+    .agenda-day-header {
+      background: var(--black);
+      color: var(--white);
+      padding: var(--s-3);
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .agenda-day {
+      background: var(--white);
+      min-height: 120px;
+      padding: var(--s-2);
+    }
+    .agenda-event {
+      background: var(--lime);
+      color: var(--black);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border: 1px solid var(--black);
+    }
+  </style>
+</head>
+<body>
+  <div class="page-loader">
+    <div class="loader-ring"></div>
+    <div class="loader-text">CHARGEMENT</div>
+  </div>
+
+  <div class="app-shell-mount"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    window.addEventListener('load', () => ClubHub.hideLoader());
+
+    const user = ClubHub.Auth.require();
+    if (!user) throw new Error('Unauthorized');
+
+    const content = `
+      <div class="card" style="margin-bottom: var(--s-5); padding: var(--s-5);">
+        <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3);">
+          <div>
+            <strong style="font-size: var(--fs-2xl);">Juillet 2026</strong>
+            <span class="text-muted" style="font-size: var(--fs-sm);"> · ${CLUBHUB.EVENTS.length} événements planifiés</span>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-secondary btn-sm">Aujourd'hui</button>
+            <button class="btn btn-secondary btn-sm">‹</button>
+            <button class="btn btn-secondary btn-sm">›</button>
+            <div style="width: 1px; background: var(--black); margin: 0 var(--s-2);"></div>
+            <button class="btn btn-primary btn-sm">Mois</button>
+            <button class="btn btn-secondary btn-sm">Semaine</button>
+            <button class="btn btn-secondary btn-sm">↓ Exporter</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="agenda-grid">
+          <div class="agenda-day-header">Lundi</div>
+          <div class="agenda-day-header">Mardi</div>
+          <div class="agenda-day-header">Mercredi</div>
+          <div class="agenda-day-header">Jeudi</div>
+          <div class="agenda-day-header">Vendredi</div>
+          <div class="agenda-day-header">Samedi</div>
+          <div class="agenda-day-header">Dimanche</div>
+          ${(() => {
+            let html = '';
+            for (let i = 0; i < 1; i++) html += '<div class="agenda-day"></div>';
+            for (let d = 1; d <= 31; d++) {
+              const dayEvents = CLUBHUB.EVENTS.filter(e => new Date(e.date).getDate() === d);
+              html += `
+                <div class="agenda-day">
+                  <div class="text-mono" style="font-size: 12px; color: var(--text-tertiary); margin-bottom: 4px; font-weight: 700;">${d}</div>
+                  ${dayEvents.slice(0, 2).map(e => `<div class="agenda-event" title="${e.title}">${e.time} ${e.title}</div>`).join('')}
+                  ${dayEvents.length > 2 ? `<div class="text-mono" style="font-size: 9px; color: var(--text-tertiary); margin-top: 2px; font-weight: 700;">+${dayEvents.length - 2}</div>` : ''}
+                </div>
+              `;
+            }
+            for (let i = 1; i <= 3; i++) html += `<div class="agenda-day"></div>`;
+            return html;
+          })()}
+        </div>
+      </div>
+
+      <div class="grid grid-3" style="margin-top: var(--s-5);">
+        <div class="card" style="text-align: center;">
+          <div class="text-mono" style="font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Cette semaine</div>
+          <div class="text-mono" style="font-size: var(--fs-3xl); color: var(--orange); margin: var(--s-2) 0; font-weight: 900;">3</div>
+          <div style="font-size: var(--fs-sm); color: var(--text-secondary);">événements à venir</div>
+        </div>
+        <div class="card" style="text-align: center;">
+          <div class="text-mono" style="font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Ce mois</div>
+          <div class="text-mono" style="font-size: var(--fs-3xl); color: var(--text-primary); margin: var(--s-2) 0; font-weight: 900;">11</div>
+          <div style="font-size: var(--fs-sm); color: var(--text-secondary);">événements à venir</div>
+        </div>
+        <div class="card" style="text-align: center; background: var(--orange); color: var(--white);">
+          <div class="text-mono" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: var(--white);">Conflits</div>
+          <div class="text-mono" style="font-size: var(--fs-3xl); color: var(--white); margin: var(--s-2) 0; font-weight: 900;">1</div>
+          <div style="font-size: var(--fs-sm); color: var(--white);">chevauchement détecté</div>
+        </div>
+      </div>
+    `;
+
+    ClubHub.renderShell({
+      active: 'agenda',
+      role: 'student',
+      content,
+      pageTitle: 'Mon agenda',
+      pageSubtitle: 'Visualisez tous vos événements en un coup d\'œil.',
+    });
+  </script>
+</body>
+</html>
