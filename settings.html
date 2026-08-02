@@ -17,17 +17,26 @@
   <div class="app-shell-mount"></div>
 
   <script src="js/data.js"></script>
+  <script src="js/api.js?v=3"></script>
   <script src="js/app.js"></script>
   <script>
-    window.addEventListener('load', () => {
-      ClubHub.hideLoader();
-      // init le switch du dark mode selon l'etat actuel
-      const sw = document.getElementById('theme-toggle-page');
-      if (sw) sw.checked = ClubHub.Theme.get() === 'dark';
-    });
+    (async function () {
+      window.addEventListener('load', () => {
+        ClubHub.hideLoader();
+        const sw = document.getElementById('theme-toggle-page');
+        if (sw) sw.checked = ClubHub.Theme.get() === 'dark';
+      });
 
-    const user = ClubHub.Auth.require();
-    if (!user) throw new Error('Unauthorized');
+      const user = ClubHub.Auth.require();
+      if (!user) throw new Error('Unauthorized');
+
+      let profileData = user;
+      try {
+        const res = await ClubHubAPI.me();
+        profileData = res.data || res || user;
+      } catch (e) {
+        profileData = user;
+      }
 
     const content = `
       <div class="grid" style="grid-template-columns: 240px 1fr; gap: var(--s-5);">
@@ -50,7 +59,7 @@
             <div class="flex flex-col gap-3">
               <div>
                 <label class="label">Adresse email principale</label>
-                <input class="input" type="email" value="${user.email || 'mika@univ.mg'}" />
+                <input class="input" type="email" value="${profileData.email || 'mika@univ.mg'}" />
               </div>
               <div>
                 <label class="label">Mot de passe</label>
@@ -207,6 +216,7 @@
       pageTitle: 'Paramètres',
       pageSubtitle: 'Personnalisez votre expérience sur la plateforme.',
     });
+    })();
   </script>
 </body>
 </html>

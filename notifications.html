@@ -17,80 +17,107 @@
   <div class="app-shell-mount"></div>
 
   <script src="js/data.js"></script>
+  <script src="js/api.js?v=3"></script>
   <script src="js/app.js"></script>
   <script>
-    window.addEventListener('load', () => ClubHub.hideLoader());
+    (async function () {
+      window.addEventListener('load', () => ClubHub.hideLoader());
 
-    const user = ClubHub.Auth.require();
-    if (!user) throw new Error('Unauthorized');
+      const user = ClubHub.Auth.require();
+      if (!user) throw new Error('Unauthorized');
 
-    const content = `
-      <div class="card">
-        <div class="flex items-center justify-between" style="margin-bottom: var(--s-4);">
-          <h2 style="font-size: var(--fs-lg); font-weight: 800;">Notifications</h2>
-          <div class="flex gap-2">
-            <button class="btn btn-secondary btn-sm">Tout marquer comme lu</button>
-          </div>
-        </div>
+      let notifications = [];
+      try {
+        const res = await ClubHubAPI.notifications();
+        notifications = res.data || res;
+      } catch (e) {
+        notifications = [];
+      }
 
-        <div class="text-mono" style="font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.15em; text-transform: uppercase; margin: var(--s-3) 0 var(--s-2); font-weight: 700;">Aujourd'hui</div>
+      const groupByDate = (notifs) => {
+        const today = new Date().toISOString().split('T')[0];
+        const groups = { today: [], week: [], older: [] };
+        notifs.forEach(n => {
+          const d = n.created_at ? n.created_at.split('T')[0] : '';
+          if (d === today) groups.today.push(n);
+          else if (d >= '2026-07-20') groups.week.push(n);
+          else groups.older.push(n);
+        });
+        return groups;
+      };
 
-        <div class="notification unread">
-          <div class="notification-icon success">✓</div>
+      const groups = groupByDate(notifications);
+
+      const renderNotif = (n) => `
+        <div class="notification ${n.read ? '' : 'unread'}" data-id="${n.id}">
+          <div class="notification-icon ${n.kind === 'inscription' ? 'success' : n.kind === 'event' ? 'event' : n.kind === 'system' ? 'warning' : 'info'}">${n.icon || 'i'}</div>
           <div class="notification-content">
-            <div class="notification-title">Inscription confirmée</div>
-            <div class="notification-message">Vous êtes maintenant membre du Club Robotique.</div>
-            <div class="notification-time">Il y a 2 minutes</div>
+            <div class="notification-title">${n.title}</div>
+            <div class="notification-message">${n.message}</div>
+            <div class="notification-time">${n.created_at ? new Date(n.created_at).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' }) : ''}</div>
           </div>
         </div>
+      `;
 
-        <div class="notification unread">
-          <div class="notification-icon event">◷</div>
-          <div class="notification-content">
-            <div class="notification-title">Nouvel événement : Atelier Python</div>
-            <div class="notification-message">Le Club Informatique a publié un nouvel atelier.</div>
-            <div class="notification-time">Il y a 1 heure</div>
+      const renderGroup = (label, items) => {
+        if (!items.length) return '';
+        return `
+          <div class="text-mono" style="font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.15em; text-transform: uppercase; margin: var(--s-5) 0 var(--s-2); font-weight: 700;">${label}</div>
+          ${items.map(renderNotif).join('')}
+        `;
+      };
+
+      const content = `
+        <div class="card">
+          <div class="flex items-center justify-between" style="margin-bottom: var(--s-4);">
+            <h2 style="font-size: var(--fs-lg); font-weight: 800;">Notifications</h2>
+            <div class="flex gap-2">
+              <button class="btn btn-secondary btn-sm" id="btn-mark-all-read">Tout marquer comme lu</button>
+            </div>
           </div>
+          ${renderGroup("Aujourd'hui", groups.today)}
+          ${renderGroup("Cette semaine", groups.week)}
+          ${renderGroup("Plus ancien", groups.older)}
+          ${notifications.length === 0 ? '<p class="text-muted">Aucune notification.</p>' : ''}
         </div>
+      `;
 
-        <div class="notification unread">
-          <div class="notification-icon warning">!</div>
-          <div class="notification-content">
-            <div class="notification-title">Rappel : Débat IA & éthique</div>
-            <div class="notification-message">L'événement commence dans 2 jours (23 juillet à 14h).</div>
-            <div class="notification-time">Il y a 3 heures</div>
-          </div>
-        </div>
+      ClubHub.renderShell({
+        active: 'notifications',
+        role: 'student',
+        content,
+        pageTitle: 'Notifications',
+        pageSubtitle: 'Toutes vos alertes et communications en un seul endroit.',
+      });
 
-        <div class="text-mono" style="font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.15em; text-transform: uppercase; margin: var(--s-5) 0 var(--s-2); font-weight: 700;">Cette semaine</div>
+      document.getElementById('btn-mark-all-read')?.addEventListener('click', async () => {
+        try {
+          await ClubHubAPI.markAllRead();
+          notifications.forEach(n => n.read = true);
+          const btn = document.getElementById('btn-mark-all-read');
+          if (btn) btn.disabled = true;
+          document.querySelectorAll('.notification.unread').forEach(el => el.classList.remove('unread'));
+          ClubHub.toast('Notifications', 'Toutes les notifications ont été marquées comme lues.', 'success');
+        } catch (e) {
+          ClubHub.toast('Erreur', 'Impossible de marquer les notifications comme lues.', 'error');
+        }
+      });
 
-        <div class="notification">
-          <div class="notification-icon info">i</div>
-          <div class="notification-content">
-            <div class="notification-title">Nouveau club disponible</div>
-            <div class="notification-message">Le Club Langues & Cultures vient d'ouvrir ses inscriptions.</div>
-            <div class="notification-time">Hier</div>
-          </div>
-        </div>
-
-        <div class="notification">
-          <div class="notification-icon success">★</div>
-          <div class="notification-content">
-            <div class="notification-title">+50 points d'engagement</div>
-            <div class="notification-message">Vous avez gagné 50 points pour votre participation.</div>
-            <div class="notification-time">Il y a 3 jours</div>
-          </div>
-        </div>
-      </div>
-    `;
-
-    ClubHub.renderShell({
-      active: 'notifications',
-      role: 'student',
-      content,
-      pageTitle: 'Notifications',
-      pageSubtitle: 'Toutes vos alertes et communications en un seul endroit.',
-    });
+      document.querySelectorAll('.notification').forEach(el => {
+        el.style.cursor = 'pointer';
+        el.addEventListener('click', async () => {
+          const id = el.dataset.id;
+          if (!id) return;
+          try {
+            await ClubHubAPI.markRead(id);
+            el.classList.remove('unread');
+            ClubHub.toast('Notification', 'Marquée comme lue.', 'success');
+          } catch (e) {
+            ClubHub.toast('Erreur', 'Impossible de marquer la notification.', 'error');
+          }
+        });
+      });
+    })();
   </script>
 </body>
 </html>

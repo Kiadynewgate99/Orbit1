@@ -55,6 +55,7 @@
   <div class="app-shell-mount"></div>
 
   <script src="js/data.js"></script>
+  <script src="js/api.js?v=3"></script>
   <script src="js/app.js"></script>
   <script>
     window.addEventListener('load', () => ClubHub.hideLoader());
@@ -62,79 +63,162 @@
     const user = ClubHub.Auth.require();
     if (!user) throw new Error('Unauthorized');
 
-    const content = `
+    let agendaEvents = [];
+
+    async function initAgenda() {
+      try {
+        const r = await ClubHubAPI.events();
+        agendaEvents = r.data || [];
+      } catch (e) {
+        agendaEvents = CLUBHUB.EVENTS;
+      }
+      refresh();
+    }
+
+    // État du calendrier
+    let currentDate = new Date(); // aujourd'hui
+    let currentYear = currentDate.getFullYear();
+    let currentMonth = currentDate.getMonth(); // 0-11
+
+    const monthNames = [
+      'Janvier','Février','Mars','Avril','Mai','Juin',
+      'Juillet','Août','Septembre','Octobre','Novembre','Décembre'
+    ];
+    const dayNames = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+
+    function getEventsForDay(year, month, day) {
+      return agendaEvents.filter(e => {
+        const d = new Date(e.date);
+        return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
+      });
+    }
+
+    function renderCalendar() {
+      const firstDay = new Date(currentYear, currentMonth, 1);
+      const lastDay = new Date(currentYear, currentMonth + 1, 0);
+      const daysInMonth = lastDay.getDate();
+      // getDay() : 0=dimanche, on veut 0=lundi
+      let startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+
+      const today = new Date();
+      const isCurrentMonth = today.getFullYear() === currentYear && today.getMonth() === currentMonth;
+
+      // Stats
+      const monthEvents = agendaEvents.filter(e => {
+        const d = new Date(e.date);
+        return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
+      });
+      const upcomingMonth = monthEvents.filter(e => new Date(e.date) >= new Date()).length;
+      const weekEvents = agendaEvents.filter(e => {
+        const d = new Date(e.date);
+        const diff = (d - new Date()) / (1000*60*60*24);
+        return diff >= 0 && diff <= 7;
+      }).length;
+      // Conflits simples (même jour, même heure)
+      const conflicts = new Set();
+      monthEvents.forEach((a, i) => {
+        monthEvents.forEach((b, j) => {
+          if (i >= j) return;
+          const da = new Date(a.date), db = new Date(b.date);
+          if (da.toDateString() === db.toDateString()) {
+            const ta = a.time.split(':'), tb = b.time.split(':');
+            const ma = parseInt(ta[0])*60 + parseInt(ta[1]);
+            const mb = parseInt(tb[0])*60 + parseInt(tb[1]);
+            if (Math.abs(ma - mb) < 60) conflicts.add(`${a.id}-${b.id}`);
+          }
+        });
+      });
+
+      // Génération HTML
+      let html = `
       <div class="card" style="margin-bottom: var(--s-5); padding: var(--s-5);">
         <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3);">
           <div>
-            <strong style="font-size: var(--fs-2xl);">Juillet 2026</strong>
-            <span class="text-muted" style="font-size: var(--fs-sm);"> · ${CLUBHUB.EVENTS.length} événements planifiés</span>
+            <div class="text-mono" style="font-size: 11px; color: var(--orange); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;">AGENDA</div>
+            <strong style="font-size: var(--fs-2xl);">${monthNames[currentMonth]} ${currentYear}</strong>
+            <span class="text-muted" style="font-size: var(--fs-sm);"> · ${monthEvents.length} événement${monthEvents.length > 1 ? 's' : ''}</span>
           </div>
           <div class="flex gap-2">
-            <button class="btn btn-secondary btn-sm">Aujourd'hui</button>
-            <button class="btn btn-secondary btn-sm">‹</button>
-            <button class="btn btn-secondary btn-sm">›</button>
+            <button class="btn btn-secondary btn-sm" onclick="goToday()">Aujourd'hui</button>
+            <button class="btn btn-secondary btn-sm" onclick="changeMonth(-1)">‹</button>
+            <button class="btn btn-secondary btn-sm" onclick="changeMonth(1)">›</button>
             <div style="width: 1px; background: var(--black); margin: 0 var(--s-2);"></div>
             <button class="btn btn-primary btn-sm">Mois</button>
-            <button class="btn btn-secondary btn-sm">Semaine</button>
-            <button class="btn btn-secondary btn-sm">↓ Exporter</button>
+            <button class="btn btn-secondary btn-sm" onclick="ClubHub.toast('Vue semaine bientôt disponible','','info')">Semaine</button>
+            <button class="btn btn-secondary btn-sm" onclick="ClubHub.toast('Export ICS bientôt disponible','','info')">↓ Exporter</button>
           </div>
         </div>
       </div>
 
       <div class="card">
         <div class="agenda-grid">
-          <div class="agenda-day-header">Lundi</div>
-          <div class="agenda-day-header">Mardi</div>
-          <div class="agenda-day-header">Mercredi</div>
-          <div class="agenda-day-header">Jeudi</div>
-          <div class="agenda-day-header">Vendredi</div>
-          <div class="agenda-day-header">Samedi</div>
-          <div class="agenda-day-header">Dimanche</div>
-          ${(() => {
-            let html = '';
-            for (let i = 0; i < 1; i++) html += '<div class="agenda-day"></div>';
-            for (let d = 1; d <= 31; d++) {
-              const dayEvents = CLUBHUB.EVENTS.filter(e => new Date(e.date).getDate() === d);
-              html += `
-                <div class="agenda-day">
-                  <div class="text-mono" style="font-size: 12px; color: var(--text-tertiary); margin-bottom: 4px; font-weight: 700;">${d}</div>
-                  ${dayEvents.slice(0, 2).map(e => `<div class="agenda-event" title="${e.title}">${e.time} ${e.title}</div>`).join('')}
-                  ${dayEvents.length > 2 ? `<div class="text-mono" style="font-size: 9px; color: var(--text-tertiary); margin-top: 2px; font-weight: 700;">+${dayEvents.length - 2}</div>` : ''}
-                </div>
-              `;
-            }
-            for (let i = 1; i <= 3; i++) html += `<div class="agenda-day"></div>`;
-            return html;
-          })()}
+          ${dayNames.map(d => `<div class="agenda-day-header">${d}</div>`).join('')}
+          ${Array(startOffset).fill('<div class="agenda-day" style="background: var(--bg-elev-1);"></div>').join('')}
+          ${Array.from({length: daysInMonth}, (_, i) => {
+            const day = i + 1;
+            const dayEvents = getEventsForDay(currentYear, currentMonth, day);
+            const isToday = isCurrentMonth && day === today.getDate();
+            return `
+              <div class="agenda-day" style="${isToday ? 'background: var(--lime-soft);' : ''}">
+                <div class="text-mono" style="font-size: 12px; color: ${isToday ? 'var(--orange)' : 'var(--text-tertiary)'}; margin-bottom: 4px; font-weight: 700;">${day}${isToday ? ' ●' : ''}</div>
+                ${dayEvents.slice(0, 2).map(e => `
+                  <a href="events.html?id=${e.id}" class="agenda-event" title="${e.title}">${e.time} ${e.title}</a>
+                `).join('')}
+                ${dayEvents.length > 2 ? `<div class="text-mono" style="font-size: 9px; color: var(--text-tertiary); margin-top: 2px; font-weight: 700;">+${dayEvents.length - 2} autre${dayEvents.length > 3 ? 's' : ''}</div>` : ''}
+              </div>
+            `;
+          }).join('')}
         </div>
       </div>
 
       <div class="grid grid-3" style="margin-top: var(--s-5);">
         <div class="card" style="text-align: center;">
           <div class="text-mono" style="font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Cette semaine</div>
-          <div class="text-mono" style="font-size: var(--fs-3xl); color: var(--orange); margin: var(--s-2) 0; font-weight: 900;">3</div>
-          <div style="font-size: var(--fs-sm); color: var(--text-secondary);">événements à venir</div>
+          <div class="text-mono" style="font-size: var(--fs-3xl); color: var(--orange); margin: var(--s-2) 0; font-weight: 900;">${weekEvents}</div>
+          <div style="font-size: var(--fs-sm); color: var(--text-secondary);">événement${weekEvents > 1 ? 's' : ''} à venir</div>
         </div>
         <div class="card" style="text-align: center;">
           <div class="text-mono" style="font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Ce mois</div>
-          <div class="text-mono" style="font-size: var(--fs-3xl); color: var(--text-primary); margin: var(--s-2) 0; font-weight: 900;">11</div>
-          <div style="font-size: var(--fs-sm); color: var(--text-secondary);">événements à venir</div>
+          <div class="text-mono" style="font-size: var(--fs-3xl); color: var(--text-primary); margin: var(--s-2) 0; font-weight: 900;">${upcomingMonth}</div>
+          <div style="font-size: var(--fs-sm); color: var(--text-secondary);">événement${upcomingMonth > 1 ? 's' : ''} à venir</div>
         </div>
         <div class="card" style="text-align: center; background: var(--orange); color: var(--white);">
           <div class="text-mono" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: var(--white);">Conflits</div>
-          <div class="text-mono" style="font-size: var(--fs-3xl); color: var(--white); margin: var(--s-2) 0; font-weight: 900;">1</div>
-          <div style="font-size: var(--fs-sm); color: var(--white);">chevauchement détecté</div>
+          <div class="text-mono" style="font-size: var(--fs-3xl); color: var(--white); margin: var(--s-2) 0; font-weight: 900;">${conflicts.size}</div>
+          <div style="font-size: var(--fs-sm); color: var(--white);">chevauchement${conflicts.size > 1 ? 's' : ''} détecté${conflicts.size > 1 ? 's' : ''}</div>
         </div>
       </div>
-    `;
+      `;
 
-    ClubHub.renderShell({
-      active: 'agenda',
-      role: 'student',
-      content,
-      pageTitle: 'Mon agenda',
-      pageSubtitle: 'Visualisez tous vos événements en un coup d\'œil.',
-    });
+      return html;
+    }
+
+    function changeMonth(delta) {
+      currentMonth += delta;
+      if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+      if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+      refresh();
+    }
+
+    function goToday() {
+      const now = new Date();
+      currentYear = now.getFullYear();
+      currentMonth = now.getMonth();
+      refresh();
+    }
+
+    function refresh() {
+      const content = renderCalendar();
+      ClubHub.renderShell({
+        active: 'agenda',
+        role: 'student',
+        content,
+        pageTitle: 'Mon agenda',
+        pageSubtitle: 'Visualisez tous vos événements en un coup d\'œil.',
+      });
+    }
+
+    initAgenda();
   </script>
 </body>
 </html>

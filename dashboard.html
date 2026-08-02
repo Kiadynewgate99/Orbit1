@@ -34,6 +34,7 @@
   <div class="app-shell-mount"></div>
 
   <script src="js/data.js"></script>
+  <script src="js/api.js?v=3"></script>
   <script src="js/app.js"></script>
   <script>
     window.addEventListener('load', () => ClubHub.hideLoader());
@@ -44,15 +45,36 @@
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab') || 'overview';
 
-    const myClubs = CLUBHUB.CLUBS.filter(c => user.clubs?.includes(c.id));
-    const myEvents = CLUBHUB.EVENTS.filter(e => user.events?.includes(e.id));
-    const upcomingEvents = CLUBHUB.EVENTS.filter(e => new Date(e.date) > new Date()).slice(0, 4);
+    let allClubs = [];
+    let allEvents = [];
+    let apiStats = null;
+
+    async function init() {
+      try {
+        const [clubsRes, eventsRes, statsRes] = await Promise.all([
+          ClubHubAPI.myClubs(),
+          ClubHubAPI.events(),
+          ClubHubAPI.stats(),
+        ]);
+        allClubs = clubsRes.data || [];
+        allEvents = eventsRes.data || [];
+        apiStats = statsRes.data || {};
+      } catch (e) {
+        allClubs = CLUBHUB.CLUBS.filter(c => user.clubs?.includes(c.id));
+        allEvents = CLUBHUB.EVENTS.filter(e => user.events?.includes(e.id));
+      }
+      render();
+    }
+
+    const myClubs = () => allClubs;
+    const myEvents = () => allEvents.filter(e => new Date(e.date) > new Date());
+    const upcomingEvents = () => allEvents.filter(e => new Date(e.date) > new Date()).slice(0, 4);
 
     const stats = {
-      clubs: myClubs.length || 0,
-      events: myEvents.length || 0,
-      attendance: 100,
-      points: (myClubs.length || 0) * 50 + (myEvents.length || 0) * 10,
+      clubs: myClubs().length || 0,
+      events: myEvents().length || 0,
+      attendance: apiStats?.users_total ? Math.min(100, Math.round((myClubs().length || 0) * 12 + 50)) : 100,
+      points: apiStats?.users_total ? (myClubs().length || 0) * 50 + (myEvents().length || 0) * 10 + Math.round((apiStats.users_total || 0) / 10) : (myClubs().length || 0) * 50 + (myEvents().length || 0) * 10,
     };
 
     const pageTitleMap = {
@@ -105,16 +127,16 @@
               <h2 style="font-size: var(--fs-lg); font-weight: 800;">Prochains événements</h2>
               <a href="events.html" class="btn btn-ghost btn-sm">Voir tout →</a>
             </div>
-            ${upcomingEvents.length === 0 ? `
+            ${upcomingEvents().length === 0 ? `
               <div class="empty">
                 <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/></svg></div>
                 <div class="empty-title">Aucun événement à venir</div>
                 <div class="empty-text">Inscrivez-vous à un club pour découvrir les activités.</div>
                 <a href="clubs.html" class="btn btn-orange btn-sm">Explorer les clubs</a>
               </div>
-            ` : upcomingEvents.map(evt => {
+            ` : upcomingEvents().map(evt => {
               const d = ClubHub.formatDate(evt.date, { short: true });
-              const club = CLUBHUB.CLUBS.find(c => c.id === evt.clubId);
+              const club = allClubs.find(c => c.id === evt.club_id || c.slug === evt.club_id) || CLUBHUB.CLUBS.find(c => c.id === evt.clubId || c.slug === evt.clubId);
               return `
                 <div class="event-row" style="margin-bottom: var(--s-3);">
                   <div style="flex: 1;">
@@ -122,14 +144,14 @@
                       <span>${d.day} ${d.month.toUpperCase()}</span>
                       <span>${evt.time} · ${club?.icon || ''}</span>
                     </div>
-                    <div class="event-row-content">
-                      <div class="event-title">${evt.title}</div>
-                      <div class="event-meta">
-                        <span class="event-meta-item">◷ ${evt.duration}min</span>
-                        <span class="event-meta-item">◎ ${evt.location}</span>
-                        <span class="event-meta-item">${club?.name || ''}</span>
-                      </div>
-                    </div>
+                     <div class="event-row-content">
+                       <div class="event-title">${evt.title}</div>
+                       <div class="event-meta">
+                         <span class="event-meta-item">◷ ${evt.duration_min || evt.duration}min</span>
+                         <span class="event-meta-item">◎ ${evt.room || evt.location || ''}</span>
+                         <span class="event-meta-item">${club?.name || club?.slug || ''}</span>
+                       </div>
+                     </div>
                   </div>
                   <div style="padding: var(--s-4); display: flex; align-items: center;">
                     <span class="badge badge-orange">${evt.type}</span>
@@ -214,63 +236,70 @@
 
       <h2 style="font-size: var(--fs-xl); font-weight: 800; margin: var(--s-8) 0 var(--s-4);">Mes clubs</h2>
       <div class="grid grid-3">
-        ${myClubs.length === 0 ? `
+        ${myClubs().length === 0 ? `
           <div class="empty" style="grid-column: 1 / -1;">
             <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/></svg></div>
             <div class="empty-title">Vous n'êtes inscrit à aucun club</div>
             <div class="empty-text">Découvrez les clubs et rejoignez ceux qui vous correspondent.</div>
             <a href="clubs.html" class="btn btn-orange btn-sm">Explorer l'annuaire</a>
           </div>
-        ` : myClubs.map(club => `
-          <a href="club.html?id=${club.id}" class="club-card">
+        ` : myClubs().map(club => {
+          const domainLabel = CLUBHUB.CLUB_CATEGORIES.find(c => c.id === club.category || c.id === club.domain)?.label || club.category || club.domain || '';
+          const clubEvents = allEvents.filter(e => (e.club_id === club.id || e.clubId === club.id) && new Date(e.date) > new Date()).length;
+          return `
+          <a href="club.html?id=${club.slug || club.id}" class="club-card">
             <div class="club-card-header">
-              <span>${club.id}.html</span>
+              <span>${club.slug || club.id}</span>
               <span>◉</span>
             </div>
             <div class="club-card-body">
-              <div class="club-card-icon" style="background: ${club.color};">${club.icon}</div>
+              <div class="club-card-icon" style="background: ${club.color};">${club.name.substring(0, 2).toUpperCase()}</div>
               <div class="club-card-name">${club.name}</div>
-              <div class="club-card-domain">${CLUBHUB.CLUB_CATEGORIES.find(c => c.id === club.domain)?.label || ''}</div>
-              <div class="club-card-desc">${club.description}</div>
+              <div class="club-card-domain">${domainLabel}</div>
+              <div class="club-card-desc">${club.short_desc || club.description || ''}</div>
               <div class="club-card-footer">
                 <span>◉ Membre</span>
-                <span>◷ ${club.events} événements</span>
+                <span>◷ ${clubEvents} événements</span>
               </div>
             </div>
           </a>
-        `).join('')}
+        `;
+      }).join('')}
       </div>
     `;
 
     const renderClubs = () => `
       <div class="grid grid-3">
-        ${myClubs.length === 0 ? `
+        ${myClubs().length === 0 ? `
           <div class="empty" style="grid-column: 1 / -1;">
             <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/></svg></div>
             <div class="empty-title">Vous n'êtes inscrit à aucun club</div>
             <div class="empty-text">Découvrez les clubs disponibles et rejoignez la communauté.</div>
             <a href="clubs.html" class="btn btn-orange btn-sm">Voir l'annuaire</a>
           </div>
-        ` : myClubs.map(club => `
+        ` : myClubs().map(club => {
+          const domainLabel = CLUBHUB.CLUB_CATEGORIES.find(c => c.id === club.category || c.id === club.domain)?.label || club.category || club.domain || '';
+          return `
           <div class="card">
             <div class="flex items-center gap-3" style="margin-bottom: var(--s-3);">
-              <div class="avatar avatar-lg" style="background: ${club.color}; color: var(--white);">${club.icon}</div>
+              <div class="avatar avatar-lg" style="background: ${club.color}; color: var(--white);">${club.name.substring(0, 2).toUpperCase()}</div>
               <div style="flex: 1;">
                 <strong style="font-size: var(--fs-lg); display: block;">${club.name}</strong>
-                <div class="text-mono" style="font-size: 10px; color: var(--orange); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;">${CLUBHUB.CLUB_CATEGORIES.find(c => c.id === club.domain)?.label || ''}</div>
+                <div class="text-mono" style="font-size: 10px; color: var(--orange); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;">${domainLabel}</div>
               </div>
               <span class="badge badge-lime">Membre</span>
             </div>
-            <p style="font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.5; margin-bottom: var(--s-4);">${club.description}</p>
+            <p style="font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.5; margin-bottom: var(--s-4);">${club.short_desc || club.description || ''}</p>
             <div class="flex gap-2" style="margin-bottom: var(--s-4); flex-wrap: wrap;">
-              ${club.tags.slice(0, 3).map(t => `<span class="badge">${t}</span>`).join('')}
+              ${(club.tags || []).slice(0, 3).map(t => `<span class="badge">${t}</span>`).join('')}
             </div>
             <div class="flex gap-2">
-              <a href="club.html?id=${club.id}" class="btn btn-primary btn-sm" style="flex: 1;">Voir le club</a>
-              <button class="btn btn-secondary btn-sm" onclick="leaveClub('${club.id}')">Quitter</button>
+              <a href="club.html?id=${club.slug || club.id}" class="btn btn-primary btn-sm" style="flex: 1;">Voir le club</a>
+              <button class="btn btn-secondary btn-sm" onclick="leaveClub('${club.slug || club.id}')">Quitter</button>
             </div>
           </div>
-        `).join('')}
+        `;
+      }).join('')}
       </div>
     `;
 
@@ -281,21 +310,21 @@
           <input type="text" placeholder="Rechercher un événement..." />
         </div>
         <div class="chip-group">
-          <button class="chip active">À venir (${myEvents.length})</button>
+          <button class="chip active">À venir (${myEvents().length})</button>
           <button class="chip">Passés</button>
         </div>
       </div>
       <div class="flex flex-col gap-3">
-        ${myEvents.length === 0 ? `
+        ${myEvents().length === 0 ? `
           <div class="empty">
             <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/></svg></div>
             <div class="empty-title">Aucun événement inscrit</div>
             <div class="empty-text">Explorez l'agenda pour découvrir les prochaines activités.</div>
             <a href="events.html" class="btn btn-orange btn-sm">Voir l'agenda</a>
           </div>
-        ` : myEvents.map(evt => {
+        ` : myEvents().map(evt => {
           const d = ClubHub.formatDate(evt.date, { short: true });
-          const club = CLUBHUB.CLUBS.find(c => c.id === evt.clubId);
+          const club = allClubs.find(c => c.id === evt.club_id || c.slug === evt.club_id) || CLUBHUB.CLUBS.find(c => c.id === evt.clubId || c.slug === evt.clubId);
           return `
             <div class="event-row">
               <div style="flex: 1;">
@@ -305,7 +334,7 @@
                 </div>
                 <div class="event-row-content">
                   <div class="event-title">${evt.title}</div>
-                  <div class="event-meta"><span>${club?.name || ''} · ${evt.location}</span></div>
+                  <div class="event-meta"><span>${club?.name || club?.slug || ''} · ${evt.room || evt.location || ''}</span></div>
                 </div>
               </div>
               <div style="padding: var(--s-4); display: flex; align-items: center; gap: var(--s-2);">
@@ -327,14 +356,16 @@
       pageTitle: pageTitleMap[tab] || 'Tableau de bord',
     });
 
-    function leaveClub(clubId) {
-      ClubHub.confirm('Quitter le club', 'Êtes-vous sûr de vouloir quitter ce club ?', () => {
-        const u = ClubHub.Auth.current();
-        if (u && u.clubs) {
-          u.clubs = u.clubs.filter(c => c !== clubId);
-          ClubHub.STORAGE.set('current_user', u);
+    init();
+
+    async function leaveClub(clubId) {
+      ClubHub.confirm('Quitter le club', 'Êtes-vous sûr de vouloir quitter ce club ?', async () => {
+        try {
+          await ClubHubAPI.leaveClub(clubId);
           ClubHub.toast('Désinscription confirmée', '', 'info');
           setTimeout(() => location.reload(), 800);
+        } catch (e) {
+          ClubHub.toast('Erreur', e.message, 'error');
         }
       });
     }

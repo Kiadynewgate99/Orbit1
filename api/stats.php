@@ -37,4 +37,14 @@ $out['by_filiere'] = db()->query('
 ')->fetchAll();
 
 audit((int)$u['id'], 'VIEW_STATS');
+
+$out['users_ranking'] = db()->query('
+    SELECT u.matricule, u.name, u.avatar, u.filiere, u.points,
+           (SELECT COUNT(*) FROM inscriptions i WHERE i.user_id = u.id AND i.status = "active") AS clubs_count
+    FROM users u
+    WHERE u.is_active = 1
+    ORDER BY u.points DESC
+    LIMIT 20
+')->fetchAll();
+
 json_ok($out);

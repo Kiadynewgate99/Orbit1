@@ -30,20 +30,41 @@
   <div class="app-shell-mount"></div>
 
   <script src="js/data.js"></script>
+  <script src="js/api.js?v=3"></script>
   <script src="js/app.js"></script>
   <script>
     window.addEventListener('load', () => ClubHub.hideLoader());
 
+    let allEvents = [];
+    let allClubs = [];
+    let myEventIds = [];
+
+    async function initEvents() {
+      try {
+        const [eventsRes, clubsRes] = await Promise.all([
+          ClubHubAPI.events(),
+          ClubHubAPI.clubs(),
+        ]);
+        allEvents = eventsRes.data || [];
+        allClubs = clubsRes.data || [];
+      } catch (e) {
+        allEvents = CLUBHUB.EVENTS;
+        allClubs = CLUBHUB.CLUBS;
+      }
+      const u = ClubHub.Auth.current();
+      myEventIds = u?.events || [];
+      renderEvents();
+    }
+
     const u = ClubHub.Auth.current();
-    const myEvents = u?.events || [];
 
     const content = `
       <div class="card" style="margin-bottom: var(--s-5); padding: var(--s-5);">
         <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3);">
           <div>
             <div class="text-mono" style="font-size: 11px; color: var(--orange); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;">AGENDA</div>
-            <strong style="font-size: var(--fs-2xl);">${CLUBHUB.EVENTS.length} événements planifiés</strong>
-            <div class="text-muted" style="font-size: var(--fs-sm); margin-top: 2px;">${CLUBHUB.EVENTS.filter(e => e.attendees > e.maxAttendees * 0.7).length} bientôt complets</div>
+            <strong style="font-size: var(--fs-2xl);" id="events-total">${allEvents.length} événements planifiés</strong>
+            <div class="text-muted" style="font-size: var(--fs-sm); margin-top: 2px;" id="events-soon">${allEvents.filter(e => (e.attendees || e.registered || 0) > (e.capacity || e.maxAttendees || 0) * 0.7).length} bientôt complets</div>
           </div>
           <div class="flex gap-2">
             <button class="btn btn-secondary btn-sm">Exporter (.ics)</button>
@@ -66,7 +87,7 @@
         </select>
         <select class="select" id="event-club" style="max-width: 200px;">
           <option value="all">Tous les clubs</option>
-          ${CLUBHUB.CLUBS.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+          ${allClubs.map(c => `<option value="${c.slug || c.id}">${c.name}</option>`).join('')}
         </select>
       </div>
 
@@ -122,16 +143,21 @@
     });
 
     const cal = document.getElementById('mini-calendar');
-    const eventDates = CLUBHUB.EVENTS.map(e => new Date(e.date).getDate());
-    const today = 19;
+    const eventDates = allEvents.map(e => new Date(e.date).getDate());
+    const today = new Date().getDate();
     let calHTML = '';
-    for (let i = 0; i < 1; i++) calHTML += '<div class="calendar-day muted">29</div>';
-    for (let d = 1; d <= 31; d++) {
+    const firstDay = new Date();
+    firstDay.setDate(1);
+    const startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+    for (let i = 0; i < startOffset; i++) calHTML += '<div class="calendar-day muted"></div>';
+    const daysInMonth = new Date(firstDay.getFullYear(), firstDay.getMonth() + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
       const hasEvent = eventDates.includes(d);
-      const isToday = d === today;
+      const isToday = d === today && firstDay.getMonth() === new Date().getMonth();
       calHTML += `<div class="calendar-day ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''}">${d}</div>`;
     }
-    for (let i = 1; i <= 3; i++) calHTML += `<div class="calendar-day muted">${i}</div>`;
+    const remaining = 42 - (startOffset + daysInMonth);
+    for (let i = 0; i < remaining; i++) calHTML += '<div class="calendar-day muted"></div>';
     cal.innerHTML = calHTML;
 
     const container = document.getElementById('events-container');
@@ -141,31 +167,36 @@
 
     const renderEvents = () => {
       const q = (search.value || '').toLowerCase();
-      const list = CLUBHUB.EVENTS.filter(e => {
+      const list = allEvents.filter(e => {
         const matchesType = typeSel.value === 'all' || e.type === typeSel.value;
-        const matchesClub = clubSel.value === 'all' || e.clubId === clubSel.value;
-        const matchesSearch = !q || e.title.toLowerCase().includes(q) || e.description.toLowerCase().includes(q);
+        const matchesClub = clubSel.value === 'all' || (e.club_id === clubSel.value || e.clubId === clubSel.value);
+        const matchesSearch = !q || (e.title || '').toLowerCase().includes(q) || (e.description || '').toLowerCase().includes(q);
         return matchesType && matchesClub && matchesSearch;
       }).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      const totalEl = document.getElementById('events-total');
+      const soonEl = document.getElementById('events-soon');
+      if (totalEl) totalEl.textContent = list.length + ' événements planifiés';
+      if (soonEl) soonEl.textContent = list.filter(e => (e.attendees || e.registered || 0) > (e.capacity || e.maxAttendees || 0) * 0.7).length + ' bientôt complets';
 
       if (list.length === 0) {
         container.innerHTML = `<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/></svg></div><div class="empty-title">Aucun événement trouvé</div><div class="empty-text">Modifiez vos filtres.</div></div>`;
         return;
       }
 
-      const isSubscribed = (evtId) => myEvents.includes(evtId);
+      const isSubscribed = (evtId) => myEventIds.includes(evtId);
 
       container.innerHTML = list.map(evt => {
         const d = ClubHub.formatDate(evt.date, { short: true });
-        const club = CLUBHUB.CLUBS.find(c => c.id === evt.clubId);
-        const fillRate = Math.round((evt.attendees / evt.maxAttendees) * 100);
-        const isFull = evt.attendees >= evt.maxAttendees;
+        const club = allClubs.find(c => c.id === evt.club_id || c.slug === evt.club_id || c.id === evt.clubId || c.slug === evt.clubId) || CLUBHUB.CLUBS.find(c => c.id === evt.clubId || c.slug === evt.clubId);
+        const fillRate = Math.round(((evt.attendees || evt.registered || 0) / (evt.capacity || evt.maxAttendees || 1)) * 100);
+        const isFull = (evt.attendees || evt.registered || 0) >= (evt.capacity || evt.maxAttendees || 999);
         return `
-          <div class="event-row-block ${isSubscribed(evt.id) ? 'accent' : ''}">
+          <div class="event-row-block ${isSubscribed(evt.id || evt.clubId + '-' + evt.date) ? 'accent' : ''}">
             <div style="flex: 1;">
-              <div class="event-row-header" style="background: ${club.color}; color: var(--black);">
+              <div class="event-row-header" style="background: ${club?.color || 'var(--lime)'}; color: var(--black);">
                 <span>${d.day} ${d.month.toUpperCase()}</span>
-                <span>${evt.time} · ${evt.duration}min · ${evt.location}</span>
+                <span>${evt.time} · ${evt.duration_min || evt.duration}min · ${evt.room || evt.location || ''}</span>
               </div>
               <div class="event-row-content">
                 <div class="flex items-center gap-2" style="margin-bottom: 4px;">
@@ -174,19 +205,19 @@
                 </div>
                 <div class="event-title">${evt.title}</div>
                 <div class="event-meta">
-                  <span class="event-meta-item">${club?.name || ''}</span>
+                  <span class="event-meta-item">${club?.name || club?.slug || ''}</span>
                 </div>
               </div>
             </div>
             <div style="padding: var(--s-4); display: flex; align-items: center; gap: var(--s-3);">
               <div style="text-align: right; min-width: 80px;">
-                <div class="text-mono" style="font-size: 11px; color: var(--text-tertiary); font-weight: 600;">${evt.attendees}/${evt.maxAttendees}</div>
+                <div class="text-mono" style="font-size: 11px; color: var(--text-tertiary); font-weight: 600;">${evt.attendees || evt.registered || 0}/${evt.capacity || evt.maxAttendees || '-'}</div>
                 <div class="progress" style="width: 80px; margin-top: 4px;">
                   <div class="progress-bar" style="width: ${fillRate}%; background: var(--orange);"></div>
                 </div>
               </div>
-              <button class="btn ${isSubscribed(evt.id) ? 'btn-secondary' : 'btn-orange'} btn-sm" onclick="${isSubscribed(evt.id) ? `unsubscribeEvent('${evt.id}')` : `subscribeEvent('${evt.id}')`}">
-                ${isSubscribed(evt.id) ? 'Inscrit ✓' : isFull ? 'Complet' : "S'inscrire"}
+              <button class="btn ${isSubscribed(evt.id || evt.clubId + '-' + evt.date) ? 'btn-secondary' : 'btn-orange'} btn-sm" onclick="${isSubscribed(evt.id || evt.clubId + '-' + evt.date) ? `unsubscribeEvent('${evt.id || evt.clubId + '-' + evt.date}')` : `subscribeEvent('${evt.id || evt.clubId + '-' + evt.date}')`}">
+                ${isSubscribed(evt.id || evt.clubId + '-' + evt.date) ? 'Inscrit ✓' : isFull ? 'Complet' : "S'inscrire"}
               </button>
             </div>
           </div>
@@ -197,16 +228,18 @@
     function subscribeEvent(id) {
       const u = ClubHub.Auth.current();
       if (!u) { window.location.href = 'login.html'; return; }
-      if (!u.events.includes(id)) u.events.push(id);
-      ClubHub.STORAGE.set('current_user', u);
+      if (!myEventIds.includes(id)) myEventIds.push(id);
+      const userData = { ...u, events: myEventIds };
+      ClubHub.STORAGE.set('current_user', userData);
       ClubHub.toast('Inscription confirmée', 'Rappel 24h avant', 'success');
       renderEvents();
     }
 
     function unsubscribeEvent(id) {
       const u = ClubHub.Auth.current();
-      u.events = u.events.filter(e => e !== id);
-      ClubHub.STORAGE.set('current_user', u);
+      myEventIds = myEventIds.filter(e => e !== id);
+      const userData = { ...u, events: myEventIds };
+      ClubHub.STORAGE.set('current_user', userData);
       ClubHub.toast('Désinscription', '', 'info');
       renderEvents();
     }
@@ -214,7 +247,7 @@
     search.addEventListener('input', renderEvents);
     typeSel.addEventListener('change', renderEvents);
     clubSel.addEventListener('change', renderEvents);
-    renderEvents();
+    initEvents();
   </script>
 </body>
 </html>

@@ -12,15 +12,14 @@ require_once __DIR__ . '/auth.php';
 send_headers();
 
 $method = $_SERVER['REQUEST_METHOD'];
-$id     = $_GET['id'] ?? '';
-$id     = $id !== '' ? trim((string)$id) : '';
+$id     = get_int('id');
 
 try {
     switch ($method) {
         case 'GET':    return clubs_read($id);
         case 'POST':   return clubs_create();
-        case 'PUT':    return clubs_update((int)$id);
-        case 'DELETE': return clubs_delete((int)$id);
+        case 'PUT':    return clubs_update($id);
+        case 'DELETE': return clubs_delete($id);
         default:       json_err('Method not allowed', 405);
     }
 } catch (Throwable $e) {
@@ -30,22 +29,24 @@ try {
 // =============================================================
 // READ
 // =============================================================
-function clubs_read($id): void {
-    if ($id !== '' && $id !== '0') {
-        if (ctype_digit($id) && (int)$id > 0) {
-            $where = 'WHERE id = ?';
-            $params = [(int)$id];
-        } else {
-            $where = 'WHERE slug = ?';
-            $params = [(string)$id];
-        }
-        $stmt = db()->prepare('SELECT * FROM clubs ' . $where);
-        $stmt->execute($params);
+function clubs_read(int $id): void {
+    if ($id > 0) {
+        $stmt = db()->prepare('SELECT * FROM clubs WHERE id = ?');
+        $stmt->execute([$id]);
         $c = $stmt->fetch();
         if (!$c) json_err('Club introuvable', 404);
         $c['tags'] = json_decode($c['tags'] ?? '[]', true);
-        $c['members_count'] = (int)db()->query('SELECT COUNT(*) FROM inscriptions WHERE club_id = ' . (int)$c['id'] . ' AND status = "active"')->fetchColumn();
-        $c['members'] = db()->prepare('SELECT u.id, u.name, u.avatar, u.filiere, i.role_in_club, i.joined_at FROM inscriptions i JOIN users u ON u.id = i.user_id WHERE i.club_id = ? AND i.status = "active" ORDER BY i.joined_at DESC')->fetchAll();
+        $c['members_count'] = (int)db()->query('SELECT COUNT(*) FROM inscriptions WHERE club_id = ' . (int)$id . ' AND status = "active"')->fetchColumn();
+
+        // Liste reelle des membres/etudiants du club (utilisee par l'onglet "Membres" de club.html)
+        $c['members'] = db()->query('
+            SELECT u.id, u.name, u.avatar, u.filiere, i.role_in_club, i.joined_at
+            FROM inscriptions i
+            JOIN users u ON u.id = i.user_id
+            WHERE i.club_id = ' . (int)$id . ' AND i.status = "active"
+            ORDER BY FIELD(i.role_in_club, "president","bureau","member"), u.name ASC
+        ')->fetchAll();
+
         json_ok($c);
     }
 
@@ -53,7 +54,7 @@ function clubs_read($id): void {
     $q        = get_str('q');
     $category = get_str('category');
     $status   = get_str('status', 'active');
-    $sort     = get_str('sort', 'name');
+    $sort     = get_str('sort', 'name');  // name, members, recent
     $page     = max(1, (int)($_GET['page'] ?? 1));
     $per_page = min(50, max(1, (int)($_GET['per_page'] ?? 24)));
     $offset   = ($page - 1) * $per_page;
@@ -70,13 +71,11 @@ function clubs_read($id): void {
         $params[':cat'] = $category;
     }
 
-    if ($sort === 'members') {
-        $order = '(SELECT COUNT(*) FROM inscriptions i WHERE i.club_id = clubs.id AND i.status = "active") DESC';
-    } elseif ($sort === 'recent') {
-        $order = 'created_at DESC';
-    } else {
-        $order = 'name ASC';
-    }
+    $order = match($sort) {
+        'members' => '(SELECT COUNT(*) FROM inscriptions i WHERE i.club_id = clubs.id AND i.status = "active") DESC',
+        'recent'  => 'created_at DESC',
+        default   => 'name ASC',
+    };
 
     $sql = 'SELECT c.*, (SELECT COUNT(*) FROM inscriptions i WHERE i.club_id = c.id AND i.status = "active") AS members_count
             FROM clubs c WHERE ' . implode(' AND ', $where) . ' ORDER BY ' . $order . ' LIMIT :lim OFFSET :off';

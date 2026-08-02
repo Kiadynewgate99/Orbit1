@@ -25,17 +25,32 @@
   <div class="app-shell-mount"></div>
 
   <script src="js/data.js"></script>
+  <script src="js/api.js?v=3"></script>
   <script src="js/app.js"></script>
   <script>
     window.addEventListener('load', () => ClubHub.hideLoader());
+
+    let apiClubs = [];
+    let apiError = false;
+
+    async function initClubs() {
+      try {
+        const r = await ClubHubAPI.clubs();
+        apiClubs = r.data || [];
+      } catch (e) {
+        apiError = true;
+        apiClubs = CLUBHUB.CLUBS;
+      }
+      renderClubs();
+    }
 
     const content = `
       <div class="card" style="padding: var(--s-5); margin-bottom: var(--s-5);">
         <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3);">
           <div>
             <div class="text-mono" style="font-size: 11px; color: var(--orange); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;">ANNUAIRE</div>
-            <strong style="font-size: var(--fs-2xl);">${CLUBHUB.CLUBS.length} clubs actifs</strong>
-            <div class="text-muted" style="font-size: var(--fs-sm); margin-top: 2px;">${CLUBHUB.CLUBS.reduce((a, c) => a + c.members, 0)} membres · 8 domaines</div>
+            <strong style="font-size: var(--fs-2xl);" id="clubs-count">${CLUBHUB.CLUBS.length} clubs actifs</strong>
+            <div class="text-muted" style="font-size: var(--fs-sm); margin-top: 2px;" id="clubs-members">${CLUBHUB.CLUBS.reduce((a, c) => a + c.members, 0)} membres · 8 domaines</div>
           </div>
         </div>
       </div>
@@ -84,47 +99,68 @@
 
     const renderClubs = () => {
       const q = (search.value || '').toLowerCase();
-      let list = CLUBHUB.CLUBS.filter(club => {
-        const matchesDomain = currentDomain === 'all' || club.domain === currentDomain;
-        const matchesSearch = !q || club.name.toLowerCase().includes(q) || club.description.toLowerCase().includes(q) || club.tags.some(t => t.toLowerCase().includes(q));
+      let list = apiClubs.filter(club => {
+        const clubDomain = club.category || club.domain || '';
+        const clubName = club.name || '';
+        const clubDesc = club.short_desc || club.description || '';
+        const clubTags = club.tags || [];
+        const matchesDomain = currentDomain === 'all' || clubDomain === currentDomain;
+        const matchesSearch = !q || clubName.toLowerCase().includes(q) || clubDesc.toLowerCase().includes(q) || clubTags.some(t => t.toLowerCase().includes(q));
         return matchesDomain && matchesSearch;
       });
 
-      if (sort.value === 'members') list.sort((a, b) => b.members - a.members);
-      else if (sort.value === 'events') list.sort((a, b) => b.events - a.events);
-      else list.sort((a, b) => a.name.localeCompare(b.name));
+      if (sort.value === 'members') list.sort((a, b) => (b.members_count || b.members || 0) - (a.members_count || a.members || 0));
+      else if (sort.value === 'events') list.sort((a, b) => (b.events_count || b.events || 0) - (a.events_count || a.events || 0));
+      else list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+      const countEl = document.getElementById('clubs-count');
+      const membersEl = document.getElementById('clubs-members');
+      if (countEl) countEl.textContent = list.length + ' clubs actifs';
+      if (membersEl) membersEl.textContent = list.reduce((a, c) => a + (c.members_count || c.members || 0), 0) + ' membres · 8 domaines';
 
       if (list.length === 0) {
         grid.innerHTML = `<div class="empty" style="grid-column: 1 / -1;"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div><div class="empty-title">Aucun club trouvé</div><div class="empty-text">Modifiez vos filtres.</div><button class="btn btn-secondary btn-sm" onclick="resetFilters()">Réinitialiser</button></div>`;
         return;
       }
 
-      grid.innerHTML = list.map(club => `
-        <a href="club.html?id=${club.id}" class="club-card">
+      grid.innerHTML = list.map(club => {
+        const clubId = club.slug || club.id;
+        const clubName = club.name || '';
+        const clubColor = club.color || '#ff4502';
+        const clubDomain = club.category || club.domain || '';
+        const clubDesc = club.short_desc || club.description || '';
+        const clubTags = club.tags || [];
+        const memberCount = club.members_count || club.members || 0;
+        const eventCount = club.events_count || club.events || 0;
+        const initials = clubName.substring(0, 2).toUpperCase();
+        const domainLabel = CLUBHUB.CLUB_CATEGORIES.find(c => c.id === clubDomain)?.label || clubDomain || '';
+        return `
+        <a href="club.html?id=${clubId}" class="club-card">
           <div class="club-card-header">
-            <span>${club.id}.html</span>
+            <span>${clubId}</span>
             <span>◉</span>
           </div>
           <div class="club-card-body">
             <div style="display: flex; gap: var(--s-3); margin-bottom: var(--s-3);">
-              <div class="club-card-icon" style="background: ${club.color};">${club.icon}</div>
+              <div class="club-card-icon" style="background: ${clubColor};">${initials}</div>
               <div style="flex: 1;">
-                <div class="club-card-name" style="margin-bottom: 2px;">${club.name}</div>
-                <div class="club-card-domain">${CLUBHUB.CLUB_CATEGORIES.find(c => c.id === club.domain)?.label || ''}</div>
+                <div class="club-card-name" style="margin-bottom: 2px;">${clubName}</div>
+                <div class="club-card-domain">${domainLabel}</div>
               </div>
             </div>
-            <div class="club-card-desc">${club.description}</div>
+            <div class="club-card-desc">${clubDesc}</div>
             <div class="club-card-tags">
-              ${club.tags.slice(0, 2).map(t => `<span class="badge">${t}</span>`).join('')}
+              ${clubTags.slice(0, 2).map(t => `<span class="badge">${t}</span>`).join('')}
             </div>
             <div class="club-card-footer">
-              <span>◉ ${club.members}</span>
-              <span>◷ ${club.events}</span>
+              <span>◉ ${memberCount}</span>
+              <span>◷ ${eventCount}</span>
               <span style="margin-left: auto; color: var(--text-primary); font-weight: 700;">Ouvert</span>
             </div>
           </div>
         </a>
-      `).join('');
+      `;
+      }).join('');
     };
 
     const resetFilters = () => {
@@ -152,6 +188,7 @@
     }));
 
     renderClubs();
+    initClubs();
 
     // Autocomplete (debounce 200ms)
     const searchInput = document.getElementById('club-search');
@@ -163,18 +200,19 @@
       if (q.length < 2) { suggestBox.style.display = 'none'; return; }
       debounceTimer = setTimeout(() => {
         const lcQ = q.toLowerCase();
-        const matches = CLUBHUB.CLUBS.filter(c =>
-          c.name.toLowerCase().includes(lcQ) ||
-          c.short_desc.toLowerCase().includes(lcQ) ||
+        const matches = apiClubs.filter(c =>
+          (c.name || '').toLowerCase().includes(lcQ) ||
+          (c.short_desc || c.description || '').toLowerCase().includes(lcQ) ||
           (c.tags || []).some(t => t.toLowerCase().includes(lcQ))
         ).slice(0, 6);
         if (!matches.length) { suggestBox.style.display = 'none'; return; }
+        const textColor = (cat) => cat === 'sport' || cat === 'environnement' || cat === 'culture' || cat === 'debats' ? '#000' : '#fff';
         suggestBox.innerHTML = matches.map(c => `
-          <a href="club.html?id=${c.id}" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--border-subtle); text-decoration: none; color: var(--text-primary); transition: background 0.15s;" onmouseover="this.style.background='var(--lime-soft)'" onmouseout="this.style.background=''">
-            <div style="width: 32px; height: 32px; border-radius: 4px; background: ${c.color}; color: ${c.cat === 'sport' || c.cat === 'environnement' || c.cat === 'culture' || c.cat === 'debats' ? '#000' : '#fff'}; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px;">${c.short}</div>
+          <a href="club.html?id=${c.slug || c.id}" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--border-subtle); text-decoration: none; color: var(--text-primary); transition: background 0.15s;" onmouseover="this.style.background='var(--lime-soft)'" onmouseout="this.style.background=''">
+            <div style="width: 32px; height: 32px; border-radius: 4px; background: ${c.color}; color: ${textColor(c.category || c.domain)}; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px;">${c.name.substring(0, 2).toUpperCase()}</div>
             <div style="flex: 1; min-width: 0;">
               <div style="font-weight: 700; font-size: 13px;">${c.name}</div>
-              <div style="font-size: 11px; color: var(--text-tertiary); font-family: var(--font-mono);">${c.category.toUpperCase()} · ${c.members} membres</div>
+              <div style="font-size: 11px; color: var(--text-tertiary); font-family: var(--font-mono);">${(c.category || c.domain || '').toUpperCase()} · ${c.members_count || c.members || 0} membres</div>
             </div>
             <span style="color: var(--orange); font-weight: 800;">→</span>
           </a>

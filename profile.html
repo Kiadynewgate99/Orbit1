@@ -17,116 +17,127 @@
   <div class="app-shell-mount"></div>
 
   <script src="js/data.js"></script>
+  <script src="js/api.js?v=3"></script>
   <script src="js/app.js"></script>
   <script>
-    window.addEventListener('load', () => ClubHub.hideLoader());
+    (async function () {
+      window.addEventListener('load', () => ClubHub.hideLoader());
 
-    const user = ClubHub.Auth.require();
-    if (!user) throw new Error('Unauthorized');
+      const user = ClubHub.Auth.require();
+      if (!user) throw new Error('Unauthorized');
 
-    const content = `
-      <div class="card" style="padding: var(--s-6); margin-bottom: var(--s-5);">
-        <div class="flex items-center gap-4" style="flex-wrap: wrap;">
-          <div class="avatar avatar-xl avatar-orange" style="width: 80px; height: 80px; font-size: 28px;">${user.avatar}</div>
-          <div style="flex: 1; min-width: 200px;">
-            <div class="text-mono" style="font-size: 11px; color: var(--orange); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;">PROFIL</div>
-            <h2 style="font-size: var(--fs-2xl); margin: 4px 0;">${user.name}</h2>
-            <div class="text-mono" style="font-size: var(--fs-sm); font-weight: 600;">${user.matricule} · ${user.filiere || 'Informatique'} ${user.niveau || 'L2'}</div>
-            <div class="flex gap-2" style="margin-top: var(--s-3); flex-wrap: wrap;">
-              <span class="badge badge-lime">Compte vérifié</span>
-              <span class="badge">2 clubs</span>
-            </div>
-          </div>
-          <div class="flex gap-3">
-            <div style="text-align: center; padding: var(--s-3); background: var(--orange); color: var(--white); border-radius: var(--r-sm);">
-              <div class="text-mono" style="font-size: var(--fs-2xl); font-weight: 900;">120</div>
-              <div class="text-mono" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Points</div>
-            </div>
-            <div style="text-align: center; padding: var(--s-3); background: var(--bg-elev-1); border: 1px solid var(--black); border-radius: var(--r-sm);">
-              <div class="text-mono" style="font-size: var(--fs-2xl); font-weight: 900;">#42</div>
-              <div class="text-mono" style="font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Rang</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      let profileData = user;
+      try {
+        const res = await ClubHubAPI.me();
+        profileData = res.data || res || user;
+      } catch (e) {
+        profileData = user;
+      }
 
-      <div class="grid" style="grid-template-columns: 2fr 1fr; gap: var(--s-5);">
-        <div>
-          <div class="card" style="margin-bottom: var(--s-4);">
-            <div class="flex items-center justify-between" style="margin-bottom: var(--s-4);">
-              <h2 style="font-size: var(--fs-lg); font-weight: 800;">Informations personnelles</h2>
-              <button class="btn btn-secondary btn-sm">Modifier</button>
-            </div>
-            <div class="grid grid-2" style="gap: var(--s-4);">
-              <div>
-                <label class="label">Nom complet</label>
-                <input class="input" type="text" value="${user.name}" />
-              </div>
-              <div>
-                <label class="label">Email universitaire</label>
-                <input class="input" type="email" value="${user.email || 'mika.andriamaota@univ.mg'}" />
-              </div>
-              <div>
-                <label class="label">Matricule</label>
-                <input class="input" type="text" value="${user.matricule}" disabled />
-              </div>
-              <div>
-                <label class="label">Filière</label>
-                <input class="input" type="text" value="${user.filiere || 'Informatique'} - ${user.niveau || 'L2'}" disabled />
+      const content = `
+        <div class="card" style="padding: var(--s-6); margin-bottom: var(--s-5);">
+          <div class="flex items-center gap-4" style="flex-wrap: wrap;">
+            <div class="avatar avatar-xl avatar-orange" style="width: 80px; height: 80px; font-size: 28px;">${profileData.avatar}</div>
+            <div style="flex: 1; min-width: 200px;">
+              <div class="text-mono" style="font-size: 11px; color: var(--orange); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;">PROFIL</div>
+              <h2 style="font-size: var(--fs-2xl); margin: 4px 0;">${profileData.name}</h2>
+              <div class="text-mono" style="font-size: var(--fs-sm); font-weight: 600;">${profileData.matricule} · ${profileData.filiere || 'Informatique'} ${profileData.niveau || 'L2'}</div>
+              <div class="flex gap-2" style="margin-top: var(--s-3); flex-wrap: wrap;">
+                <span class="badge badge-lime">Compte vérifié</span>
+                <span class="badge">2 clubs</span>
               </div>
             </div>
-          </div>
-
-          <div class="card">
-            <h2 style="font-size: var(--fs-lg); font-weight: 800; margin-bottom: var(--s-4);">Centres d'intérêt</h2>
-            <p class="text-muted" style="font-size: var(--fs-sm); margin-bottom: var(--s-4);">Sélectionnez vos centres d'intérêt pour des suggestions personnalisées.</p>
-            <div class="chip-group">
-              ${['Technologie', 'Sport', 'Culture', 'Entrepreneuriat', 'Environnement', 'Débats', 'Bénévolat', 'Langues'].map((t, i) => `
-                <button class="chip ${[0, 4, 5].includes(i) ? 'active' : ''}">${t}</button>
-              `).join('')}
+            <div class="flex gap-3">
+              <div style="text-align: center; padding: var(--s-3); background: var(--orange); color: var(--white); border-radius: var(--r-sm);">
+                <div class="text-mono" style="font-size: var(--fs-2xl); font-weight: 900;">120</div>
+                <div class="text-mono" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Points</div>
+              </div>
+              <div style="text-align: center; padding: var(--s-3); background: var(--bg-elev-1); border: 1px solid var(--black); border-radius: var(--r-sm);">
+                <div class="text-mono" style="font-size: var(--fs-2xl); font-weight: 900;">#42</div>
+                <div class="text-mono" style="font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Rang</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div>
-          <div class="card" style="margin-bottom: var(--s-4);">
-            <h3 style="font-size: var(--fs-base); font-weight: 800; margin-bottom: var(--s-4);">Statistiques</h3>
-            <div class="flex flex-col gap-3">
-              ${[
-                { label: 'Clubs rejoints', val: '2' },
-                { label: 'Événements suivis', val: '2' },
-                { label: 'Taux de présence', val: '100%', orange: true },
-                { label: "Points d'engagement", val: '120', orange: true },
-              ].map(s => `
-                <div class="flex items-center justify-between" style="padding: var(--s-3) 0; border-bottom: 1px solid var(--border-subtle);">
-                  <span style="font-size: var(--fs-sm); color: var(--text-secondary);">${s.label}</span>
-                  <strong class="text-mono" style="${s.orange ? 'color: var(--orange);' : ''}">${s.val}</strong>
+        <div class="grid" style="grid-template-columns: 2fr 1fr; gap: var(--s-5);">
+          <div>
+            <div class="card" style="margin-bottom: var(--s-4);">
+              <div class="flex items-center justify-between" style="margin-bottom: var(--s-4);">
+                <h2 style="font-size: var(--fs-lg); font-weight: 800;">Informations personnelles</h2>
+                <button class="btn btn-secondary btn-sm">Modifier</button>
+              </div>
+              <div class="grid grid-2" style="gap: var(--s-4);">
+                <div>
+                  <label class="label">Nom complet</label>
+                  <input class="input" type="text" value="${profileData.name}" />
                 </div>
-              `).join('')}
+                <div>
+                  <label class="label">Email universitaire</label>
+                  <input class="input" type="email" value="${profileData.email || 'mika.andriamaota@univ.mg'}" />
+                </div>
+                <div>
+                  <label class="label">Matricule</label>
+                  <input class="input" type="text" value="${profileData.matricule}" disabled />
+                </div>
+                <div>
+                  <label class="label">Filière</label>
+                  <input class="input" type="text" value="${profileData.filiere || 'Informatique'} - ${profileData.niveau || 'L2'}" disabled />
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2 style="font-size: var(--fs-lg); font-weight: 800; margin-bottom: var(--s-4);">Centres d'intérêt</h2>
+              <p class="text-muted" style="font-size: var(--fs-sm); margin-bottom: var(--s-4);">Sélectionnez vos centres d'intérêt pour des suggestions personnalisées.</p>
+              <div class="chip-group">
+                ${['Technologie', 'Sport', 'Culture', 'Entrepreneuriat', 'Environnement', 'Débats', 'Bénévolat', 'Langues'].map((t, i) => `
+                  <button class="chip ${[0, 4, 5].includes(i) ? 'active' : ''}">${t}</button>
+                `).join('')}
+              </div>
             </div>
           </div>
 
-          <div class="card" style="background: var(--lime); border-color: var(--black);">
-            <h3 style="font-size: var(--fs-base); font-weight: 800; margin-bottom: var(--s-3);">Confidentialité</h3>
-            <p style="font-size: var(--fs-sm); line-height: 1.5; margin-bottom: var(--s-4);">
-              Vos données sont chiffrées et hébergées localement. Vous pouvez exporter ou supprimer votre compte (RGPD).
-            </p>
-            <div class="flex flex-col gap-2">
-              <button class="btn btn-sm" style="background: var(--white);">Exporter mes données</button>
-              <button class="btn btn-sm" style="background: var(--white); border-color: var(--black);">Supprimer mon compte</button>
+          <div>
+            <div class="card" style="margin-bottom: var(--s-4);">
+              <h3 style="font-size: var(--fs-base); font-weight: 800; margin-bottom: var(--s-4);">Statistiques</h3>
+              <div class="flex flex-col gap-3">
+                ${[
+                  { label: 'Clubs rejoints', val: '2' },
+                  { label: 'Événements suivis', val: '2' },
+                  { label: 'Taux de présence', val: '100%', orange: true },
+                  { label: "Points d'engagement", val: '120', orange: true },
+                ].map(s => `
+                  <div class="flex items-center justify-between" style="padding: var(--s-3) 0; border-bottom: 1px solid var(--border-subtle);">
+                    <span style="font-size: var(--fs-sm); color: var(--text-secondary);">${s.label}</span>
+                    <strong class="text-mono" style="${s.orange ? 'color: var(--orange);' : ''}">${s.val}</strong>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="card" style="background: var(--lime); border-color: var(--black);">
+              <h3 style="font-size: var(--fs-base); font-weight: 800; margin-bottom: var(--s-3);">Confidentialité</h3>
+              <p style="font-size: var(--fs-sm); line-height: 1.5; margin-bottom: var(--s-4);">
+                Vos données sont chiffrées et hébergées localement. Vous pouvez exporter ou supprimer votre compte (RGPD).
+              </p>
+              <div class="flex flex-col gap-2">
+                <button class="btn btn-sm" style="background: var(--white);">Exporter mes données</button>
+                <button class="btn btn-sm" style="background: var(--white); border-color: var(--black);">Supprimer mon compte</button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    `;
+      `;
 
-    ClubHub.renderShell({
-      active: 'profile',
-      role: 'student',
-      content,
-      pageTitle: 'Mon profil',
-      pageSubtitle: 'Gérez vos informations personnelles et préférences.',
-    });
+      ClubHub.renderShell({
+        active: 'profile',
+        role: 'student',
+        content,
+        pageTitle: 'Mon profil',
+        pageSubtitle: 'Gérez vos informations personnelles et préférences.',
+      });
+    })();
   </script>
 </body>
 </html>

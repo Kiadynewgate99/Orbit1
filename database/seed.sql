@@ -1,3 +1,6 @@
+CREATE DATABASE IF NOT EXISTS `clubhub` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `clubhub`;
+
 -- =============================================================
 -- ClubHub v1.0.0 - Seed (donnees de demonstration)
 -- 3 comptes demo + 12 clubs + 11 events + inscriptions

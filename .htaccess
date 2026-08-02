@@ -23,7 +23,6 @@ RewriteEngine On
 
 # Hide server signature
 ServerSignature Off
-ServerTokens Prod
 
 # Remove PHP headers (if PHP is present)
 <IfModule mod_php.c>
@@ -36,7 +35,7 @@ ServerTokens Prod
 
 # Block access to sensitive files and directories
 RedirectMatch 403 /\.(env|git|svn|hg)\/
-RedirectMatch 403 /(api|database|\.github)\/
+RedirectMatch 403 /(database|\.github)\/
 
 # Block access to hidden files
 RedirectMatch 403 /\..*$
@@ -78,4 +77,4 @@ RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK|CONNECT|DEBUG) [NC]
 RewriteRule .* - [F,L]
 
 # Block suspicious query strings
-RedirectMatch 403 (\.\./|/etc/passwd|\.php\b)
+RedirectMatch 403 (\.\./|/etc/passwd)

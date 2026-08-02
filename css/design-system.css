@@ -1,12 +1,21 @@
-/* =========================================================================
-   ClubHub v3 - Design System
+/* ==========================================================================
+   ClubHub v3 — Design System
    Style: Retro Webflow Monochrome + Bold Color Accents
    Palette: Red-Orange, Bitter Lime, Mauve, Blue, Black
-   ========================================================================= */
+   ========================================================================== */
 
+/* ==========================================================================
+   1. FONTS
+   ========================================================================== */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
+
+/* ==========================================================================
+   2. DESIGN TOKENS (light theme = défaut)
+   ========================================================================== */
 :root {
+  color-scheme: light;
+
   /* Base monochrome */
   --bg-page: #ffffff;
   --bg-surface: #ffffff;
@@ -16,14 +25,14 @@
   --bg-inverse: #000000;
   --bg-inverse-2: #111111;
 
-  /* Accent palette - bold retro */
-  --orange: #ff4502;       /* Red-Orange */
+  /* Accent palette — bold retro */
+  --orange: #ff4502;
   --orange-soft: #ff450233;
-  --lime: #c2ff01;         /* Bitter Lime */
+  --lime: #c2ff01;
   --lime-soft: #c2ff0133;
-  --mauve: #dcb8ff;        /* Mauve */
+  --mauve: #dcb8ff;
   --mauve-soft: #dcb8ff66;
-  --blue: #0044ff;         /* Blue */
+  --blue: #0044ff;
   --blue-soft: #0044ff33;
   --black: #000000;
   --white: #ffffff;
@@ -56,7 +65,7 @@
   --s-20: 80px;
   --s-24: 96px;
 
-  /* Rayons - plutot angulaires pour le look retro */
+  /* Rayons */
   --r-sm: 4px;
   --r-md: 8px;
   --r-lg: 12px;
@@ -82,15 +91,58 @@
   --fs-6xl: 80px;
   --fs-7xl: 120px;
 
+  /* Motion */
   --t-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --t-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
   --t-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  --t-theme: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+
+  /* Retro pattern : décalage + ombre dure (utilisé par .lift, .btn:hover) */
+  --lift-offset: 4px;
+  --lift-shadow: 4px 4px 0 var(--shadow-color, var(--black));
+  --shadow-color: var(--black);
+
+  /* Curseur dynamique (permet l'inversion en dark) */
+  --cursor-fill: #000000;
+  --cursor-stroke: #ffffff;
 }
 
-/* =============================================================
-   DARK MODE — fond pur noir, texte blanc, bordures blanches
-   ============================================================= */
+
+/* ==========================================================================
+   3. DARK MODE — source unique
+   Couvre :
+     - toggle explicite  : <html data-theme="dark">
+     - préférence système: @media (prefers-color-scheme: dark), sauf si data-theme="light"
+   ========================================================================== */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --bg-page: #000000;
+    --bg-surface: #0a0a0a;
+    --bg-elev-1: #141414;
+    --bg-elev-2: #1e1e1e;
+    --bg-elev-3: #282828;
+    --bg-inverse: #ffffff;
+
+    --text-primary: #ffffff;
+    --text-secondary: #b8b8b8;
+    --text-tertiary: #888888;
+    --text-disabled: #555555;
+
+    --border-default: #ffffff;
+    --border-thin: rgba(255, 255, 255, 0.2);
+    --border-subtle: #2a2a2a;
+
+    --shadow-color: var(--orange);
+    --cursor-fill: #ffffff;
+    --cursor-stroke: #000000;
+  }
+}
+
 [data-theme="dark"] {
+  color-scheme: dark;
+
   --bg-page: #000000;
   --bg-surface: #0a0a0a;
   --bg-elev-1: #141414;
@@ -106,34 +158,42 @@
   --border-default: #ffffff;
   --border-thin: rgba(255, 255, 255, 0.2);
   --border-subtle: #2a2a2a;
+
+  --shadow-color: var(--orange);
+  --cursor-fill: #ffffff;
+  --cursor-stroke: #000000;
 }
 
-[data-theme="dark"] body { background: var(--bg-page); color: var(--text-primary); }
-[data-theme="dark"] .card { background: var(--bg-surface); border-color: var(--border-default); color: var(--text-primary); }
-[data-theme="dark"] .input,
-[data-theme="dark"] .select,
-[data-theme="dark"] textarea { background: var(--bg-elev-1); color: var(--text-primary); border-color: var(--border-default); }
-[data-theme="dark"] .stat-card { background: var(--bg-surface); color: var(--text-primary); }
-[data-theme="dark"] .stat-card .stat-label { color: var(--text-tertiary); }
-[data-theme="dark"] .file-card { background: var(--bg-surface) !important; }
-[data-theme="dark"] .file-card .file-card-title { color: var(--text-primary); }
-[data-theme="dark"] .file-card .file-card-meta { color: var(--text-tertiary); }
-[data-theme="dark"] .footer { background: #000000; border-top: 1px solid #1a1a1a; color: var(--text-secondary); }
-[data-theme="dark"] .page-loader { background: #000000; }
-[data-theme="dark"] .file-card-tag { background: var(--orange); color: #fff; }
 
-html, body, * { cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMyAyIEwzIDE4IEw3IDE0IEwxMCAyMSBIMTMgTDEwIDEzIEwxNiAxMyBaIiBmaWxsPSIjMDAwIiBzdHJva2U9IiNGRkZGIiBzdHJva2Utd2lkdGg9IjEuMiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==") 0 0, auto; }
+/* ==========================================================================
+   4. CURSEUR PERSONNALISÉ (adaptatif light/dark)
+   ========================================================================== */
+html, body, * {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M3 2L3 18L7 14L10 21H13L10 13L16 13Z' fill='%23000' stroke='%23fff' stroke-width='1.2' stroke-linejoin='round' /></svg>") 0 0, auto;
+}
 input, textarea, [contenteditable] { cursor: text; }
 .grab, [data-cursor="grab"] { cursor: grab; }
 
+/* Dark mode : curseur inversé (blanc sur fond noir) */
+[data-theme="dark"] :is(html, body, *) {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M3 2L3 18L7 14L10 21H13L10 13L16 13Z' fill='%23fff' stroke='%23000' stroke-width='1.2' stroke-linejoin='round' /></svg>") 0 0, auto;
+}
 
-/* Reset */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ==========================================================================
+   5. RESET
+   ========================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
@@ -144,49 +204,58 @@ body {
   background: var(--bg-page);
   min-height: 100vh;
   overflow-x: hidden;
+  transition: var(--t-theme);
 }
 
 a { color: inherit; text-decoration: none; transition: opacity var(--t-fast); }
 a:hover { opacity: 0.7; }
 
 button {
-  font-family: inherit;
+  font: inherit;
   cursor: pointer;
   border: none;
   background: none;
   color: inherit;
-  font-size: inherit;
 }
 
 input, textarea, select {
-  font-family: inherit;
-  font-size: inherit;
+  font: inherit;
   color: inherit;
 }
 
 img, svg { max-width: 100%; display: block; }
+
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.04em;
+  text-wrap: balance;
 }
+
 ul, ol { list-style: none; }
 
 ::selection { background: var(--lime); color: var(--black); }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg-elev-1); }
-::-webkit-scrollbar-thumb { background: var(--black); border-radius: var(--r-full); }
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: var(--r-full);
+  transition: background var(--t-base);
+}
 
 :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
 
-/* Layout */
+
+/* ==========================================================================
+   6. LAYOUT PRIMITIVES
+   ========================================================================== */
 .container {
   width: 100%;
   max-width: 1320px;
-  margin: 0 auto;
-  padding: 0 var(--s-6);
+  margin-inline: auto;
+  padding-inline: var(--s-6);
 }
 
 .grid { display: grid; gap: var(--s-5); }
@@ -209,8 +278,8 @@ ul, ol { list-style: none; }
 .gap-3 { gap: var(--s-3); }
 .gap-4 { gap: var(--s-4); }
 
-.section { padding: var(--s-16) 0; position: relative; }
-@media (max-width: 768px) { .section { padding: var(--s-10) 0; } }
+.section { padding-block: var(--s-16); position: relative; }
+@media (max-width: 768px) { .section { padding-block: var(--s-10); } }
 
 .section-header { margin-bottom: var(--s-10); }
 .section-eyebrow {
@@ -239,18 +308,40 @@ ul, ol { list-style: none; }
   max-width: 640px;
 }
 
-/* Cartes avec bordure retro */
+
+/* ==========================================================================
+   7. UTILITIES
+   ========================================================================== */
+:where(.text-orange, .text-lime, .text-mauve, .text-blue, .text-muted, .text-dim, .text-mono, .text-center) {
+  /* Specificité 0 pour rester facilement surchargeables */
+}
+
+/* .text-* déclarés via :where ci-dessus pour spécificité 0 */
+.text-orange { color: var(--orange); }
+.text-lime { color: var(--lime); }
+.text-mauve { color: var(--mauve); }
+.text-blue { color: var(--blue); }
+.text-muted { color: var(--text-secondary); }
+.text-dim { color: var(--text-tertiary); }
+.text-mono { font-family: var(--font-mono); }
+.text-center { text-align: center; }
+
+
+/* ==========================================================================
+   8. COMPOSANTS — CARDS
+   ========================================================================== */
 .card {
   background: var(--bg-surface);
   border: 1px solid var(--black);
   border-radius: var(--r-md);
   padding: var(--s-5);
-  transition: all var(--t-base);
+  transition: transform var(--t-base), box-shadow var(--t-base), background var(--t-theme), border-color var(--t-theme);
 }
 
+/* Pattern retro : décalage + ombre dure réutilisable */
 .card-hover:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0 var(--black);
+  box-shadow: var(--lift-shadow);
 }
 
 .card-title {
@@ -259,8 +350,19 @@ ul, ol { list-style: none; }
   letter-spacing: -0.02em;
 }
 
-/* Boutons - style retro bold */
+
+/* ==========================================================================
+   9. COMPOSANTS — BOUTONS
+   Pattern hover unifié via custom props : chaque variante définit
+   --btn-hover-bg / --btn-hover-color / --btn-hover-shadow,
+   le bloc :hover commun applique le décalage rétro.
+   ========================================================================== */
 .btn {
+  /* Valeurs par défaut (variante "neutre") */
+  --btn-hover-bg: var(--white);
+  --btn-hover-color: var(--black);
+  --btn-hover-shadow: var(--shadow-color);
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -270,80 +372,94 @@ ul, ol { list-style: none; }
   font-weight: 600;
   border-radius: var(--r-sm);
   border: 1px solid var(--black);
+  background: var(--white);
+  color: var(--black);
   cursor: pointer;
-  transition: all var(--t-base);
+  transition: background var(--t-base), color var(--t-base), transform var(--t-base), box-shadow var(--t-base);
   white-space: nowrap;
   letter-spacing: -0.01em;
   position: relative;
-  background: var(--white);
-  color: var(--black);
 }
 
 .btn svg { width: 16px; height: 16px; }
 
+/* Toutes les variantes appliquent le même pattern hover */
+:where(.btn-primary, .btn-orange, .btn-lime, .btn-mauve, .btn-blue, .btn-ghost, .card-hover):hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--btn-hover-shadow, var(--shadow-color));
+}
+
 .btn-primary {
   background: var(--black);
   color: var(--white);
+  --btn-hover-bg: var(--white);
+  --btn-hover-color: var(--black);
 }
 .btn-primary:hover {
   background: var(--white);
   color: var(--black);
-  transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0 var(--black);
 }
 
 .btn-orange {
   background: var(--orange);
   color: var(--white);
   border-color: var(--black);
+  --btn-hover-bg: var(--black);
+  --btn-hover-color: var(--orange);
+  --btn-hover-shadow: var(--orange);
 }
 .btn-orange:hover {
   background: var(--black);
   color: var(--orange);
-  transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0 var(--orange);
 }
 
 .btn-lime {
   background: var(--lime);
   color: var(--black);
+  --btn-hover-bg: var(--black);
+  --btn-hover-color: var(--lime);
+  --btn-hover-shadow: var(--lime);
 }
 .btn-lime:hover {
   background: var(--black);
   color: var(--lime);
-  transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0 var(--lime);
 }
 
 .btn-mauve {
   background: var(--mauve);
   color: var(--black);
+  --btn-hover-bg: var(--black);
+  --btn-hover-color: var(--mauve);
+  --btn-hover-shadow: var(--mauve);
 }
 .btn-mauve:hover {
   background: var(--black);
   color: var(--mauve);
-  transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0 var(--mauve);
 }
 
 .btn-blue {
   background: var(--blue);
   color: var(--white);
+  --btn-hover-bg: var(--white);
+  --btn-hover-color: var(--blue);
+  --btn-hover-shadow: var(--blue);
 }
 .btn-blue:hover {
   background: var(--white);
   color: var(--blue);
-  transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0 var(--blue);
 }
 
 .btn-ghost {
   background: transparent;
   border-color: transparent;
+  --btn-hover-bg: var(--bg-elev-1);
+  --btn-hover-color: var(--text-primary);
+  --btn-hover-shadow: transparent;
 }
 .btn-ghost:hover {
   background: var(--bg-elev-1);
   border-color: var(--black);
+  /* écrase le pattern lift pour cette variante */
   transform: none;
   box-shadow: none;
 }
@@ -359,14 +475,18 @@ ul, ol { list-style: none; }
   background: var(--white);
   border: 1px solid var(--black);
   color: var(--black);
+  transition: background var(--t-base), color var(--t-base);
 }
-.btn-icon:hover { background: var(--black); color: var(--white); }
+.btn-icon:hover { background: var(--black); color: var(--white); transform: none; box-shadow: none; }
 
 .btn-sm { padding: 6px 12px; font-size: 12px; }
 .btn-lg { padding: 16px 28px; font-size: var(--fs-md); }
 .btn-full { width: 100%; }
 
-/* Inputs */
+
+/* ==========================================================================
+   10. COMPOSANTS — INPUTS
+   ========================================================================== */
 .input, .select, .textarea {
   width: 100%;
   padding: 12px 16px;
@@ -375,7 +495,7 @@ ul, ol { list-style: none; }
   border-radius: var(--r-sm);
   color: var(--text-primary);
   font-size: var(--fs-sm);
-  transition: all var(--t-base);
+  transition: box-shadow var(--t-base), background var(--t-theme), border-color var(--t-theme), color var(--t-theme);
 }
 
 .input::placeholder, .textarea::placeholder { color: var(--text-tertiary); }
@@ -406,7 +526,10 @@ ul, ol { list-style: none; }
   margin-bottom: 6px;
 }
 
-/* Badges - retro */
+
+/* ==========================================================================
+   11. COMPOSANTS — BADGES
+   ========================================================================== */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -427,7 +550,10 @@ ul, ol { list-style: none; }
 .badge-blue { background: var(--blue); color: var(--white); }
 .badge-dark { background: var(--black); color: var(--white); }
 
-/* Avatars */
+
+/* ==========================================================================
+   12. COMPOSANTS — AVATARS
+   ========================================================================== */
 .avatar {
   width: 40px;
   height: 40px;
@@ -449,12 +575,16 @@ ul, ol { list-style: none; }
 .avatar-lg { width: 56px; height: 56px; font-size: var(--fs-md); }
 .avatar-xl { width: 80px; height: 80px; font-size: var(--fs-xl); }
 
-/* Table */
+
+/* ==========================================================================
+   13. COMPOSANTS — TABLE
+   ========================================================================== */
 .table-wrap {
   background: var(--bg-surface);
   border: 1px solid var(--black);
   border-radius: var(--r-md);
   overflow: hidden;
+  transition: background var(--t-theme), border-color var(--t-theme);
 }
 
 .table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
@@ -469,23 +599,27 @@ ul, ol { list-style: none; }
   color: var(--text-primary);
   background: var(--bg-elev-1);
   border-bottom: 1px solid var(--black);
+  transition: background var(--t-theme), color var(--t-theme);
 }
 
 .table tbody td {
   padding: 14px 20px;
   border-bottom: 1px solid var(--border-subtle);
   color: var(--text-primary);
+  transition: background var(--t-fast), color var(--t-theme), border-color var(--t-theme);
 }
 
 .table tbody tr:last-child td { border-bottom: none; }
-.table tbody tr { transition: background var(--t-fast); }
 .table tbody tr:hover { background: var(--lime-soft); }
 
 .table .member-cell { display: flex; align-items: center; gap: var(--s-3); }
 .table .member-info strong { display: block; font-size: var(--fs-sm); }
 .table .member-info span { color: var(--text-tertiary); font-size: 11px; }
 
-/* Stats cards */
+
+/* ==========================================================================
+   14. COMPOSANTS — STAT CARDS
+   ========================================================================== */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -506,9 +640,10 @@ ul, ol { list-style: none; }
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  transition: background var(--t-theme), color var(--t-theme);
 }
 
-.stat-card-white { background: var(--white); }
+.stat-card-white { background: var(--white); color: var(--text-primary); }
 .stat-card-orange { background: var(--orange); color: var(--white); }
 .stat-card-lime { background: var(--lime); color: var(--black); }
 .stat-card-mauve { background: var(--mauve); color: var(--black); }
@@ -541,15 +676,19 @@ ul, ol { list-style: none; }
   padding: 3px 8px;
   border-radius: var(--r-sm);
   width: fit-content;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgb(255 255 255 / 0.2);
 }
 
-/* Charts */
+
+/* ==========================================================================
+   15. COMPOSANTS — CHARTS
+   ========================================================================== */
 .chart-card {
   background: var(--white);
   border: 1px solid var(--black);
   border-radius: var(--r-md);
   padding: var(--s-6);
+  transition: background var(--t-theme), border-color var(--t-theme);
 }
 
 .chart-header {
@@ -559,10 +698,7 @@ ul, ol { list-style: none; }
   margin-bottom: var(--s-5);
 }
 
-.chart-title {
-  font-size: var(--fs-lg);
-  font-weight: 700;
-}
+.chart-title { font-size: var(--fs-lg); font-weight: 700; }
 
 .chart-tabs {
   display: inline-flex;
@@ -570,6 +706,7 @@ ul, ol { list-style: none; }
   border: 1px solid var(--black);
   border-radius: var(--r-sm);
   padding: 2px;
+  transition: background var(--t-theme), border-color var(--t-theme);
 }
 
 .chart-tab {
@@ -590,7 +727,7 @@ ul, ol { list-style: none; }
   align-items: flex-end;
   gap: var(--s-2);
   height: 220px;
-  padding: var(--s-4) 0;
+  padding-block: var(--s-4);
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -609,9 +746,8 @@ ul, ol { list-style: none; }
   background: var(--black);
   border-radius: 2px 2px 0 0;
   min-height: 4px;
-  transition: all var(--t-base);
+  transition: opacity var(--t-base);
 }
-
 .chart-bar.orange { background: var(--orange); }
 .chart-bar.lime { background: var(--lime); }
 .chart-bar.blue { background: var(--blue); }
@@ -625,12 +761,15 @@ ul, ol { list-style: none; }
   font-weight: 600;
 }
 
-/* Donut */
+
+/* ==========================================================================
+   16. COMPOSANTS — DONUT
+   ========================================================================== */
 .donut-wrap {
   position: relative;
   width: 200px;
-  height: 200px;
-  margin: 0 auto;
+  aspect-ratio: 1; /* plus moderne que height: 200px */
+  margin-inline: auto;
 }
 
 .donut-center {
@@ -643,6 +782,7 @@ ul, ol { list-style: none; }
   align-items: center;
   justify-content: center;
   border: 1px solid var(--black);
+  transition: background var(--t-theme);
 }
 
 .donut-percent {
@@ -659,13 +799,17 @@ ul, ol { list-style: none; }
   font-weight: 600;
 }
 
-/* Progress */
+
+/* ==========================================================================
+   17. COMPOSANTS — PROGRESS / SWITCH / CHECKBOX
+   ========================================================================== */
 .progress {
   height: 8px;
   background: var(--bg-elev-1);
   border: 1px solid var(--black);
   border-radius: var(--r-full);
   overflow: hidden;
+  transition: background var(--t-theme), border-color var(--t-theme);
 }
 
 .progress-bar {
@@ -674,7 +818,6 @@ ul, ol { list-style: none; }
   transition: width var(--t-slow);
 }
 
-/* Switch */
 .switch {
   position: relative;
   display: inline-block;
@@ -692,7 +835,7 @@ ul, ol { list-style: none; }
   border: 1px solid var(--black);
   border-radius: var(--r-full);
   cursor: pointer;
-  transition: all var(--t-base);
+  transition: background var(--t-base);
 }
 
 .switch-slider::before {
@@ -704,13 +847,12 @@ ul, ol { list-style: none; }
   height: 18px;
   background: var(--black);
   border-radius: 50%;
-  transition: all var(--t-base);
+  transition: transform var(--t-base), background var(--t-base);
 }
 
 .switch input:checked + .switch-slider { background: var(--lime); }
 .switch input:checked + .switch-slider::before { transform: translateX(20px); background: var(--black); }
 
-/* Checkbox */
 .checkbox {
   width: 20px;
   height: 20px;
@@ -721,7 +863,7 @@ ul, ol { list-style: none; }
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all var(--t-fast);
+  transition: background var(--t-fast), border-color var(--t-fast);
   flex-shrink: 0;
 }
 
@@ -739,7 +881,10 @@ ul, ol { list-style: none; }
   transform: rotate(-45deg) translate(1px, -1px);
 }
 
-/* Search input */
+
+/* ==========================================================================
+   18. COMPOSANTS — SEARCH / CHIPS / DIVIDER
+   ========================================================================== */
 .search-input {
   display: flex;
   align-items: center;
@@ -749,12 +894,10 @@ ul, ol { list-style: none; }
   border: 1px solid var(--black);
   border-radius: var(--r-sm);
   flex: 1;
-  transition: all var(--t-base);
+  transition: box-shadow var(--t-base), background var(--t-theme), border-color var(--t-theme);
 }
 
-.search-input:focus-within {
-  box-shadow: 0 0 0 3px var(--lime);
-}
+.search-input:focus-within { box-shadow: 0 0 0 3px var(--lime); }
 
 .search-input svg { width: 16px; height: 16px; color: var(--text-tertiary); }
 .search-input input {
@@ -765,12 +908,7 @@ ul, ol { list-style: none; }
   font-size: var(--fs-sm);
 }
 
-/* Filter chips */
-.chip-group {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
+.chip-group { display: flex; gap: 8px; flex-wrap: wrap; }
 
 .chip {
   padding: 8px 16px;
@@ -780,21 +918,19 @@ ul, ol { list-style: none; }
   border: 1px solid var(--black);
   color: var(--text-primary);
   cursor: pointer;
-  transition: all var(--t-fast);
+  transition: background var(--t-fast), color var(--t-fast);
   font-weight: 600;
 }
 
 .chip:hover { background: var(--bg-elev-1); }
+.chip.active { background: var(--black); color: var(--white); }
 
-.chip.active {
-  background: var(--black);
-  color: var(--white);
-}
+.divider { height: 1px; background: var(--border-subtle); margin-block: var(--s-6); }
 
-/* Divider */
-.divider { height: 1px; background: var(--border-subtle); margin: var(--s-6) 0; }
 
-/* Toast */
+/* ==========================================================================
+   19. COMPOSANTS — TOAST
+   ========================================================================== */
 .toast-container {
   position: fixed;
   top: 20px;
@@ -839,7 +975,10 @@ ul, ol { list-style: none; }
 .toast-title { font-weight: 700; }
 .toast-message { color: var(--text-inverse-secondary); font-size: var(--fs-xs); }
 
-/* Animations */
+
+/* ==========================================================================
+   20. ANIMATIONS
+   ========================================================================== */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
@@ -848,11 +987,174 @@ ul, ol { list-style: none; }
 .fade-in { animation: fadeIn 0.6s ease both; }
 .slide-up { animation: slideUp 0.6s ease both; }
 
-.text-orange { color: var(--orange); }
-.text-lime { color: var(--lime); }
-.text-mauve { color: var(--mauve); }
-.text-blue { color: var(--blue); }
-.text-muted { color: var(--text-secondary); }
-.text-dim { color: var(--text-tertiary); }
-.text-mono { font-family: var(--font-mono); }
-.text-center { text-align: center; }
+
+/* ==========================================================================
+   21. DARK MODE — OVERRIDES SPÉCIFIQUES
+   (les variables sont déjà dans la section 3, ici on gère les cas
+    qui ne peuvent pas se résoudre via variables seules)
+   ========================================================================== */
+
+/* Surfaces : groupement pour réduire le poids du CSS */
+[data-theme="dark"] :is(
+  .card, .club-card, .event-row, .chart-card, .browser-mockup,
+  .hero-visual, .stat-block, .feature-card, .persona-card,
+  .notification, .member-row, .modal, .cdc-doc, .cdc-meta-card,
+  .cdc-feature, .cdc-actor, .cdc-tech
+) {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+/* Cards interactives : halo orange (au lieu de noir) */
+[data-theme="dark"] :is(.card-hover, .club-card, .feature-card, .persona-card):hover {
+  box-shadow: 4px 4px 0 var(--orange);
+}
+
+/* Lignes interactives (event, member) */
+[data-theme="dark"] :is(.event-row, .member-row):hover {
+  background: var(--bg-elev-2);
+  border-color: var(--border-default);
+}
+
+/* Hover table : écrase le lime-soft (illisible sur fond blanc) */
+[data-theme="dark"] .table tbody tr:hover {
+  background: var(--bg-elev-2);
+  color: var(--text-primary);
+}
+
+/* Headers de section dans les composants */
+[data-theme="dark"] :is(
+  .event-row-header, .club-card-header, .browser-header, .hero-visual-header
+) {
+  background: var(--bg-elev-2);
+  border-color: var(--border-default);
+  color: var(--text-secondary);
+}
+
+/* Stat-card blanches uniquement (les colorées gardent leur couleur) */
+[data-theme="dark"] .stat-card-white {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+/* badge-dark : inversé pour rester lisible sur fond noir */
+[data-theme="dark"] .badge-dark {
+  background: var(--white);
+  color: var(--black);
+  border-color: var(--black);
+}
+
+/* Donut center : suit le fond dark */
+[data-theme="dark"] .donut-center {
+  background: var(--bg-surface);
+}
+
+/* Calendar / Agenda */
+[data-theme="dark"] .agenda-grid { background: var(--border-default); }
+[data-theme="dark"] .agenda-day-header {
+  background: var(--bg-inverse);
+  color: var(--bg-page);
+}
+[data-theme="dark"] .agenda-day {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+[data-theme="dark"] .agenda-event {
+  background: var(--lime);
+  color: var(--black);
+  border-color: var(--black);
+}
+[data-theme="dark"] .calendar-day {
+  background: var(--bg-surface);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+[data-theme="dark"] .calendar-day.muted {
+  color: var(--text-disabled);
+  background: var(--bg-elev-1);
+}
+[data-theme="dark"] .calendar-day.today {
+  background: var(--orange);
+  color: var(--white);
+}
+
+/* Activité / notifications */
+[data-theme="dark"] .activity-item {
+  border-color: var(--border-subtle);
+  color: var(--text-secondary);
+}
+[data-theme="dark"] .activity-text strong { color: var(--text-primary); }
+[data-theme="dark"] .notification.unread::before { border-color: var(--bg-page); }
+
+/* Dashboard */
+[data-theme="dark"] .welcome-card {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+  box-shadow: 4px 4px 0 var(--orange);
+}
+[data-theme="dark"] .suggestion-card {
+  background: var(--lime);
+  color: var(--black);
+  border-color: var(--black);
+}
+
+/* Footer & landing */
+[data-theme="dark"] .footer {
+  background: var(--bg-page);
+  border-color: var(--border-default);
+}
+[data-theme="dark"] :is(.hero-mock-stat, .hero-mock-bar) { background: var(--bg-elev-2); }
+[data-theme="dark"] .hero-mock-stat-light {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+}
+[data-theme="dark"] .hero-mock-bar.active { background: var(--orange); }
+
+/* Cahier des charges */
+[data-theme="dark"] .cdc-toolbar {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+}
+[data-theme="dark"] .cdc-cover { border-color: var(--border-default); }
+[data-theme="dark"] .cdc-h2 { color: var(--text-primary); }
+[data-theme="dark"] :is(.cdc-p, .cdc-list li) { color: var(--text-secondary); }
+[data-theme="dark"] .cdc-table th {
+  background: var(--bg-inverse);
+  color: var(--bg-page);
+}
+[data-theme="dark"] .cdc-table td {
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+[data-theme="dark"] .cdc-table tr:hover { background: var(--bg-elev-1); }
+[data-theme="dark"] .cdc-constraint {
+  background: var(--bg-elev-1);
+  border-color: var(--orange);
+}
+
+/* File cards */
+[data-theme="dark"] .file-card {
+  background: var(--bg-surface) !important;
+}
+[data-theme="dark"] .file-card .file-card-title { color: var(--text-primary); }
+[data-theme="dark"] .file-card .file-card-meta { color: var(--text-tertiary); }
+[data-theme="dark"] .file-card-tag { background: var(--orange); color: var(--white); }
+
+/* Loader */
+[data-theme="dark"] .page-loader { background: #000000; }
+
+/* Scrollbar dark */
+[data-theme="dark"] ::-webkit-scrollbar-track { background: var(--bg-elev-1); }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: var(--white); }
+
+/* Reduced motion : respecte les préférences utilisateur */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

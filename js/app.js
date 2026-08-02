@@ -248,27 +248,40 @@
     items.forEach(i => obs.observe(i));
   };
 
-  // Theme toggle (dark / light / high-contrast)
+  // Theme toggle (dark / light / system)
   const Theme = {
-    get() { return localStorage.getItem('orbit_theme') || 'light'; },
+    get() { return localStorage.getItem('orbit_theme') || 'system'; },
     set(theme) {
       localStorage.setItem('orbit_theme', theme);
-      document.documentElement.setAttribute('data-theme', theme);
+      this.apply();
+    },
+    apply() {
+      const theme = this.get();
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const effective = theme === 'system' ? (prefersDark ? 'dark' : 'light') : theme;
+      document.documentElement.setAttribute('data-theme', effective);
       this._updateIcon();
     },
     toggle() {
       const cur = this.get();
-      this.set(cur === 'dark' ? 'light' : 'dark');
+      const next = cur === 'light' ? 'dark' : cur === 'dark' ? 'system' : 'light';
+      this.set(next);
+      ClubHub.toast(`Thème : ${next === 'system' ? 'Auto' : next === 'dark' ? 'Sombre' : 'Clair'}`, '', 'info', 2000);
     },
     _updateIcon() {
       const ico = document.getElementById('theme-icon');
       if (!ico) return;
-      ico.innerHTML = this.get() === 'dark'
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      ico.innerHTML = isDark
         ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
         : '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>';
     },
     init() {
-      document.documentElement.setAttribute('data-theme', this.get());
+      this.apply();
+      // Écoute les changements système si en mode auto
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if (this.get() === 'system') this.apply();
+      });
       setTimeout(() => this._updateIcon(), 100);
     }
   };

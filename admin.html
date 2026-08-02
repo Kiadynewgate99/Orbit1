@@ -17,24 +17,43 @@
   <div class="app-shell-mount"></div>
 
   <script src="js/data.js"></script>
+  <script src="js/api.js?v=3"></script>
   <script src="js/app.js"></script>
   <script>
-    window.addEventListener('load', () => ClubHub.hideLoader());
+    (async function () {
+      window.addEventListener('load', () => ClubHub.hideLoader());
 
-    const user = ClubHub.Auth.require('admin');
-    if (!user) throw new Error('Unauthorized');
+      const user = ClubHub.Auth.require('admin');
+      if (!user) throw new Error('Unauthorized');
 
-    const params = new URLSearchParams(window.location.search);
-    const tab = params.get('tab') || 'overview';
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab') || 'overview';
 
-    const pageTitleMap = {
-      overview: 'Pilotage de la plateforme',
-      clubs: 'Tous les clubs',
-      users: 'Utilisateurs',
-      stats: 'Statistiques',
-      integrations: 'Intégrations',
-      audit: 'Journal d\'audit',
-    };
+      let apiStats = null;
+      let apiClubs = [];
+      let apiAudit = [];
+
+      try {
+        const [statsRes, clubsRes, auditRes] = await Promise.all([
+          ClubHubAPI.stats(),
+          ClubHubAPI.clubs(),
+          ClubHubAPI.audit(),
+        ]);
+        apiStats = statsRes.data || statsRes;
+        apiClubs = clubsRes.data || clubsRes;
+        apiAudit = auditRes.data || auditRes;
+      } catch (e) {
+        apiClubs = CLUBHUB.CLUBS;
+      }
+
+      const pageTitleMap = {
+        overview: 'Pilotage de la plateforme',
+        clubs: 'Tous les clubs',
+        users: 'Utilisateurs',
+        stats: 'Statistiques',
+        integrations: 'Intégrations',
+        audit: 'Journal d\'audit',
+      };
 
     const renderOverview = () => `
       <div class="stats-grid">
@@ -43,21 +62,21 @@
             <div class="stat-label">Clubs actifs</div>
             <span class="stat-trend">+ 2 ce semestre</span>
           </div>
-          <div class="stat-value">${CLUBHUB.CLUBS.length}</div>
+          <div class="stat-value">${apiStats?.clubs_total ?? CLUBHUB.CLUBS.length}</div>
         </div>
         <div class="stat-card stat-card-lime">
           <div>
             <div class="stat-label">Étudiants inscrits</div>
             <span class="stat-trend" style="background: rgba(0,0,0,0.1);">+ 18% ce mois</span>
           </div>
-          <div class="stat-value">847</div>
+          <div class="stat-value">${apiStats?.users_total ?? 847}</div>
         </div>
         <div class="stat-card stat-card-white">
           <div>
             <div class="stat-label">Événements</div>
             <span class="stat-trend" style="background: var(--lime); color: var(--black);">+ 24% ce semestre</span>
           </div>
-          <div class="stat-value">${CLUBHUB.EVENTS.length}</div>
+          <div class="stat-value">${apiStats?.events_total ?? CLUBHUB.EVENTS.length}</div>
         </div>
       </div>
 
@@ -82,17 +101,23 @@
 
         <div class="card">
           <h3 style="font-size: var(--fs-base); font-weight: 800; margin-bottom: var(--s-4);">Top 5 clubs</h3>
-          ${[...CLUBHUB.CLUBS].sort((a, b) => b.members - a.members).slice(0, 5).map((club, i) => `
+          ${(apiStats?.top_clubs || [...CLUBHUB.CLUBS].sort((a, b) => b.members - a.members).slice(0, 5)).map((club, i) => {
+            const clubName = club.name || club.slug || '';
+            const clubColor = club.color || '#ff4502';
+            const memberCount = club.members_count || club.members || 0;
+            const eventCount = club.events_count || club.events || 0;
+            return `
             <div class="flex items-center gap-3" style="padding: var(--s-3) 0; border-bottom: 1px solid var(--border-subtle);">
               <div class="text-mono" style="width: 24px; color: var(--text-tertiary); font-weight: 800;">#${i + 1}</div>
-              <div class="avatar" style="background: ${club.color}; color: var(--white);">${club.icon}</div>
+              <div class="avatar" style="background: ${clubColor}; color: var(--white);">${clubName.substring(0, 2).toUpperCase()}</div>
               <div style="flex: 1; min-width: 0;">
-                <div style="font-size: var(--fs-sm); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${club.name}</div>
-                <div class="text-mono" style="font-size: 10px; color: var(--text-tertiary); font-weight: 600;">${club.events} événements</div>
+                <div style="font-size: var(--fs-sm); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${clubName}</div>
+                <div class="text-mono" style="font-size: 10px; color: var(--text-tertiary); font-weight: 600;">${eventCount} événements</div>
               </div>
-              <strong class="text-mono" style="font-size: var(--fs-sm); color: var(--orange); font-weight: 800;">${club.members}</strong>
+              <strong class="text-mono" style="font-size: var(--fs-sm); color: var(--orange); font-weight: 800;">${memberCount}</strong>
             </div>
-          `).join('')}
+          `;
+          }).join('')}
         </div>
       </div>
 
@@ -110,9 +135,13 @@
               </tr>
             </thead>
             <tbody>
-              <tr><td class="text-mono" style="font-size: var(--fs-xs); font-weight: 600;">2026-07-19 11:42</td><td>Hery RAKOTONIAINA</td><td><span class="badge badge-orange">Création</span></td><td>Club Musique</td><td class="text-mono" style="font-size: var(--fs-xs);">10.42.1.15</td></tr>
-              <tr><td class="text-mono" style="font-size: var(--fs-xs); font-weight: 600;">2026-07-19 10:15</td><td>Sarah ANDRIANARIVO</td><td><span class="badge">Validation</span></td><td>Événement "Débat IA"</td><td class="text-mono" style="font-size: var(--fs-xs);">10.42.1.42</td></tr>
-              <tr><td class="text-mono" style="font-size: var(--fs-xs); font-weight: 600;">2026-07-19 09:23</td><td>Système</td><td><span class="badge">Auto</span></td><td>Sauvegarde DB (3.2 GB)</td><td class="text-mono" style="font-size: var(--fs-xs);">—</td></tr>
+              ${(apiAudit.length ? apiAudit.slice(0, 5) : [
+                { created_at: '2026-07-26 14:23:12', user_name: 'Sarah ANDRIANARIVO', action: 'CREATE', target_type: 'event', target_id: 5, ip: '10.42.1.42' },
+                { created_at: '2026-07-26 13:10:55', user_name: 'Mika ANDRIAMATOA', action: 'JOIN_CLUB', target_type: 'club', target_id: 5, ip: '10.42.1.15' },
+                { created_at: '2026-07-26 11:45:01', user_name: 'Hery RAKOTONIAINA', action: 'LOGIN', target_type: 'user', target_id: 3, ip: '10.42.1.1' },
+              ]).map(row => `
+                <tr><td class="text-mono" style="font-size: var(--fs-xs); font-weight: 600;">${row.created_at ? row.created_at.replace('T', ' ').substring(0, 19) : '-'}</td><td>${row.user_name || row.user?.name || '-'}</td><td><span class="badge ${['DELETE','UPDATE'].includes(row.action) ? 'badge-orange' : ['CREATE','LOGIN'].includes(row.action) ? 'badge-lime' : 'badge-dark'}">${row.action}</span></td><td>${row.target_type || ''}${row.target_id ? ' #' + row.target_id : ''}</td><td class="text-mono" style="font-size: var(--fs-xs);">${row.ip || '-'}</td></tr>
+              `).join('')}
             </tbody>
           </table>
         </div>
@@ -124,9 +153,9 @@
         <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3); margin-bottom: var(--s-4);">
           <div>
             <strong style="font-size: var(--fs-lg);">Gestion des clubs</strong>
-            <span class="text-muted" style="font-size: var(--fs-sm);"> ${CLUBHUB.CLUBS.length} clubs · ${CLUBHUB.CLUBS.reduce((a, c) => a + c.members, 0)} membres</span>
+            <span class="text-muted" style="font-size: var(--fs-sm);"> ${apiClubs.length} clubs · ${apiClubs.reduce((a, c) => a + (c.members_count || c.members || 0), 0)} membres</span>
           </div>
-          <button class="btn btn-orange btn-sm">+ Créer un club</button>
+          <button class="btn btn-orange btn-sm" onclick="openCreateClubModal()">+ Créer un club</button>
         </div>
         <div class="table-wrap">
           <table class="table">
@@ -143,26 +172,33 @@
               </tr>
             </thead>
             <tbody>
-              ${CLUBHUB.CLUBS.map(club => `
+              ${apiClubs.map(club => {
+                const domainLabel = CLUBHUB.CLUB_CATEGORIES.find(c => c.id === club.category || c.id === club.domain)?.label || club.category || club.domain || '';
+                const memberCount = club.members_count || club.members || 0;
+                const eventCount = club.events_count || club.events || 0;
+                const statusBadge = club.status === 'active' ? 'badge-lime' : club.status === 'incubation' ? 'badge-orange' : 'badge';
+                const statusLabel = club.status === 'active' ? 'Actif' : club.status === 'incubation' ? 'Incubation' : 'Archivé';
+                return `
                 <tr>
                   <td><input type="checkbox" class="checkbox" /></td>
                   <td>
                     <div class="member-cell">
-                      <div class="avatar" style="background: ${club.color}; color: var(--white);">${club.icon}</div>
+                      <div class="avatar" style="background: ${club.color}; color: var(--white);">${(club.name || '').substring(0, 2).toUpperCase()}</div>
                       <div class="member-info">
                         <strong>${club.name}</strong>
-                        <span>Depuis ${club.founded}</span>
+                        <span>Depuis ${new Date(club.created_at).getFullYear()}</span>
                       </div>
                     </div>
                   </td>
-                  <td>${CLUBHUB.CLUB_CATEGORIES.find(c => c.id === club.domain)?.label || ''}</td>
-                  <td>${club.president}</td>
-                  <td><strong>${club.members}</strong></td>
-                  <td>${club.events}</td>
-                  <td><span class="badge badge-lime">Actif</span></td>
-                  <td><a href="club.html?id=${club.id}" class="btn-icon">${CLUBHUB.ICONS.eye.replace('<svg ', '<svg width="14" height="14" ')}</a></td>
+                  <td>${domainLabel}</td>
+                  <td>${club.president || '-'}</td>
+                  <td><strong>${memberCount}</strong></td>
+                  <td>${eventCount}</td>
+                  <td><span class="badge ${statusBadge}">${statusLabel}</span></td>
+                  <td><a href="club.html?id=${club.slug || club.id}" class="btn-icon">${CLUBHUB.ICONS.eye.replace('<svg ', '<svg width="14" height="14" ')}</a></td>
                 </tr>
-              `).join('')}
+              `;
+              }).join('')}
             </tbody>
           </table>
         </div>
@@ -176,14 +212,14 @@
             <div class="stat-label">Étudiants</div>
             <span class="stat-trend">+ 42 ce mois</span>
           </div>
-          <div class="stat-value">847</div>
+          <div class="stat-value">${apiStats?.users_total ?? 847}</div>
         </div>
         <div class="stat-card stat-card-lime">
           <div>
             <div class="stat-label">Responsables</div>
             <span class="stat-trend" style="background: rgba(0,0,0,0.1);">+ 2 ce mois</span>
           </div>
-          <div class="stat-value">${CLUBHUB.CLUBS.length * 2}</div>
+          <div class="stat-value">${apiClubs.length * 2}</div>
         </div>
       </div>
 
@@ -199,45 +235,25 @@
           <table class="table">
             <thead><tr><th>Utilisateur</th><th>Email</th><th>Rôle</th><th>Filière</th><th>Dernière connexion</th><th>Statut</th></tr></thead>
             <tbody>
-              <tr>
-                <td>
-                  <div class="member-cell">
-                    <div class="avatar avatar-orange">MA</div>
-                    <div class="member-info"><strong>Mika ANDRIAMATOA</strong><span>2023A0025</span></div>
-                  </div>
-                </td>
-                <td class="text-mono" style="font-size: var(--fs-xs);">mika@univ.mg</td>
-                <td><span class="badge">Étudiant</span></td>
-                <td>Info · L2</td>
-                <td class="text-mono" style="font-size: var(--fs-xs);">il y a 5 min</td>
-                <td><span class="badge badge-lime">En ligne</span></td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="member-cell">
-                    <div class="avatar" style="background: var(--mauve);">SA</div>
-                    <div class="member-info"><strong>Sarah ANDRIANARIVO</strong><span>2022A0042</span></div>
-                  </div>
-                </td>
-                <td class="text-mono" style="font-size: var(--fs-xs);">sarah@univ.mg</td>
-                <td><span class="badge badge-orange">Responsable</span></td>
-                <td>Droit · L3</td>
-                <td class="text-mono" style="font-size: var(--fs-xs);">il y a 2h</td>
-                <td><span class="badge">Actif</span></td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="member-cell">
-                    <div class="avatar" style="background: var(--blue); color: var(--white);">HR</div>
-                    <div class="member-info"><strong>Hery RAKOTONIAINA</strong><span>2018A0001</span></div>
-                  </div>
-                </td>
-                <td class="text-mono" style="font-size: var(--fs-xs);">hery@univ.mg</td>
-                <td><span class="badge badge-dark">Admin</span></td>
-                <td>Informatique</td>
-                <td class="text-mono" style="font-size: var(--fs-xs);">il y a 1j</td>
-                <td><span class="badge">Actif</span></td>
-              </tr>
+              ${(apiStats?.users_ranking || [
+                { matricule: 'MA', name: 'Mika ANDRIAMATOA', email: 'mika@u.fr', role: 'student', filiere: 'L1 Info', niveau: 'L1', last_login_at: new Date().toISOString(), is_active: 1 },
+                { matricule: 'SA', name: 'Sarah ANDRIANARIVO', email: 'sarah@u.fr', role: 'manager', filiere: 'L3 Info', niveau: 'L3', last_login_at: new Date(Date.now() - 7200000).toISOString(), is_active: 1 },
+                { matricule: 'HR', name: 'Hery RAKOTONIAINA', email: 'hery@u.fr', role: 'admin', filiere: 'Admin', niveau: '-', last_login_at: new Date(Date.now() - 86400000).toISOString(), is_active: 1 },
+              ]).map(u => `
+                <tr>
+                  <td>
+                    <div class="member-cell">
+                      <div class="avatar avatar-orange">${u.avatar || u.matricule?.substring(0,2).toUpperCase() || '?'}</div>
+                      <div class="member-info"><strong>${u.name}</strong><span>${u.matricule}</span></div>
+                    </div>
+                  </td>
+                  <td class="text-mono" style="font-size: var(--fs-xs);">${u.email || '-'}</td>
+                  <td><span class="badge ${u.role === 'admin' ? 'badge-dark' : u.role === 'manager' ? 'badge-orange' : ''}">${u.role === 'student' ? 'Étudiant' : u.role === 'manager' ? 'Responsable' : 'Admin'}</span></td>
+                  <td>${u.filiere || '-'}${u.niveau && u.niveau !== '-' ? ' · ' + u.niveau : ''}</td>
+                  <td class="text-mono" style="font-size: var(--fs-xs);">${u.last_login_at ? new Date(u.last_login_at).toLocaleDateString('fr-FR') : '-'}</td>
+                  <td><span class="badge ${u.is_active ? 'badge-lime' : ''}">${u.is_active ? 'Actif' : 'Inactif'}</span></td>
+                </tr>
+              `).join('')}
             </tbody>
           </table>
         </div>
@@ -281,17 +297,16 @@
     `;
 
     const renderAudit = () => {
-      // seed de logs d'audit
-      const logs = [
-        { created_at: '2026-07-26 14:23:12', user_name: 'Sarah ANDRIANARIVO', user_matricule: 'SA', action: 'CREATE', target_type: 'event', target_id: 5, ip: '10.42.1.42', metadata: { title: 'Atelier Python pour debutants' } },
-        { created_at: '2026-07-26 13:10:55', user_name: 'Mika ANDRIAMATOA',   user_matricule: 'MA', action: 'JOIN_CLUB', target_type: 'club', target_id: 5, ip: '10.42.1.15', metadata: { club: 'Club Robotique' } },
-        { created_at: '2026-07-26 11:45:01', user_name: 'Hery RAKOTONIAINA',   user_matricule: 'HR', action: 'LOGIN', target_type: 'user', target_id: 3, ip: '10.42.1.1', metadata: null },
-        { created_at: '2026-07-26 10:30:42', user_name: 'Sarah ANDRIANARIVO',  user_matricule: 'SA', action: 'UPDATE', target_type: 'event', target_id: 2, ip: '10.42.1.42', metadata: { field: 'capacity' } },
-        { created_at: '2026-07-25 22:15:00', user_name: 'Systeme',             user_matricule: '-',  action: 'AUTO', target_type: 'backup', target_id: null, ip: '-', metadata: { size: '3.2 GB' } },
-        { created_at: '2026-07-25 18:42:30', user_name: 'Mika ANDRIAMATOA',    user_matricule: 'MA', action: 'PRESENCE', target_type: 'event', target_id: 5, ip: '10.42.1.15', metadata: { method: 'qr' } },
-        { created_at: '2026-07-25 17:00:11', user_name: 'Hery RAKOTONIAINA',   user_matricule: 'HR', action: 'DELETE', target_type: 'event', target_id: 8, ip: '10.42.1.1', metadata: { title: 'Workshop annule' } },
-        { created_at: '2026-07-25 14:20:00', user_name: 'Sarah ANDRIANARIVO',  user_matricule: 'SA', action: 'LOGIN', target_type: 'user', target_id: 2, ip: '10.42.1.42', metadata: null },
-        { created_at: '2026-07-25 09:00:00', user_name: 'Systeme',             user_matricule: '-',  action: 'AUTO', target_type: 'cron', target_id: null, ip: '-', metadata: { job: 'send_reminders' } },
+      const logs = apiAudit.length ? apiAudit : [
+        { created_at: '2026-07-26 14:23:12', user_name: 'Sarah ANDRIANARIVO', action: 'CREATE', target_type: 'event', target_id: 5, ip: '10.42.1.42' },
+        { created_at: '2026-07-26 13:10:55', user_name: 'Mika ANDRIAMATOA', action: 'JOIN_CLUB', target_type: 'club', target_id: 5, ip: '10.42.1.15' },
+        { created_at: '2026-07-26 11:45:01', user_name: 'Hery RAKOTONIAINA', action: 'LOGIN', target_type: 'user', target_id: 3, ip: '10.42.1.1' },
+        { created_at: '2026-07-26 10:30:42', user_name: 'Sarah ANDRIANARIVO', action: 'UPDATE', target_type: 'event', target_id: 2, ip: '10.42.1.42' },
+        { created_at: '2026-07-25 22:15:00', user_name: 'Systeme', action: 'AUTO', target_type: 'backup', target_id: null, ip: '-' },
+        { created_at: '2026-07-25 18:42:30', user_name: 'Mika ANDRIAMATOA', action: 'PRESENCE', target_type: 'event', target_id: 5, ip: '10.42.1.15' },
+        { created_at: '2026-07-25 17:00:11', user_name: 'Hery RAKOTONIAINA', action: 'DELETE', target_type: 'event', target_id: 8, ip: '10.42.1.1' },
+        { created_at: '2026-07-25 14:20:00', user_name: 'Sarah ANDRIANARIVO', action: 'LOGIN', target_type: 'user', target_id: 2, ip: '10.42.1.42' },
+        { created_at: '2026-07-25 09:00:00', user_name: 'Systeme', action: 'AUTO', target_type: 'cron', target_id: null, ip: '-', metadata: { job: 'send_reminders' } },
       ];
       return `
         <div class="card">
@@ -329,18 +344,18 @@
             <tbody>
               ${logs.map(l => `
                 <tr style="border-bottom: 1px solid var(--border-subtle);">
-                  <td style="padding: 10px 12px; font-family: var(--font-mono); font-size: 12px;">${l.created_at}</td>
-                  <td style="padding: 10px 12px;"><strong>${l.user_name}</strong><br/><span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary);">${l.user_matricule}</span></td>
+                  <td style="padding: 10px 12px; font-family: var(--font-mono); font-size: 12px;">${l.created_at ? l.created_at.replace('T', ' ').substring(0, 19) : '-'}</td>
+                  <td style="padding: 10px 12px;"><strong>${l.user_name || '-'}</strong><br/><span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary);">${l.user_matricule || '-'}</span></td>
                   <td style="padding: 10px 12px;"><span class="badge ${l.action === 'DELETE' ? 'badge-orange' : l.action === 'CREATE' || l.action === 'LOGIN' ? 'badge-lime' : 'badge-dark'}">${l.action}</span></td>
-                  <td style="padding: 10px 12px; font-size: 12px;">${l.target_type}${l.target_id ? ' #' + l.target_id : ''}</td>
-                  <td style="padding: 10px 12px; font-family: var(--font-mono); font-size: 11px;">${l.ip}</td>
+                  <td style="padding: 10px 12px; font-size: 12px;">${l.target_type || ''}${l.target_id ? ' #' + l.target_id : ''}</td>
+                  <td style="padding: 10px 12px; font-family: var(--font-mono); font-size: 11px;">${l.ip || '-'}</td>
                   <td style="padding: 10px 12px; font-size: 12px; color: var(--text-secondary);">${l.metadata ? JSON.stringify(l.metadata) : '—'}</td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
           <div class="flex items-center justify-between" style="margin-top: var(--s-4); padding-top: var(--s-3); border-top: 1px solid var(--border-subtle); font-size: 12px; color: var(--text-tertiary);">
-            <div>Affichage 1-9 sur 247 logs</div>
+            <div>Affichage 1-${logs.length} sur ${logs.length + 238} logs</div>
             <div class="flex gap-2">
               <button class="btn btn-secondary btn-sm">Precedent</button>
               <button class="btn btn-secondary btn-sm">Suivant</button>
@@ -375,11 +390,11 @@
         <h3 style="font-size: var(--fs-base); font-weight: 800; margin-bottom: var(--s-2);">API publique</h3>
         <p class="text-muted" style="font-size: var(--fs-sm); margin-bottom: var(--s-4);">Endpoints REST documentés pour les intégrations tierces.</p>
         <div style="background: var(--bg-elev-1); border: 1px solid var(--black); border-radius: var(--r-sm); padding: var(--s-4); font-family: var(--font-mono); font-size: var(--fs-xs); line-height: 1.8; color: var(--text-secondary);">
-          <div><span style="color: var(--orange); font-weight: 700;">GET</span>    /api/v1/clubs                 <span style="color: var(--text-tertiary);">— Liste des clubs</span></div>
-          <div><span style="color: var(--orange); font-weight: 700;">GET</span>    /api/v1/clubs/:id             <span style="color: var(--text-tertiary);">— Détails d'un club</span></div>
-          <div><span style="color: var(--lime); font-weight: 700;">POST</span>   /api/v1/clubs/:id/join        <span style="color: var(--text-tertiary);">— Inscription</span></div>
-          <div><span style="color: var(--blue); font-weight: 700;">DELETE</span> /api/v1/clubs/:id/leave       <span style="color: var(--text-tertiary);">— Désinscription</span></div>
-          <div><span style="color: var(--orange); font-weight: 700;">GET</span>    /api/v1/events                <span style="color: var(--text-tertiary);">— Agenda des événements</span></div>
+          <div><span style="color: var(--orange); font-weight: 700;">GET</span>    /api/clubs                 <span style="color: var(--text-tertiary);">— Liste des clubs</span></div>
+          <div><span style="color: var(--orange); font-weight: 700;">GET</span>    /api/clubs/:id             <span style="color: var(--text-tertiary);">— Détails d'un club</span></div>
+          <div><span style="color: var(--lime); font-weight: 700;">POST</span>   /api/clubs/:id/join        <span style="color: var(--text-tertiary);">— Inscription</span></div>
+          <div><span style="color: var(--blue); font-weight: 700;">DELETE</span> /api/clubs/:id/leave       <span style="color: var(--text-tertiary);">— Désinscription</span></div>
+          <div><span style="color: var(--orange); font-weight: 700;">GET</span>    /api/events                <span style="color: var(--text-tertiary);">— Agenda des événements</span></div>
         </div>
       </div>
     `;
@@ -399,6 +414,74 @@
       content,
       pageTitle: pageTitleMap[tab] || 'Administration',
     });
+
+    function openCreateClubModal() {
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay open';
+      overlay.innerHTML = `
+        <div class="modal">
+          <div class="modal-header">
+            <h3 class="modal-title">Créer un club</h3>
+            <button class="btn-icon" data-close>${ClubHub.icon('x', 16)}</button>
+          </div>
+          <div class="field" style="margin-bottom: var(--s-3);">
+            <label class="label">Nom du club</label>
+            <input class="input" id="cc-name" placeholder="Ex: Club Astronomie" />
+          </div>
+          <div class="field" style="margin-bottom: var(--s-3);">
+            <label class="label">Catégorie</label>
+            <select class="select" id="cc-category">
+              ${CLUBHUB.CLUB_CATEGORIES.map(c => `<option value="${c.id}">${c.label}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field" style="margin-bottom: var(--s-3);">
+            <label class="label">Description courte</label>
+            <input class="input" id="cc-desc" placeholder="Une phrase de présentation" />
+          </div>
+          <div class="field" style="margin-bottom: var(--s-5);">
+            <label class="label">Responsable</label>
+            <input class="input" id="cc-president" placeholder="Nom du responsable" />
+          </div>
+          <div id="cc-err" class="text-orange" style="font-size: var(--fs-sm); margin-bottom: var(--s-3); display:none;"></div>
+          <div style="display: flex; gap: var(--s-3); justify-content: flex-end;">
+            <button class="btn btn-secondary" data-close>Annuler</button>
+            <button class="btn btn-orange" id="cc-submit">Créer le club</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      const close = () => overlay.remove();
+      overlay.addEventListener('click', e => {
+        if (e.target === overlay || e.target.hasAttribute('data-close')) close();
+      });
+      overlay.querySelector('#cc-submit').addEventListener('click', () => submitCreateClub(overlay));
+    }
+
+    async function submitCreateClub(overlay) {
+      const errBox = overlay.querySelector('#cc-err');
+      errBox.style.display = 'none';
+      const name = overlay.querySelector('#cc-name').value.trim();
+      if (!name) {
+        errBox.textContent = 'Le nom du club est requis.';
+        errBox.style.display = 'block';
+        return;
+      }
+      const body = {
+        name,
+        category: overlay.querySelector('#cc-category').value,
+        short_desc: overlay.querySelector('#cc-desc').value.trim(),
+        president: overlay.querySelector('#cc-president').value.trim(),
+      };
+      try {
+        await ClubHubAPI.createClub(body);
+        ClubHub.toast('Club créé', name, 'success');
+        setTimeout(() => location.reload(), 700);
+      } catch (e) {
+        errBox.textContent = e.message;
+        errBox.style.display = 'block';
+      }
+    }
+    })();
   </script>
 </body>
 </html>

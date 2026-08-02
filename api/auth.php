@@ -39,6 +39,8 @@ function current_user(): ?array {
 
     // ne pas renvoyer le hash
     unset($u['password_hash']);
+    $u['clubs_count'] = (int)db()->query('SELECT COUNT(*) FROM inscriptions WHERE user_id = ' . (int)$u['id'] . ' AND status = "active"')->fetchColumn();
+    $u['events_count'] = (int)db()->query('SELECT COUNT(DISTINCT event_id) FROM presences WHERE user_id = ' . (int)$u['id'] . ' AND status IN ("registered","present")')->fetchColumn();
     $cached = $u;
     return $u;
 }

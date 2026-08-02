@@ -43,24 +43,56 @@
   <div class="app-shell-mount"></div>
 
   <script src="js/data.js"></script>
+  <script src="js/api.js?v=3"></script>
   <script src="js/app.js"></script>
   <script>
     window.addEventListener('load', () => ClubHub.hideLoader());
 
     const params = new URLSearchParams(window.location.search);
     const clubId = params.get('id') || 'club-001';
-    const club = CLUBHUB.CLUBS.find(c => c.id === clubId) || CLUBHUB.CLUBS[0];
-    const category = CLUBHUB.CLUB_CATEGORIES.find(c => c.id === club.domain);
-    const clubEvents = CLUBHUB.EVENTS.filter(e => e.clubId === club.id);
 
-    const memberSample = [
-      { name: 'Andry RAKOTONIAINA', role: 'Président', avatar: 'AR' },
-      { name: 'Tiana ANDRIANJAKA', role: 'Vice-présidente', avatar: 'TA' },
-      { name: 'Hery RAZANAKOTO', role: 'Secrétaire', avatar: 'HR' },
-      { name: 'Mihary RAZAFINDRAKOTO', role: 'Trésorier', avatar: 'MR' },
-    ];
+    // Fallback local (mode mock / hors-ligne) pendant que la vraie fiche charge
+    const localFallback = CLUBHUB.CLUBS.find(c => c.id === clubId || String(c.id) === String(clubId)) || CLUBHUB.CLUBS[0];
 
-    const content = `
+    let club = localFallback;
+    let realMembers = null; // rempli par l'API si dispo (liste reelle des etudiants inscrits)
+
+    async function loadClub() {
+      try {
+        const r = await ClubHubAPI.club(clubId);
+        if (r && r.data) {
+          const apiData = r.data;
+          club = {
+            ...localFallback,
+            ...apiData,
+            activities: apiData.activities || localFallback.activities || [],
+            tags: apiData.tags || localFallback.tags || [],
+            members: apiData.members_count || localFallback.members || 0,
+            events: apiData.events_count || localFallback.events || 0,
+            founded: localFallback.founded || new Date(apiData.created_at || Date.now()).getFullYear(),
+            president: apiData.president || localFallback.president || '',
+            email: apiData.email || localFallback.email || '',
+            location: apiData.room || localFallback.location || '',
+            meeting: localFallback.meeting || '',
+          };
+          realMembers = Array.isArray(apiData.members) ? apiData.members : null;
+        }
+      } catch (e) {
+        club = localFallback;
+        realMembers = null;
+      }
+      render();
+    }
+
+    function render() {
+      const category = CLUBHUB.CLUB_CATEGORIES.find(c => c.id === club.domain);
+      const clubEvents = CLUBHUB.EVENTS.filter(e => e.clubId === club.id);
+
+      // Bureau = membres avec un role de responsabilite, sinon fallback visuel minimal
+      const bureau = (realMembers || []).filter(m => m.role_in_club && m.role_in_club !== 'member');
+      const allMembers = realMembers || [];
+
+      const content = `
       <div class="club-hero">
         <a href="clubs.html" class="text-mono" style="font-size: 11px; color: var(--lime); margin-bottom: var(--s-3); display: inline-block; font-weight: 700; letter-spacing: 0.1em;">← RETOUR À L'ANNUAIRE</a>
         <div class="club-hero-icon" style="background: ${club.color};">${club.icon}</div>
@@ -70,45 +102,82 @@
 
         <div class="flex gap-2" style="flex-wrap: wrap; margin-bottom: var(--s-5);">
           <span class="badge badge-lime">● Inscriptions ouvertes</span>
-          <span class="badge" style="background: var(--white); color: var(--black);">${club.members} membres</span>
-          <span class="badge" style="background: var(--white); color: var(--black);">${club.events} événements / an</span>
-          <span class="badge" style="background: var(--white); color: var(--black);">Depuis ${club.founded}</span>
+          <span class="badge" style="background: var(--bg-elev-1); color: var(--text-primary); border-color: var(--border-default);">${club.members} membres</span>
+          <span class="badge" style="background: var(--bg-elev-1); color: var(--text-primary); border-color: var(--border-default);">${club.events} événements / an</span>
+          <span class="badge" style="background: var(--bg-elev-1); color: var(--text-primary); border-color: var(--border-default);">Depuis ${club.founded}</span>
         </div>
 
         <div class="flex gap-3" style="flex-wrap: wrap;">
           <button class="btn btn-orange btn-lg" onclick="joinClub('${club.id}')">
             + S'inscrire au club
           </button>
-          <button class="btn btn-lg" style="background: var(--white); color: var(--black);">♡ Favoris</button>
+          <button class="btn btn-lg" style="background: var(--bg-elev-1); color: var(--text-primary); border-color: var(--border-default);">♡ Favoris</button>
         </div>
       </div>
 
       <div class="grid" style="grid-template-columns: 2fr 1fr; gap: var(--s-5);">
         <div>
           <div class="tabs">
-            <button class="tab active">À propos</button>
-            <button class="tab">Événements (${clubEvents.length})</button>
-            <button class="tab">Membres (${club.members})</button>
+            <button class="tab active" data-tab="about" onclick="switchTab('about')">À propos</button>
+            <button class="tab" data-tab="events" onclick="switchTab('events')">Événements (${clubEvents.length})</button>
+            <button class="tab" data-tab="members" onclick="switchTab('members')">Membres (${club.members})</button>
           </div>
 
-          <div class="card" style="margin-bottom: var(--s-4);">
-            <h2 style="font-size: var(--fs-xl); font-weight: 800; margin-bottom: var(--s-4);">À propos du club</h2>
-            <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: var(--s-4);">${club.longDescription}</p>
-            <h3 style="font-size: var(--fs-base); font-weight: 700; margin-bottom: var(--s-3);">Activités principales</h3>
-            <div class="grid grid-2" style="gap: var(--s-3);">
-              ${club.activities.map(act => `
-                <div class="flex items-center gap-3" style="padding: var(--s-3); background: var(--bg-elev-1); border: 1px solid var(--border-subtle); border-radius: var(--r-sm);">
-                  <div style="width: 28px; height: 28px; border-radius: var(--r-sm); background: var(--lime); border: 1px solid var(--black); display: flex; align-items: center; justify-content: center; font-weight: 800;">✓</div>
-                  <span style="font-size: var(--fs-sm);">${act}</span>
-                </div>
-              `).join('')}
+          <div class="tab-panel" data-panel="about">
+            <div class="card" style="margin-bottom: var(--s-4);">
+              <h2 style="font-size: var(--fs-xl); font-weight: 800; margin-bottom: var(--s-4);">À propos du club</h2>
+              <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: var(--s-4);">${club.longDescription}</p>
+              <h3 style="font-size: var(--fs-base); font-weight: 700; margin-bottom: var(--s-3);">Activités principales</h3>
+              <div class="grid grid-2" style="gap: var(--s-3);">
+                ${club.activities.map(act => `
+                  <div class="flex items-center gap-3" style="padding: var(--s-3); background: var(--bg-elev-1); border: 1px solid var(--border-subtle); border-radius: var(--r-sm);">
+                    <div style="width: 28px; height: 28px; border-radius: var(--r-sm); background: var(--lime); border: 1px solid var(--black); display: flex; align-items: center; justify-content: center; font-weight: 800;">✓</div>
+                    <span style="font-size: var(--fs-sm);">${act}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="card">
+              <h2 style="font-size: var(--fs-xl); font-weight: 800; margin-bottom: var(--s-4);">Mots-clés</h2>
+              <div class="flex gap-2" style="flex-wrap: wrap;">
+                ${club.tags.map(tag => `<span class="chip">#${tag}</span>`).join('')}
+              </div>
             </div>
           </div>
 
-          <div class="card">
-            <h2 style="font-size: var(--fs-xl); font-weight: 800; margin-bottom: var(--s-4);">Mots-clés</h2>
-            <div class="flex gap-2" style="flex-wrap: wrap;">
-              ${club.tags.map(tag => `<span class="chip">#${tag}</span>`).join('')}
+          <div class="tab-panel" data-panel="events" style="display:none;">
+            <div class="card">
+              <h2 style="font-size: var(--fs-xl); font-weight: 800; margin-bottom: var(--s-4);">Événements à venir</h2>
+              ${clubEvents.length ? `
+                <div class="flex flex-col gap-3">
+                  ${clubEvents.map(e => `
+                    <a href="events.html?id=${e.id}" class="flex items-center gap-3" style="padding: var(--s-3); background: var(--bg-elev-1); border: 1px solid var(--border-subtle); border-radius: var(--r-sm);">
+                      <div style="font-weight:700;">${e.title}</div>
+                      <span class="text-muted" style="margin-left:auto; font-size:var(--fs-xs);">${e.date} · ${e.time}</span>
+                    </a>
+                  `).join('')}
+                </div>
+              ` : `<p class="text-muted">Aucun événement programmé pour le moment.</p>`}
+            </div>
+          </div>
+
+          <div class="tab-panel" data-panel="members" style="display:none;">
+            <div class="card">
+              <h2 style="font-size: var(--fs-xl); font-weight: 800; margin-bottom: var(--s-4);">Membres du club (${club.members})</h2>
+              ${allMembers.length ? `
+                <div class="flex flex-col gap-2">
+                  ${allMembers.map(m => `
+                    <div class="member-row">
+                      <div class="avatar" style="background: ${club.color}; color: var(--white);">${(m.avatar || m.name || '?').substring(0,2).toUpperCase()}</div>
+                      <div class="member-info">
+                        <div class="member-name">${m.name}</div>
+                        <div class="member-role">${m.role_in_club === 'president' ? 'Président' : m.role_in_club === 'bureau' ? 'Bureau' : (m.filiere || 'Membre')}</div>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : `<p class="text-muted">La liste des membres n'est disponible qu'en mode connecté au backend (voir js/api.js?v=3).</p>`}
             </div>
           </div>
         </div>
@@ -139,33 +208,47 @@
           <div class="card">
             <h3 style="font-size: var(--fs-base); font-weight: 800; margin-bottom: var(--s-4);">Bureau</h3>
             <div class="flex flex-col gap-2">
-              ${memberSample.map(m => `
+              ${bureau.length ? bureau.map(m => `
                 <div class="member-row">
-                  <div class="avatar" style="background: ${club.color}; color: var(--white);">${m.avatar}</div>
+                  <div class="avatar" style="background: ${club.color}; color: var(--white);">${(m.avatar || m.name || '?').substring(0,2).toUpperCase()}</div>
                   <div class="member-info">
                     <div class="member-name">${m.name}</div>
-                    <div class="member-role">${m.role}</div>
+                    <div class="member-role">${m.role_in_club === 'president' ? 'Président' : 'Bureau'}</div>
                   </div>
                 </div>
-              `).join('')}
+              `).join('') : `<p class="text-muted" style="font-size: var(--fs-sm);">Bureau non renseigné.</p>`}
             </div>
           </div>
         </div>
       </div>
     `;
 
-    ClubHub.renderShell({
-      active: 'clubs',
-      role: 'student',
-      content,
-      pageTitle: club.name,
-    });
+      ClubHub.renderShell({
+        active: 'clubs',
+        role: 'student',
+        content,
+        pageTitle: club.name,
+      });
+    }
 
-    function joinClub(clubId) {
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+      document.querySelectorAll('.tab-panel').forEach(p => p.style.display = p.dataset.panel === tab ? '' : 'none');
+    }
+
+    async function joinClub(clubId) {
       const u = ClubHub.Auth.current();
       if (!u) { ClubHub.toast('Connexion requise', '', 'warning'); setTimeout(() => window.location.href = 'login.html', 1200); return; }
-      ClubHub.toast('Inscription réussie', '', 'success');
+      try {
+        await ClubHubAPI.joinClub(clubId);
+        ClubHub.toast('Inscription réussie', '', 'success');
+        setTimeout(() => loadClub(), 600);
+      } catch (e) {
+        ClubHub.toast('Erreur', e.message, 'error');
+      }
     }
+
+    loadClub();
   </script>
 </body>
 </html>

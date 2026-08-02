@@ -34,112 +34,125 @@
   <div class="page-loader"><div class="loader-ring"></div><div class="loader-text">CHARGEMENT</div></div>
   <div class="app-shell-mount"></div>
   <script src="js/data.js"></script>
-  <script src="js/api.js"></script>
+  <script src="js/api.js?v=3"></script>
   <script src="js/app.js"></script>
   <script>
-    window.addEventListener('load', () => ClubHub.hideLoader());
-    const user = ClubHub.Auth.require();
+    (async function () {
+      window.addEventListener('load', () => ClubHub.hideLoader());
+      const user = ClubHub.Auth.require();
 
-    // Calcul du leaderboard a partir des donnees seedees
-    const allUsers = (CLUBHUB.USERS || []).length ? CLUBHUB.USERS : [
-      { matricule:'MA', name:'Mika ANDRIAMATOA', filiere:'L1 Info', points: 120, avatar:'MA' },
-      { matricule:'SA', name:'Sarah ANDRIANARIVO', filiere:'L3 Info', points: 285, avatar:'SA' },
-      { matricule:'HR', name:'Hery RAKOTONIAINA', filiere:'Admin', points: 95, avatar:'HR' },
-      { matricule:'TR', name:'Toky RASOANAIVO', filiere:'L2 STAPS', points: 198, avatar:'TR' },
-      { matricule:'AR', name:'Antsa RAZAFY', filiere:'L2 SVT', points: 174, avatar:'AR' },
-      { matricule:'NA', name:'Naina ANDRIA', filiere:'M1 Info', points: 312, avatar:'NA' },
-      { matricule:'VR', name:'Voahangy RALA', filiere:'L3 Lettres', points: 156, avatar:'VR' },
-      { matricule:'FR', name:'Fanja RAKOTO', filiere:'M2 Eco', points: 245, avatar:'FR' },
-      { matricule:'TR2', name:'Tiana RABE', filiere:'L2 Info', points: 188, avatar:'TR' },
-      { matricule:'LA', name:'Lova ANDRY', filiere:'L3 Musique', points: 222, avatar:'LA' },
-      { matricule:'MR', name:'Mamy RAJAO', filiere:'L1 STAPS', points: 134, avatar:'MR' },
-      { matricule:'MR2', name:'Mihary RANAIVO', filiere:'L2 Droit', points: 167, avatar:'MR' },
-      { matricule:'NR', name:'Niry RAZANA', filiere:'L1 LEA', points: 89, avatar:'NR' },
-      { matricule:'FB', name:'Faly BEZANDRY', filiere:'M1 Info', points: 256, avatar:'FB' },
-    ];
-    const sorted = allUsers.sort((a,b) => b.points - a.points);
-    const top3 = sorted.slice(0, 3);
-    const rest = sorted.slice(3);
-    const myRank = sorted.findIndex(u => u.matricule === user.matricule) + 1;
-    const myPoints = sorted.find(u => u.matricule === user.matricule)?.points || 0;
+      let allUsers = [];
+      try {
+        const res = await ClubHubAPI.stats();
+        const data = res.data || res;
+        allUsers = data.users_ranking || [];
+      } catch (e) {
+        allUsers = [];
+      }
 
-    const podiumOrder = [top3[1], top3[0], top3[2]]; // 2-1-3 pour le visuel
-    const podiumClass = ['silver', 'gold', 'bronze'];
-    const podiumRank = ['#2', '#1', '#3'];
+      if (!allUsers.length) {
+        allUsers = [
+          { matricule:'MA', name:'Mika ANDRIAMATOA', filiere:'L1 Info', points: 120, avatar:'MA' },
+          { matricule:'SA', name:'Sarah ANDRIANARIVO', filiere:'L3 Info', points: 285, avatar:'SA' },
+          { matricule:'HR', name:'Hery RAKOTONIAINA', filiere:'Admin', points: 95, avatar:'HR' },
+          { matricule:'TR', name:'Toky RASOANAIVO', filiere:'L2 STAPS', points: 198, avatar:'TR' },
+          { matricule:'AR', name:'Antsa RAZAFY', filiere:'L2 SVT', points: 174, avatar:'AR' },
+          { matricule:'NA', name:'Naina ANDRIA', filiere:'M1 Info', points: 312, avatar:'NA' },
+          { matricule:'VR', name:'Voahangy RALA', filiere:'L3 Lettres', points: 156, avatar:'VR' },
+          { matricule:'FR', name:'Fanja RAKOTO', filiere:'M2 Eco', points: 245, avatar:'FR' },
+          { matricule:'TR2', name:'Tiana RABE', filiere:'L2 Info', points: 188, avatar:'TR' },
+          { matricule:'LA', name:'Lova ANDRY', filiere:'L3 Musique', points: 222, avatar:'LA' },
+          { matricule:'MR', name:'Mamy RAJAO', filiere:'L1 STAPS', points: 134, avatar:'MR' },
+          { matricule:'MR2', name:'Mihary RANAIVO', filiere:'L2 Droit', points: 167, avatar:'MR' },
+          { matricule:'NR', name:'Niry RAZANA', filiere:'L1 LEA', points: 89, avatar:'NR' },
+          { matricule:'FB', name:'Faly BEZANDRY', filiere:'M1 Info', points: 256, avatar:'FB' },
+        ];
+      }
 
-    const content = `
-      <div class="card" style="background: var(--orange); color: var(--white); border: 2px solid var(--black); box-shadow: 8px 8px 0 var(--black);">
-        <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3);">
-          <div>
-            <div class="text-mono" style="font-size: 11px; opacity: 0.85; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700;">GAMIFICATION</div>
-            <h1 style="font-size: 32px; font-weight: 900; letter-spacing: -0.03em;">Classement des etudiants</h1>
-            <p style="opacity: 0.9; margin-top: 4px;">Mis a jour en temps reel selon vos presences, inscriptions et activites.</p>
-          </div>
-          <div class="flex gap-2">
-            <button class="btn btn-secondary btn-sm">Cette semaine</button>
-            <button class="btn btn-secondary btn-sm">Tous les temps</button>
-            <button class="btn btn-primary btn-sm">L1 + L2 + L3</button>
-          </div>
-        </div>
-      </div>
+      const sorted = allUsers.sort((a,b) => b.points - a.points);
+      const top3 = sorted.slice(0, 3);
+      const rest = sorted.slice(3);
+      const myRank = sorted.findIndex(u => u.matricule === user.matricule) + 1;
+      const myPoints = sorted.find(u => u.matricule === user.matricule)?.points || 0;
 
-      <div class="card" style="margin-top: var(--s-5);">
-        <div class="grid grid-3" style="gap: var(--s-4);">
-          <div class="stat-card stat-card-orange" style="text-align: center;">
-            <div class="stat-label">Mon rang</div>
-            <div class="stat-value">#${myRank}</div>
-            <span class="stat-trend" style="background: rgba(0,0,0,0.2);">sur ${sorted.length} etudiants</span>
-          </div>
-          <div class="stat-card stat-card-lime" style="text-align: center;">
-            <div class="stat-label">Mes points</div>
-            <div class="stat-value">${myPoints}</div>
-            <span class="stat-trend" style="background: rgba(0,0,0,0.2);">+12 cette semaine</span>
-          </div>
-          <div class="stat-card stat-card-white" style="text-align: center;">
-            <div class="stat-label">Pour le top 3</div>
-            <div class="stat-value">+${Math.max(0, top3[2].points - myPoints + 1)}</div>
-            <span class="stat-trend">points necessaires</span>
+      const podiumOrder = [top3[1], top3[0], top3[2]];
+      const podiumClass = ['silver', 'gold', 'bronze'];
+      const podiumRank = ['#2', '#1', '#3'];
+
+      const content = `
+        <div class="card" style="background: var(--orange); color: var(--white); border: 2px solid var(--black); box-shadow: 8px 8px 0 var(--black);">
+          <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3);">
+            <div>
+              <div class="text-mono" style="font-size: 11px; opacity: 0.85; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700;">GAMIFICATION</div>
+              <h1 style="font-size: 32px; font-weight: 900; letter-spacing: -0.03em;">Classement des etudiants</h1>
+              <p style="opacity: 0.9; margin-top: 4px;">Mis a jour en temps reel selon vos presences, inscriptions et activites.</p>
+            </div>
+            <div class="flex gap-2">
+              <button class="btn btn-secondary btn-sm">Cette semaine</button>
+              <button class="btn btn-secondary btn-sm">Tous les temps</button>
+              <button class="btn btn-primary btn-sm">L1 + L2 + L3</button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="card" style="margin-top: var(--s-5);">
-        <h2 style="font-size: var(--fs-lg); font-weight: 800; margin-bottom: var(--s-4);">Podium</h2>
-        <div class="lb-podium">
-          ${podiumOrder.map((u, i) => `
-            <div class="lb-podium-item ${podiumClass[i]}">
-              <div class="lb-podium-rank">${podiumRank[i]}</div>
-              <div class="lb-podium-avatar">${u.avatar}</div>
-              <div class="lb-podium-name">${u.name.split(' ')[0]}</div>
-              <div class="text-mono" style="font-size: 10px; opacity: 0.7;">${u.filiere}</div>
-              <div class="lb-podium-points">${u.points}</div>
+        <div class="card" style="margin-top: var(--s-5);">
+          <div class="grid grid-3" style="gap: var(--s-4);">
+            <div class="stat-card stat-card-orange" style="text-align: center;">
+              <div class="stat-label">Mon rang</div>
+              <div class="stat-value">#${myRank}</div>
+              <span class="stat-trend" style="background: rgba(0,0,0,0.2);">sur ${sorted.length} etudiants</span>
+            </div>
+            <div class="stat-card stat-card-lime" style="text-align: center;">
+              <div class="stat-label">Mes points</div>
+              <div class="stat-value">${myPoints}</div>
+              <span class="stat-trend" style="background: rgba(0,0,0,0.2);">+12 cette semaine</span>
+            </div>
+            <div class="stat-card stat-card-white" style="text-align: center;">
+              <div class="stat-label">Pour le top 3</div>
+              <div class="stat-value">+${Math.max(0, top3[2].points - myPoints + 1)}</div>
+              <span class="stat-trend">points necessaires</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: var(--s-5);">
+          <h2 style="font-size: var(--fs-lg); font-weight: 800; margin-bottom: var(--s-4);">Podium</h2>
+          <div class="lb-podium">
+            ${podiumOrder.map((u, i) => `
+              <div class="lb-podium-item ${podiumClass[i]}">
+                <div class="lb-podium-rank">${podiumRank[i]}</div>
+                <div class="lb-podium-avatar">${u.avatar}</div>
+                <div class="lb-podium-name">${u.name.split(' ')[0]}</div>
+                <div class="text-mono" style="font-size: 10px; opacity: 0.7;">${u.filiere}</div>
+                <div class="lb-podium-points">${u.points}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: var(--s-5);">
+          <h2 style="font-size: var(--fs-lg); font-weight: 800; margin-bottom: var(--s-4);">Classement complet</h2>
+          ${rest.map((u, i) => `
+            <div class="lb-row ${u.matricule === user.matricule ? 'me' : ''}">
+              <div class="lb-rank">#${i + 4}</div>
+              <div class="lb-avatar">${u.avatar}</div>
+              <div>
+                <div style="font-weight: 700; font-size: var(--fs-sm);">${u.name}</div>
+                <div class="text-mono" style="font-size: 10px; color: var(--text-tertiary);">${u.filiere}</div>
+              </div>
+              <div class="lb-points">${u.points} pts</div>
+              <div class="lb-badges">
+                ${u.points >= 250 ? '<span class="lb-badge gold">A</span>' : ''}
+                ${u.points >= 150 ? '<span class="lb-badge silver">B</span>' : ''}
+                ${u.points >= 100 ? '<span class="lb-badge bronze">C</span>' : ''}
+              </div>
             </div>
           `).join('')}
         </div>
-      </div>
+      `;
 
-      <div class="card" style="margin-top: var(--s-5);">
-        <h2 style="font-size: var(--fs-lg); font-weight: 800; margin-bottom: var(--s-4);">Classement complet</h2>
-        ${rest.map((u, i) => `
-          <div class="lb-row ${u.matricule === user.matricule ? 'me' : ''}">
-            <div class="lb-rank">#${i + 4}</div>
-            <div class="lb-avatar">${u.avatar}</div>
-            <div>
-              <div style="font-weight: 700; font-size: var(--fs-sm);">${u.name}</div>
-              <div class="text-mono" style="font-size: 10px; color: var(--text-tertiary);">${u.filiere}</div>
-            </div>
-            <div class="lb-points">${u.points} pts</div>
-            <div class="lb-badges">
-              ${u.points >= 250 ? '<span class="lb-badge gold">A</span>' : ''}
-              ${u.points >= 150 ? '<span class="lb-badge silver">B</span>' : ''}
-              ${u.points >= 100 ? '<span class="lb-badge bronze">C</span>' : ''}
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `;
-
-    ClubHub.renderShell({ active: 'leaderboard', role: 'student', content, pageTitle: 'Classement' });
+      ClubHub.renderShell({ active: 'leaderboard', role: 'student', content, pageTitle: 'Classement' });
+    })();
   </script>
 </body>
 </html>

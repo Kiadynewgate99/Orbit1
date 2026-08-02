@@ -114,6 +114,23 @@ const NOTIFICATIONS = [
   { id: 9, user_matricule: 'HR', kind: 'system',     icon: '!', title: 'Pic d\'inscriptions',        message: '47 nouvelles inscriptions aujourd\'hui.',         link: 'admin.html',       read: false, created_at: '2026-07-26T11:00:00' },
 ];
 
+const USERS = [
+  { matricule:'MA', name:'Mika ANDRIAMATOA', filiere:'L1 Info', points: 120, avatar:'MA' },
+  { matricule:'SA', name:'Sarah ANDRIANARIVO', filiere:'L3 Info', points: 285, avatar:'SA' },
+  { matricule:'HR', name:'Hery RAKOTONIAINA', filiere:'Admin', points: 95, avatar:'HR' },
+  { matricule:'TR', name:'Toky RASOANAIVO', filiere:'L2 STAPS', points: 198, avatar:'TR' },
+  { matricule:'AR', name:'Antsa RAZAFY', filiere:'L2 SVT', points: 174, avatar:'AR' },
+  { matricule:'NA', name:'Naina ANDRIA', filiere:'M1 Info', points: 312, avatar:'NA' },
+  { matricule:'VR', name:'Voahangy RALA', filiere:'L3 Lettres', points: 156, avatar:'VR' },
+  { matricule:'FR', name:'Fanja RAKOTO', filiere:'M2 Eco', points: 245, avatar:'FR' },
+  { matricule:'TR2', name:'Tiana RABE', filiere:'L2 Info', points: 188, avatar:'TR' },
+  { matricule:'LA', name:'Lova ANDRY', filiere:'L3 Musique', points: 222, avatar:'LA' },
+  { matricule:'MR', name:'Mamy RAJAO', filiere:'L1 STAPS', points: 134, avatar:'MR' },
+  { matricule:'MR2', name:'Mihary RANAIVO', filiere:'L2 Droit', points: 167, avatar:'MR' },
+  { matricule:'NR', name:'Niry RAZANA', filiere:'L1 LEA', points: 89, avatar:'NR' },
+  { matricule:'FB', name:'Faly BEZANDRY', filiere:'M1 Info', points: 256, avatar:'FB' },
+];
+
 if (typeof window !== 'undefined') {
-  window.CLUBHUB = window.ClubHub = { CLUB_CATEGORIES, CLUBS, EVENTS, DEMO_ACCOUNTS, PERSONAS, STORAGE, ICONS, NOTIFICATIONS };
+  window.CLUBHUB = window.ClubHub = { CLUB_CATEGORIES, CLUBS, EVENTS, DEMO_ACCOUNTS, PERSONAS, STORAGE, ICONS, NOTIFICATIONS, USERS };
 }

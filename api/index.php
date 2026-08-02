@@ -16,12 +16,16 @@ $path = preg_replace('#^/+|/+$#', '', $path);
 $map = [
     'login'         => 'login.php',
     'logout'        => 'logout.php',
+    'register'      => 'register.php',
     'me'            => 'me.php',
     'clubs'         => 'clubs.php',
     'events'        => 'events.php',
     'inscriptions'  => 'inscriptions.php',
     'notifications' => 'notifications.php',
     'stats'         => 'stats.php',
+    'search'        => 'search.php',
+    'export'        => 'export.php',
+    'audit'         => 'audit.php',
 ];
 
 if ($path === '' || $path === 'health') {

@@ -94,7 +94,7 @@
   </div>
 
   <script src="js/data.js"></script>
-  <script src="js/api.js"></script>
+  <script src="js/api.js?v=3"></script>
   <script src="js/app.js"></script>
   <script>
     window.addEventListener('load', () => ClubHub.hideLoader());
@@ -115,18 +115,11 @@
       };
 
       try {
-        const r = await ClubHubAPI.login(data.matricule, data.password); // pas utilise, juste init
-        // si l'API n'est pas dispo, on bascule en mode mock local
         const isLive = ClubHubAPI.isLive();
 
         if (isLive) {
           // reel : POST /api/register
-          const resp = await fetch('/api/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-          });
-          const j = await resp.json();
+          const j = await ClubHubAPI.register(data);
           if (!j.ok) throw new Error(j.error);
           localStorage.setItem('clubhub_token', j.data.token);
           localStorage.setItem('clubhub_current_user', JSON.stringify(j.data.user));
