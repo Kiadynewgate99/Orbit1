@@ -20,7 +20,7 @@
     return localStorage.getItem('clubhub_api_mode') !== 'off';
   };
 
-  const base = () => '';
+  const base = () => 'api/';
 
   const token = () => localStorage.getItem('clubhub_token') || '';
 
@@ -54,8 +54,15 @@
     // simple simu - renvoie depuis CLUBHUB
     const ok = (data) => ({ ok: true, data });
     await new Promise(r => setTimeout(r, 80));
-    if (path.startsWith('clubs'))          return ok({ data: window.CLUBHUB.CLUBS, total: window.CLUBHUB.CLUBS.length, page: 1, per_page: 20 });
-    if (path.startsWith('events'))         return ok({ data: window.CLUBHUB.EVENTS, total: window.CLUBHUB.EVENTS.length, page: 1, per_page: 20 });
+    if (path.startsWith('clubs')) {
+      const idMatch = path.match(/id=(\d+)/);
+      if (idMatch) {
+        const club = window.CLUBHUB.CLUBS.find(c => c.id === 'club-' + idMatch[1] || String(c.id) === idMatch[1]);
+        return ok({ data: club ? { ...club, club_id: club.id, members_count: club.members, events_count: club.events } : null });
+      }
+      return ok({ data: window.CLUBHUB.CLUBS.map(c => ({ ...c, club_id: c.id, members_count: c.members, events_count: c.events })), total: window.CLUBHUB.CLUBS.length, page: 1, per_page: 20 });
+    }
+    if (path.startsWith('events')) return ok({ data: window.CLUBHUB.EVENTS.map(e => ({ ...e, club_id: e.clubId, duration_min: e.duration, registered: e.attendees || 0 })), total: window.CLUBHUB.EVENTS.length, page: 1, per_page: 20 });
     if (path === 'notifications.php')  return ok({ data: window.CLUBHUB.NOTIFICATIONS || [], total: (window.CLUBHUB.NOTIFICATIONS || []).length, page: 1, per_page: 20 });
     if (path === 'stats.php')          return ok({
       data: {
@@ -85,6 +92,12 @@
         { id: 4, action: 'login', user: 'HR', timestamp: '2026-07-26T12:15:00', ip: '192.168.1.3' },
         { id: 5, action: 'delete_club', user: 'HR', timestamp: '2026-07-26T13:00:00', ip: '192.168.1.3' },
       ]);
+    }
+    if (path === 'upload.php') {
+      return ok({ ok: true, data: { path: 'uploads/' + (get_str('type') || 'users') + '/' + (get_int('id') || 0) + '.jpg', url: '/uploads/' + (get_str('type') || 'users') + '/' + (get_int('id') || 0) + '.jpg' } });
+    }
+    if (path === 'import.php') {
+      return ok({ ok: true, data: { imported: 12, errors: [] } });
     }
     if (path === 'login.php') {
       throw new Error('Mode demo desactive : connectez-vous avec un vrai compte (backend requis).');
@@ -128,12 +141,29 @@
 
     stats:    ()                                => request('GET', 'stats.php'),
 
-    search:   (q)                              => request('GET', 'search.php?q=' + encodeURIComponent(q)),
-    audit:    ()                                => request('GET', 'audit.php'),
+     search:   (q)                              => request('GET', 'search.php?q=' + encodeURIComponent(q)),
+     audit:    ()                                => request('GET', 'audit.php'),
 
-    users:    (params = {})                     => {
-      const qs = new URLSearchParams(params).toString();
-      return request('GET', 'stats.php' + (qs ? '?' + qs : ''));
-    },
-  };
-})();
+     upload:   (type, id, fileData)               => {
+       const form = new FormData();
+       form.append('file', fileData);
+       form.append('type', type);
+       form.append('id', id);
+       const opts = { method: 'POST', headers: { 'Authorization': 'Bearer ' + token() }, body: form };
+       return fetch('upload.php', opts).then(r => r.json());
+     },
+
+     importCSV: (type, fileData)                  => {
+       const form = new FormData();
+       form.append('file', fileData);
+       form.append('type', type);
+       const opts = { method: 'POST', headers: { 'Authorization': 'Bearer ' + token() }, body: form };
+       return fetch('import.php', opts).then(r => r.json());
+     },
+
+     users:    (params = {})                     => {
+       const qs = new URLSearchParams(params).toString();
+       return request('GET', 'stats.php' + (qs ? '?' + qs : ''));
+     },
+   };
+ })();

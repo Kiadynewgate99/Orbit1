@@ -7,7 +7,7 @@
   <title>Fiche club - Orbit</title>
   <link rel="stylesheet" href="css/design-system.css" />
   <link rel="stylesheet" href="css/components.css" />
-  <style>
+    <style>
     .club-hero {
       background: var(--black);
       color: var(--white);
@@ -20,19 +20,40 @@
       box-shadow: 6px 6px 0 var(--orange);
     }
     .club-hero-icon {
-      width: 72px;
-      height: 72px;
-      border-radius: var(--r-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--white);
-      font-size: 28px;
-      font-weight: 800;
-      margin-bottom: var(--s-4);
-      border: 2px solid var(--black);
+      width: 72px; height: 72px; border-radius: var(--r-sm);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--white); font-size: 28px; font-weight: 800;
+      margin-bottom: var(--s-4); border: 2px solid var(--black);
     }
-  </style>
+    .club-logo-img {
+      width: 72px; height: 72px; border-radius: var(--r-sm);
+      object-fit: cover; border: 2px solid var(--black); margin-bottom: var(--s-4);
+    }
+    .club-logo-upload {
+      display: flex; align-items: center; gap: var(--s-2); margin-top: var(--s-3);
+    }
+    .club-logo-upload img {
+      width: 48px; height: 48px; border-radius: var(--r-sm); object-fit: cover; border: 1px solid var(--black);
+    }
+    .responsible-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; background: var(--orange); color: var(--white);
+      border-radius: var(--r-full); font-size: var(--fs-xs); font-weight: 700;
+    }
+    .edit-section {
+      background: var(--bg-elev-1); border: 1px solid var(--border-subtle);
+      border-radius: var(--r-sm); padding: var(--s-4); margin-top: var(--s-4);
+    }
+    .edit-section h3 { font-size: var(--fs-base); font-weight: 800; margin-bottom: var(--s-3); }
+    .edit-field { margin-bottom: var(--s-3); }
+    .edit-field label { display: block; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; color: var(--text-tertiary); }
+    .edit-field input, .edit-field textarea, .edit-field select {
+      width: 100%; padding: var(--s-2) var(--s-3); border: 1px solid var(--border-default);
+      border-radius: var(--r-sm); font-size: var(--fs-sm); background: var(--white);
+      font-family: var(--font-sans);
+    }
+    .edit-field textarea { min-height: 80px; resize: vertical; }
+    </style>
 </head>
 <body>
   <div class="page-loader">
@@ -48,14 +69,14 @@
   <script>
     window.addEventListener('load', () => ClubHub.hideLoader());
 
-    const params = new URLSearchParams(window.location.search);
+const params = new URLSearchParams(window.location.search);
     const clubId = params.get('id') || 'club-001';
 
-    // Fallback local (mode mock / hors-ligne) pendant que la vraie fiche charge
     const localFallback = CLUBHUB.CLUBS.find(c => c.id === clubId || String(c.id) === String(clubId)) || CLUBHUB.CLUBS[0];
 
     let club = localFallback;
-    let realMembers = null; // rempli par l'API si dispo (liste reelle des etudiants inscrits)
+    let realMembers = null;
+    let isResponsible = false;
 
     async function loadClub() {
       try {
@@ -74,6 +95,8 @@
             email: apiData.email || localFallback.email || '',
             location: apiData.room || localFallback.location || '',
             meeting: localFallback.meeting || '',
+            logo: apiData.logo || localFallback.logo || null,
+            responsible_id: apiData.responsible_id || localFallback.responsible_id || null,
           };
           realMembers = Array.isArray(apiData.members) ? apiData.members : null;
         }
@@ -81,39 +104,91 @@
         club = localFallback;
         realMembers = null;
       }
+      const u = ClubHub.Auth.current();
+      if (u && club.responsible_id && String(u.id) === String(club.responsible_id)) {
+        isResponsible = true;
+      }
       render();
+    }
+
+    function getClubLogoHTML() {
+      if (club.logo) {
+        return `<img src="${club.logo}" alt="Logo" class="club-logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><div class="club-hero-icon" style="background: ${club.color}; display: none;">${club.name.substring(0, 2).toUpperCase()}</div>`;
+      }
+      return `<div class="club-hero-icon" style="background: ${club.color};">${club.name.substring(0, 2).toUpperCase()}</div>`;
     }
 
     function render() {
       const category = CLUBHUB.CLUB_CATEGORIES.find(c => c.id === club.domain);
       const clubEvents = CLUBHUB.EVENTS.filter(e => e.clubId === club.id);
-
-      // Bureau = membres avec un role de responsabilite, sinon fallback visuel minimal
       const bureau = (realMembers || []).filter(m => m.role_in_club && m.role_in_club !== 'member');
       const allMembers = realMembers || [];
+      const responsibleUser = club.responsible_id ? (CLUBHUB.USERS || []).find(u => String(u.id) === String(club.responsible_id)) : null;
 
       const content = `
       <div class="club-hero">
         <a href="clubs.html" class="text-mono" style="font-size: 11px; color: var(--lime); margin-bottom: var(--s-3); display: inline-block; font-weight: 700; letter-spacing: 0.1em;">← RETOUR À L'ANNUAIRE</a>
-        <div class="club-hero-icon" style="background: ${club.color};">${club.icon}</div>
-        <div class="text-mono" style="font-size: 11px; color: var(--lime); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; margin-bottom: var(--s-2);">${category?.label || ''}</div>
-        <h1 style="font-size: clamp(32px, 4vw, 48px); margin-bottom: var(--s-3); letter-spacing: -0.04em; font-weight: 900;">${club.name}</h1>
-        <p style="color: rgba(255,255,255,0.8); font-size: var(--fs-md); max-width: 700px; line-height: 1.6; margin-bottom: var(--s-5);">${club.longDescription}</p>
-
-        <div class="flex gap-2" style="flex-wrap: wrap; margin-bottom: var(--s-5);">
-          <span class="badge badge-lime">● Inscriptions ouvertes</span>
-          <span class="badge" style="background: var(--bg-elev-1); color: var(--text-primary); border-color: var(--border-default);">${club.members} membres</span>
-          <span class="badge" style="background: var(--bg-elev-1); color: var(--text-primary); border-color: var(--border-default);">${club.events} événements / an</span>
-          <span class="badge" style="background: var(--bg-elev-1); color: var(--text-primary); border-color: var(--border-default);">Depuis ${club.founded}</span>
-        </div>
-
-        <div class="flex gap-3" style="flex-wrap: wrap;">
-          <button class="btn btn-orange btn-lg" onclick="joinClub('${club.id}')">
-            + S'inscrire au club
-          </button>
-          <button class="btn btn-lg" style="background: var(--bg-elev-1); color: var(--text-primary); border-color: var(--border-default);">♡ Favoris</button>
+        <div class="flex items-start gap-4" style="flex-wrap: wrap;">
+          ${getClubLogoHTML()}
+          <div style="flex: 1; min-width: 200px;">
+            <div class="text-mono" style="font-size: 11px; color: var(--lime); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; margin-bottom: var(--s-2);">${category?.label || ''}</div>
+            <h1 style="font-size: clamp(32px, 4vw, 48px); margin-bottom: var(--s-3); letter-spacing: -0.04em; font-weight: 900;">${club.name}</h1>
+            <p style="color: rgba(255,255,255,0.8); font-size: var(--fs-md); max-width: 700px; line-height: 1.6; margin-bottom: var(--s-5);">${club.longDescription}</p>
+            <div class="flex gap-2" style="flex-wrap: wrap; margin-bottom: var(--s-4);">
+              <span class="badge badge-lime">● Inscriptions ouvertes</span>
+              <span class="badge" style="background: var(--bg-elev-1); color: var(--text-primary); border-color: var(--border-default);">${club.members} membres</span>
+              <span class="badge" style="background: var(--bg-elev-1); color: var(--text-primary); border-color: var(--border-default);">${club.events} événements / an</span>
+              <span class="badge" style="background: var(--bg-elev-1); color: var(--text-primary); border-color: var(--border-default);">Depuis ${club.founded}</span>
+              ${responsibleUser ? `<span class="responsible-badge">👤 ${responsibleUser.name}</span>` : ''}
+            </div>
+            <div class="flex gap-3">
+              <button class="btn btn-orange btn-lg" onclick="joinClub('${club.id}')">+ S'inscrire au club</button>
+              <button class="btn btn-lg" style="background: var(--bg-elev-1); color: var(--text-primary); border-color: var(--border-default);">♡ Favoris</button>
+            </div>
+            ${isResponsible ? `
+            <div style="margin-top: var(--s-4);">
+              <button class="btn btn-orange btn-sm" onclick="toggleEdit()">✏️ Modifier les informations</button>
+            </div>
+            ` : ''}
+          </div>
         </div>
       </div>
+
+      ${isResponsible ? `
+      <div class="edit-section" id="edit-section" style="display:none;">
+        <h3>Modifier le club</h3>
+        <div class="grid grid-2" style="gap: var(--s-3);">
+          <div class="edit-field">
+            <label>Description courte</label>
+            <input id="edit-short-desc" value="${club.short_desc || ''}" />
+          </div>
+          <div class="edit-field">
+            <label>Description longue</label>
+            <textarea id="edit-long-desc">${club.longDescription || ''}</textarea>
+          </div>
+          <div class="edit-field">
+            <label>Lieu</label>
+            <input id="edit-location" value="${club.location || ''}" />
+          </div>
+          <div class="edit-field">
+            <label>Réunion</label>
+            <input id="edit-meeting" value="${club.meeting || ''}" />
+          </div>
+          <div class="edit-field">
+            <label>Capacité</label>
+            <input type="number" id="edit-capacity" value="${club.capacity || 50}" />
+          </div>
+          <div class="edit-field">
+            <label>Photo du club</label>
+            <input type="file" id="edit-logo" accept="image/*" />
+          </div>
+        </div>
+        <div class="flex gap-2" style="margin-top: var(--s-3);">
+          <button class="btn btn-orange btn-sm" onclick="saveClubEdit()">Sauvegarder</button>
+          <button class="btn btn-secondary btn-sm" onclick="toggleEdit()">Annuler</button>
+        </div>
+      </div>
+      ` : ''}
 
       <div class="grid" style="grid-template-columns: 2fr 1fr; gap: var(--s-5);">
         <div>
@@ -177,7 +252,7 @@
                     </div>
                   `).join('')}
                 </div>
-              ` : `<p class="text-muted">La liste des membres n'est disponible qu'en mode connecté au backend (voir js/api.js?v=3).</p>`}
+              ` : `<p class="text-muted">La liste des membres n'est disponible qu'en mode connecté au backend.</p>`}
             </div>
           </div>
         </div>
@@ -221,14 +296,55 @@
           </div>
         </div>
       </div>
-    `;
+      `;
 
       ClubHub.renderShell({
         active: 'clubs',
-        role: 'student',
+        role: user ? user.role : 'student',
         content,
         pageTitle: club.name,
       });
+    }
+
+    function toggleEdit() {
+      const section = document.getElementById('edit-section');
+      if (section) section.style.display = section.style.display === 'none' ? '' : 'none';
+    }
+
+    async function saveClubEdit() {
+      const shortDesc = document.getElementById('edit-short-desc')?.value || '';
+      const longDesc = document.getElementById('edit-long-desc')?.value || '';
+      const location = document.getElementById('edit-location')?.value || '';
+      const meeting = document.getElementById('edit-meeting')?.value || '';
+      const capacity = parseInt(document.getElementById('edit-capacity')?.value || '50');
+      const logoFile = document.getElementById('edit-logo')?.files?.[0] || null;
+
+      const updates = {
+        short_desc: shortDesc,
+        long_desc: longDesc,
+        room: location,
+        meeting: meeting,
+        capacity: capacity,
+      };
+
+      try {
+        if (logoFile) {
+          const formData = new FormData();
+          formData.append('file', logoFile);
+          formData.append('type', 'club');
+          formData.append('id', club.id);
+          const uploadRes = await ClubHubAPI.upload('club', club.id, logoFile);
+          if (uploadRes.ok && uploadRes.data) {
+            updates.logo = uploadRes.data.path;
+          }
+        }
+
+        await ClubHubAPI.updateClub(club.id, updates);
+        ClubHub.toast('Club mis à jour', '', 'success');
+        setTimeout(() => loadClub(), 500);
+      } catch (e) {
+        ClubHub.toast('Erreur', e.message, 'error');
+      }
     }
 
     function switchTab(tab) {

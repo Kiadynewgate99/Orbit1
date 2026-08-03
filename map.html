@@ -52,7 +52,17 @@
       { id: 'club-012', name: 'Club Langues',         short: 'LC', x: 880, y: 280, w: 100, h: 80, cat: 'langues' },
     ];
 
-    const filterCat = (cat) => buildings.filter(b => b.cat === cat);
+    window.filterMap = (cat) => {
+      document.querySelectorAll('.bldg-grp').forEach(g => {
+        g.style.display = (cat === 'all' || g.dataset.cat === cat) ? '' : 'none';
+      });
+      document.querySelectorAll('.grid.grid-3 .card').forEach(card => {
+        card.style.display = (cat === 'all' || card.dataset.cat === cat) ? '' : 'none';
+      });
+      document.querySelectorAll('.btn[data-cat]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.cat === cat);
+      });
+    };
 
     const svgMap = `
       <svg class="campus-svg" viewBox="0 0 1080 460" xmlns="http://www.w3.org/2000/svg">
@@ -66,8 +76,8 @@
         <line class="campus-path" x1="50" y1="230" x2="1030" y2="230"/>
         <!-- Titre -->
         <text x="540" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="800" fill="#000">UNIVERSITE — CARTE DES CLUBS</text>
-        ${buildings.map(b => `
-          <g class="bldg-grp" data-id="${b.id}">
+${buildings.map(b => `
+            <g class="bldg-grp" data-id="${b.id}" data-cat="${b.cat}">
             <rect class="bldg ${b.cat}" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="4"/>
             <text class="bldg-label" x="${b.x + b.w/2}" y="${b.y + b.h/2 + 4}">${b.short}</text>
             <circle class="map-pin" cx="${b.x + b.w - 10}" cy="${b.y + 10}" r="5"/>

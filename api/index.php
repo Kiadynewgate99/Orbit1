@@ -26,6 +26,8 @@ $map = [
     'search'        => 'search.php',
     'export'        => 'export.php',
     'audit'         => 'audit.php',
+    'upload'        => 'upload.php',
+    'import'        => 'import.php',
 ];
 
 if ($path === '' || $path === 'health') {

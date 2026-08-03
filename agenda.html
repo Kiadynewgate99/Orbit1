@@ -43,6 +43,74 @@
       overflow: hidden;
       text-overflow: ellipsis;
       border: 1px solid var(--black);
+      display: block;
+      text-decoration: none;
+    }
+    .agenda-event:hover {
+      background: var(--orange);
+      color: var(--white);
+    }
+    .agenda-day.today {
+      background: var(--lime-soft);
+    }
+    .agenda-day.other-month {
+      background: var(--bg-elev-1);
+      opacity: 0.5;
+    }
+    .week-grid {
+      display: grid;
+      grid-template-columns: 60px repeat(7, 1fr);
+      gap: 1px;
+      background: var(--black);
+      border: 1px solid var(--black);
+      border-radius: var(--r-sm);
+      overflow: hidden;
+    }
+    .week-time-col {
+      background: var(--bg-elev-1);
+      padding: var(--s-2);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-tertiary);
+      text-align: right;
+      min-height: 40px;
+    }
+    .week-day-col {
+      background: var(--white);
+      min-height: 80px;
+      padding: var(--s-1);
+      position: relative;
+    }
+    .week-day-col.today {
+      background: var(--lime-soft);
+    }
+    .week-event {
+      background: var(--lime);
+      color: var(--black);
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 700;
+      border: 1px solid var(--black);
+      margin-bottom: 2px;
+      cursor: pointer;
+    }
+    .week-event:hover {
+      background: var(--orange);
+      color: var(--white);
+    }
+    .week-header {
+      background: var(--black);
+      color: var(--white);
+      padding: var(--s-2);
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .ics-hidden {
+      display: none;
     }
   </style>
 </head>
@@ -64,72 +132,97 @@
     if (!user) throw new Error('Unauthorized');
 
     let agendaEvents = [];
+    let allClubs = [];
+    let viewMode = 'month';
 
     async function initAgenda() {
       try {
-        const r = await ClubHubAPI.events();
-        agendaEvents = r.data || [];
+        const [eventsRes, clubsRes] = await Promise.all([
+          ClubHubAPI.events(),
+          ClubHubAPI.clubs(),
+        ]);
+        agendaEvents = eventsRes.data || [];
+        allClubs = clubsRes.data || [];
       } catch (e) {
         agendaEvents = CLUBHUB.EVENTS;
+        allClubs = CLUBHUB.CLUBS;
       }
       refresh();
     }
 
-    // État du calendrier
-    let currentDate = new Date(); // aujourd'hui
+    let currentDate = new Date();
     let currentYear = currentDate.getFullYear();
-    let currentMonth = currentDate.getMonth(); // 0-11
+    let currentMonth = currentDate.getMonth();
 
     const monthNames = [
       'Janvier','Février','Mars','Avril','Mai','Juin',
       'Juillet','Août','Septembre','Octobre','Novembre','Décembre'
     ];
     const dayNames = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+    const shortDayNames = ['L','M','M','J','V','S','D'];
 
     function getEventsForDay(year, month, day) {
       return agendaEvents.filter(e => {
-        const d = new Date(e.date);
+        const d = new Date(e.date + 'T00:00:00');
         return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
       });
     }
 
-    function renderCalendar() {
+    function getClubName(clubId) {
+      const club = allClubs.find(c => c.id == clubId || c.slug == clubId);
+      return club ? club.name : '';
+    }
+
+    function getWeekDays(date) {
+      const d = new Date(date);
+      const dayOfWeek = d.getDay();
+      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() + mondayOffset);
+      const week = [];
+      for (let i = 0; i < 7; i++) {
+        const day = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+        week.push(day);
+      }
+      return week;
+    }
+
+    function renderMonthView() {
       const firstDay = new Date(currentYear, currentMonth, 1);
       const lastDay = new Date(currentYear, currentMonth + 1, 0);
       const daysInMonth = lastDay.getDate();
-      // getDay() : 0=dimanche, on veut 0=lundi
       let startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
 
       const today = new Date();
       const isCurrentMonth = today.getFullYear() === currentYear && today.getMonth() === currentMonth;
 
-      // Stats
       const monthEvents = agendaEvents.filter(e => {
-        const d = new Date(e.date);
+        const d = new Date(e.date + 'T00:00:00');
         return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
       });
-      const upcomingMonth = monthEvents.filter(e => new Date(e.date) >= new Date()).length;
+      const upcomingMonth = monthEvents.filter(e => {
+        const d = new Date(e.date + 'T00:00:00');
+        return d >= new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      }).length;
       const weekEvents = agendaEvents.filter(e => {
-        const d = new Date(e.date);
-        const diff = (d - new Date()) / (1000*60*60*24);
+        const d = new Date(e.date + 'T00:00:00');
+        const diff = (d - new Date(today.getFullYear(), today.getMonth(), today.getDate())) / (1000*60*60*24);
         return diff >= 0 && diff <= 7;
       }).length;
-      // Conflits simples (même jour, même heure)
       const conflicts = new Set();
       monthEvents.forEach((a, i) => {
         monthEvents.forEach((b, j) => {
           if (i >= j) return;
-          const da = new Date(a.date), db = new Date(b.date);
-          if (da.toDateString() === db.toDateString()) {
+          if (a.date === b.date) {
             const ta = a.time.split(':'), tb = b.time.split(':');
             const ma = parseInt(ta[0])*60 + parseInt(ta[1]);
             const mb = parseInt(tb[0])*60 + parseInt(tb[1]);
-            if (Math.abs(ma - mb) < 60) conflicts.add(`${a.id}-${b.id}`);
+            const durA = (a.duration_min || 120);
+            const durB = (b.duration_min || 120);
+            if (ma < mb + durB && mb < ma + durA) conflicts.add(`${a.id}-${b.id}`);
           }
         });
       });
 
-      // Génération HTML
       let html = `
       <div class="card" style="margin-bottom: var(--s-5); padding: var(--s-5);">
         <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3);">
@@ -143,9 +236,9 @@
             <button class="btn btn-secondary btn-sm" onclick="changeMonth(-1)">‹</button>
             <button class="btn btn-secondary btn-sm" onclick="changeMonth(1)">›</button>
             <div style="width: 1px; background: var(--black); margin: 0 var(--s-2);"></div>
-            <button class="btn btn-primary btn-sm">Mois</button>
-            <button class="btn btn-secondary btn-sm" onclick="ClubHub.toast('Vue semaine bientôt disponible','','info')">Semaine</button>
-            <button class="btn btn-secondary btn-sm" onclick="ClubHub.toast('Export ICS bientôt disponible','','info')">↓ Exporter</button>
+            <button class="btn btn-primary btn-sm" onclick="setView('month')">Mois</button>
+            <button class="btn btn-secondary btn-sm" onclick="setView('week')">Semaine</button>
+            <button class="btn btn-secondary btn-sm" onclick="exportICS()">↓ Exporter ICS</button>
           </div>
         </div>
       </div>
@@ -153,21 +246,22 @@
       <div class="card">
         <div class="agenda-grid">
           ${dayNames.map(d => `<div class="agenda-day-header">${d}</div>`).join('')}
-          ${Array(startOffset).fill('<div class="agenda-day" style="background: var(--bg-elev-1);"></div>').join('')}
+          ${Array(startOffset).fill('<div class="agenda-day other-month"></div>').join('')}
           ${Array.from({length: daysInMonth}, (_, i) => {
             const day = i + 1;
             const dayEvents = getEventsForDay(currentYear, currentMonth, day);
             const isToday = isCurrentMonth && day === today.getDate();
             return `
-              <div class="agenda-day" style="${isToday ? 'background: var(--lime-soft);' : ''}">
+              <div class="agenda-day ${isToday ? 'today' : ''}">
                 <div class="text-mono" style="font-size: 12px; color: ${isToday ? 'var(--orange)' : 'var(--text-tertiary)'}; margin-bottom: 4px; font-weight: 700;">${day}${isToday ? ' ●' : ''}</div>
-                ${dayEvents.slice(0, 2).map(e => `
-                  <a href="events.html?id=${e.id}" class="agenda-event" title="${e.title}">${e.time} ${e.title}</a>
+                ${dayEvents.slice(0, 3).map(e => `
+                  <a href="events.html?id=${e.id}" class="agenda-event" title="${e.title} (${getClubName(e.club_id)})">${e.time ? e.time.substring(0,5) : ''} ${e.title}</a>
                 `).join('')}
-                ${dayEvents.length > 2 ? `<div class="text-mono" style="font-size: 9px; color: var(--text-tertiary); margin-top: 2px; font-weight: 700;">+${dayEvents.length - 2} autre${dayEvents.length > 3 ? 's' : ''}</div>` : ''}
+                ${dayEvents.length > 3 ? `<div class="text-mono" style="font-size: 9px; color: var(--text-tertiary); margin-top: 2px; font-weight: 700;">+${dayEvents.length - 3} autre${dayEvents.length > 4 ? 's' : ''}</div>` : ''}
               </div>
             `;
           }).join('')}
+          ${Array(42 - startOffset - daysInMonth).fill('<div class="agenda-day other-month"></div>').join('')}
         </div>
       </div>
 
@@ -193,10 +287,81 @@
       return html;
     }
 
+    function renderWeekView() {
+      const weekDays = getWeekDays(new Date(currentYear, currentMonth, 1));
+      const today = new Date();
+
+      let html = `
+      <div class="card" style="margin-bottom: var(--s-5); padding: var(--s-5);">
+        <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3);">
+          <div>
+            <div class="text-mono" style="font-size: 11px; color: var(--orange); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;">AGENDA</div>
+            <strong style="font-size: var(--fs-2xl);">Semaine du ${weekDays[0].getDate()} ${monthNames[weekDays[0].getMonth()]} – ${weekDays[6].getDate()} ${monthNames[weekDays[6].getMonth()]}</strong>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-secondary btn-sm" onclick="goToday()">Aujourd'hui</button>
+            <button class="btn btn-secondary btn-sm" onclick="changeWeek(-1)">‹</button>
+            <button class="btn btn-secondary btn-sm" onclick="changeWeek(1)">›</button>
+            <div style="width: 1px; background: var(--black); margin: 0 var(--s-2);"></div>
+            <button class="btn btn-primary btn-sm" onclick="setView('month')">Mois</button>
+            <button class="btn btn-secondary btn-sm" onclick="setView('week')">Semaine</button>
+            <button class="btn btn-secondary btn-sm" onclick="exportICS()">↓ Exporter ICS</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="week-grid">
+          <div></div>
+          ${weekDays.map(d => {
+            const isToday = d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
+            return `<div class="week-header ${isToday ? 'today' : ''}">${shortDayNames[d.getDay()]} ${d.getDate()}</div>`;
+          }).join('')}
+          ${Array.from({length: 24}, (_, h) => {
+            const hour = h.toString().padStart(2, '0');
+            return `
+              <div class="week-time-col">${hour}:00</div>
+              ${weekDays.map(d => {
+                const isToday = d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
+                const dayEvents = getEventsForDay(d.getFullYear(), d.getMonth(), d.getDate()).filter(e => {
+                  const eHour = parseInt(e.time.split(':')[0]);
+                  return eHour === h;
+                });
+                return `<div class="week-day-col ${isToday ? 'today' : ''}">
+                  ${dayEvents.map(e => `
+                    <div class="week-event" onclick="window.location.href='events.html?id=${e.id}'" title="${e.title} (${getClubName(e.club_id)})">
+                      ${e.time ? e.time.substring(0,5) : ''} ${e.title}
+                    </div>
+                  `).join('')}
+                </div>`;
+              }).join('')}
+            `;
+          }).join('')}
+        </div>
+      </div>
+      `;
+
+      return html;
+    }
+
+    function setView(mode) {
+      viewMode = mode;
+      refresh();
+    }
+
     function changeMonth(delta) {
       currentMonth += delta;
       if (currentMonth > 11) { currentMonth = 0; currentYear++; }
       if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+      refresh();
+    }
+
+    function changeWeek(delta) {
+      const weekDays = getWeekDays(new Date(currentYear, currentMonth, 1));
+      const monday = weekDays[0];
+      monday.setDate(monday.getDate() + delta * 7);
+      currentYear = monday.getFullYear();
+      currentMonth = monday.getMonth();
       refresh();
     }
 
@@ -207,11 +372,46 @@
       refresh();
     }
 
+    function exportICS() {
+      const events = agendaEvents.map(e => {
+        const d = new Date(e.date + 'T00:00:00');
+        const dtStart = d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        const end = new Date(d.getTime() + (e.duration_min || 120) * 60000);
+        const dtEnd = end.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        return `BEGIN:VEVENT
+DTSTART:${dtStart}
+DTEND:${dtEnd}
+SUMMARY:${e.title}
+DESCRIPTION:${e.description || ''}
+LOCATION:${e.room || ''}
+END:VEVENT`;
+      }).join('\n');
+
+      const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//ClubHub//Orbit//FR
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+${events}
+END:VCALENDAR`;
+
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `orbit-agenda-${currentYear}-${String(currentMonth + 1).padStart(2, '0')}.ics`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      ClubHub.toast('ICS exporté', 'Fichier téléchargé', 'success');
+    }
+
     function refresh() {
-      const content = renderCalendar();
+      const content = viewMode === 'week' ? renderWeekView() : renderMonthView();
       ClubHub.renderShell({
         active: 'agenda',
-        role: 'student',
+        role: user.role,
         content,
         pageTitle: 'Mon agenda',
         pageSubtitle: 'Visualisez tous vos événements en un coup d\'œil.',

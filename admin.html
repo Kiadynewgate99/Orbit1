@@ -227,8 +227,9 @@
         <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3); margin-bottom: var(--s-4);">
           <strong style="font-size: var(--fs-lg);">Tous les utilisateurs</strong>
           <div class="flex gap-2">
-            <button class="btn btn-secondary btn-sm">Importer (CSV)</button>
-            <button class="btn btn-orange btn-sm">Exporter</button>
+            <button class="btn btn-orange btn-sm" onclick="document.getElementById('admin-csv-import').click()">↑ Importer CSV</button>
+            <input type="file" id="admin-csv-import" accept=".csv,.txt" style="display:none;" onchange="handleAdminCSVImport(event)" />
+            <button class="btn btn-secondary btn-sm" onclick="ClubHub.toast('Export CSV lancé','','info')">↓ Exporter</button>
           </div>
         </div>
         <div class="table-wrap">
@@ -455,6 +456,25 @@
         if (e.target === overlay || e.target.hasAttribute('data-close')) close();
       });
       overlay.querySelector('#cc-submit').addEventListener('click', () => submitCreateClub(overlay));
+    }
+
+    async function handleAdminCSVImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'clubs');
+        const res = await ClubHubAPI.importCSV('clubs', file);
+        if (res.ok) {
+          ClubHub.toast('Import rÃ©ussi', (res.data?.imported || 0) + ' clubs importÃ©s', 'success');
+          setTimeout(() => location.reload(), 700);
+        } else {
+          throw new Error(res.error || 'Erreur d\'import');
+        }
+      } catch (e) {
+        ClubHub.toast('Erreur', e.message, 'error');
+      }
     }
 
     async function submitCreateClub(overlay) {

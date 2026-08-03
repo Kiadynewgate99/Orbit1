@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="assets/logo-orbit.svg" />
+  <link rel="icon" href="assets/logo-orbit.svg" />
   <title>Événements - Orbit</title>
   <link rel="stylesheet" href="css/design-system.css" />
   <link rel="stylesheet" href="css/components.css" />
@@ -19,6 +19,18 @@
     }
     .event-row-block:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--black); }
     .event-row-block.accent { background: var(--lime); }
+    .event-row-header {
+      padding: var(--s-2) var(--s-3);
+      font-size: var(--fs-xs);
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .event-row-content { padding: var(--s-3); }
+    .event-title { font-size: var(--fs-base); font-weight: 700; margin-bottom: 4px; }
+    .event-meta { font-size: var(--fs-sm); color: var(--text-secondary); }
+    .event-meta-item { margin-right: var(--s-3); }
   </style>
 </head>
 <body>
@@ -39,6 +51,9 @@
     let allClubs = [];
     let myEventIds = [];
 
+    const params = new URLSearchParams(window.location.search);
+    const highlightEventId = params.get('id') || null;
+
     async function initEvents() {
       try {
         const [eventsRes, clubsRes] = await Promise.all([
@@ -54,20 +69,19 @@
       const u = ClubHub.Auth.current();
       myEventIds = u?.events || [];
       renderEvents();
+      renderMiniCalendar();
     }
-
-    const u = ClubHub.Auth.current();
 
     const content = `
       <div class="card" style="margin-bottom: var(--s-5); padding: var(--s-5);">
         <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3);">
           <div>
-            <div class="text-mono" style="font-size: 11px; color: var(--orange); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;">AGENDA</div>
+            <div class="text-mono" style="font-size: 11px; color: var(--orange); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;">ÉVÉNEMENTS</div>
             <strong style="font-size: var(--fs-2xl);" id="events-total">${allEvents.length} événements planifiés</strong>
-            <div class="text-muted" style="font-size: var(--fs-sm); margin-top: 2px;" id="events-soon">${allEvents.filter(e => (e.attendees || e.registered || 0) > (e.capacity || e.maxAttendees || 0) * 0.7).length} bientôt complets</div>
+            <div class="text-muted" style="font-size: var(--fs-sm); margin-top: 2px;" id="events-soon">${allEvents.filter(e => (e.registered || 0) > (e.capacity || 50) * 0.7).length} bientôt complets</div>
           </div>
           <div class="flex gap-2">
-            <button class="btn btn-secondary btn-sm">Exporter (.ics)</button>
+            <button class="btn btn-secondary btn-sm" onclick="ClubHub.toast('Export ICS bientôt disponible','','info')">Exporter (.ics)</button>
           </div>
         </div>
       </div>
@@ -84,10 +98,16 @@
           <option value="Hackathon">Hackathon</option>
           <option value="Compétition">Compétition</option>
           <option value="Débat">Débat</option>
+          <option value="Action">Action</option>
+          <option value="Spectacle">Spectacle</option>
+          <option value="Networking">Networking</option>
+          <option value="Concert">Concert</option>
+          <option value="Tournoi">Tournoi</option>
+          <option value="Culturel">Culturel</option>
         </select>
         <select class="select" id="event-club" style="max-width: 200px;">
           <option value="all">Tous les clubs</option>
-          ${allClubs.map(c => `<option value="${c.slug || c.id}">${c.name}</option>`).join('')}
+          ${allClubs.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
         </select>
       </div>
 
@@ -99,10 +119,10 @@
         <div>
           <div class="card" style="margin-bottom: var(--s-4);">
             <div class="flex items-center justify-between" style="margin-bottom: var(--s-4);">
-              <h3 style="font-size: var(--fs-base); font-weight: 800;">Juillet 2026</h3>
+              <h3 style="font-size: var(--fs-base); font-weight: 800;" id="cal-month-year">Juillet 2026</h3>
               <div class="flex gap-1">
-                <button class="btn-icon">‹</button>
-                <button class="btn-icon">›</button>
+                <button class="btn-icon" id="cal-prev">‹</button>
+                <button class="btn-icon" id="cal-next">›</button>
               </div>
             </div>
             <div class="calendar-header">
@@ -142,23 +162,41 @@
       pageSubtitle: 'Découvrez les prochaines activités et planifiez votre engagement.',
     });
 
-    const cal = document.getElementById('mini-calendar');
-    const eventDates = allEvents.map(e => new Date(e.date).getDate());
-    const today = new Date().getDate();
-    let calHTML = '';
-    const firstDay = new Date();
-    firstDay.setDate(1);
-    const startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
-    for (let i = 0; i < startOffset; i++) calHTML += '<div class="calendar-day muted"></div>';
-    const daysInMonth = new Date(firstDay.getFullYear(), firstDay.getMonth() + 1, 0).getDate();
-    for (let d = 1; d <= daysInMonth; d++) {
-      const hasEvent = eventDates.includes(d);
-      const isToday = d === today && firstDay.getMonth() === new Date().getMonth();
-      calHTML += `<div class="calendar-day ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''}">${d}</div>`;
+    function renderMiniCalendar() {
+      const cal = document.getElementById('mini-calendar');
+      if (!cal) return;
+      const today = new Date();
+      const calYear = today.getFullYear();
+      const calMonth = today.getMonth();
+      const eventDates = allEvents.map(e => new Date(e.date + 'T00:00:00').getDate());
+      const day = today.getDate();
+
+      let calHTML = '';
+      const firstDay = new Date(calYear, calMonth, 1);
+      const startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+      for (let i = 0; i < startOffset; i++) calHTML += '<div class="calendar-day muted"></div>';
+      for (let d = 1; d <= daysInMonth; d++) {
+        const hasEvent = eventDates.includes(d);
+        const isToday = d === day;
+        calHTML += `<div class="calendar-day ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''}">${d}</div>`;
+      }
+      const remaining = 42 - (startOffset + daysInMonth);
+      for (let i = 0; i < remaining; i++) calHTML += '<div class="calendar-day muted"></div>';
+      cal.innerHTML = calHTML;
+
+      const monthYearEl = document.getElementById('cal-month-year');
+      if (monthYearEl) {
+        const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+        monthYearEl.textContent = monthNames[calMonth] + ' ' + calYear;
+      }
+
+      const prevBtn = document.getElementById('cal-prev');
+      const nextBtn = document.getElementById('cal-next');
+      if (prevBtn) prevBtn.addEventListener('click', () => ClubHub.toast('Navigation mois précédent','','info'));
+      if (nextBtn) nextBtn.addEventListener('click', () => ClubHub.toast('Navigation mois suivant','','info'));
     }
-    const remaining = 42 - (startOffset + daysInMonth);
-    for (let i = 0; i < remaining; i++) calHTML += '<div class="calendar-day muted"></div>';
-    cal.innerHTML = calHTML;
 
     const container = document.getElementById('events-container');
     const search = document.getElementById('event-search');
@@ -166,58 +204,63 @@
     const clubSel = document.getElementById('event-club');
 
     const renderEvents = () => {
+      if (!container) return;
       const q = (search.value || '').toLowerCase();
       const list = allEvents.filter(e => {
         const matchesType = typeSel.value === 'all' || e.type === typeSel.value;
-        const matchesClub = clubSel.value === 'all' || (e.club_id === clubSel.value || e.clubId === clubSel.value);
+        const matchesClub = clubSel.value === 'all' || e.club_id == clubSel.value;
         const matchesSearch = !q || (e.title || '').toLowerCase().includes(q) || (e.description || '').toLowerCase().includes(q);
         return matchesType && matchesClub && matchesSearch;
-      }).sort((a, b) => new Date(a.date) - new Date(b.date));
+      }).sort((a, b) => new Date(a.date + 'T00:00:00') - new Date(b.date + 'T00:00:00'));
 
       const totalEl = document.getElementById('events-total');
       const soonEl = document.getElementById('events-soon');
-      if (totalEl) totalEl.textContent = list.length + ' événements planifiés';
-      if (soonEl) soonEl.textContent = list.filter(e => (e.attendees || e.registered || 0) > (e.capacity || e.maxAttendees || 0) * 0.7).length + ' bientôt complets';
+      if (totalEl) totalEl.textContent = list.length + ' événement' + (list.length > 1 ? 's' : '') + ' planifié' + (list.length > 1 ? 's' : '');
+      if (soonEl) soonEl.textContent = list.filter(e => (e.registered || 0) > (e.capacity || 50) * 0.7).length + ' bientôt complets';
 
       if (list.length === 0) {
         container.innerHTML = `<div class="empty"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/></svg></div><div class="empty-title">Aucun événement trouvé</div><div class="empty-text">Modifiez vos filtres.</div></div>`;
         return;
       }
 
-      const isSubscribed = (evtId) => myEventIds.includes(evtId);
-
       container.innerHTML = list.map(evt => {
-        const d = ClubHub.formatDate(evt.date, { short: true });
-        const club = allClubs.find(c => c.id === evt.club_id || c.slug === evt.club_id || c.id === evt.clubId || c.slug === evt.clubId) || CLUBHUB.CLUBS.find(c => c.id === evt.clubId || c.slug === evt.clubId);
-        const fillRate = Math.round(((evt.attendees || evt.registered || 0) / (evt.capacity || evt.maxAttendees || 1)) * 100);
-        const isFull = (evt.attendees || evt.registered || 0) >= (evt.capacity || evt.maxAttendees || 999);
+        const club = allClubs.find(c => c.id == evt.club_id) || CLUBHUB.CLUBS.find(c => c.id == evt.club_id) || { name: 'Club inconnu', color: '#ff4502' };
+        const fillRate = Math.round(((evt.registered || 0) / (evt.capacity || 50)) * 100);
+        const isFull = (evt.registered || 0) >= (evt.capacity || 999);
+        const evtId = evt.id || evt.club_id + '-' + evt.date;
+        const isSub = myEventIds.includes(evt.id);
+        const isHighlight = highlightEventId && evt.id == highlightEventId;
+
         return `
-          <div class="event-row-block ${isSubscribed(evt.id || evt.clubId + '-' + evt.date) ? 'accent' : ''}">
+          <div class="event-row-block ${isSub ? 'accent' : ''} ${isHighlight ? 'accent' : ''}" style="${isHighlight ? 'border: 2px solid var(--orange);' : ''}">
             <div style="flex: 1;">
-              <div class="event-row-header" style="background: ${club?.color || 'var(--lime)'}; color: var(--black);">
-                <span>${d.day} ${d.month.toUpperCase()}</span>
-                <span>${evt.time} · ${evt.duration_min || evt.duration}min · ${evt.room || evt.location || ''}</span>
+              <div class="event-row-header" style="background: ${club.color || 'var(--lime)'}; color: var(--black);">
+                <span>${new Date(evt.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                <span>${evt.time ? evt.time.substring(0,5) : ''} · ${evt.duration_min || 120}min · ${evt.room || ''}</span>
               </div>
               <div class="event-row-content">
                 <div class="flex items-center gap-2" style="margin-bottom: 4px;">
-                  <span class="badge badge-orange">${evt.type}</span>
+                  <span class="badge badge-orange">${evt.type || 'Événement'}</span>
                   ${fillRate > 80 ? '<span class="badge badge-amber" style="background: var(--lime);">Bientôt complet</span>' : ''}
+                  ${isFull ? '<span class="badge" style="background: var(--red); color: var(--white);">Complet</span>' : ''}
                 </div>
                 <div class="event-title">${evt.title}</div>
                 <div class="event-meta">
-                  <span class="event-meta-item">${club?.name || club?.slug || ''}</span>
+                  <span class="event-meta-item">${club.name}</span>
+                  <span class="event-meta-item">${evt.registered || 0}/${evt.capacity || '?'} inscrits</span>
                 </div>
+                ${evt.description ? `<p style="font-size: var(--fs-sm); color: var(--text-secondary); margin-top: 4px;">${evt.description}</p>` : ''}
               </div>
             </div>
-            <div style="padding: var(--s-4); display: flex; align-items: center; gap: var(--s-3);">
+            <div style="padding: var(--s-4); display: flex; align-items: center; gap: var(--s-3); flex-direction: column; justify-content: center;">
               <div style="text-align: right; min-width: 80px;">
-                <div class="text-mono" style="font-size: 11px; color: var(--text-tertiary); font-weight: 600;">${evt.attendees || evt.registered || 0}/${evt.capacity || evt.maxAttendees || '-'}</div>
+                <div class="text-mono" style="font-size: 11px; color: var(--text-tertiary); font-weight: 600;">${evt.registered || 0}/${evt.capacity || '?'}</div>
                 <div class="progress" style="width: 80px; margin-top: 4px;">
                   <div class="progress-bar" style="width: ${fillRate}%; background: var(--orange);"></div>
                 </div>
               </div>
-              <button class="btn ${isSubscribed(evt.id || evt.clubId + '-' + evt.date) ? 'btn-secondary' : 'btn-orange'} btn-sm" onclick="${isSubscribed(evt.id || evt.clubId + '-' + evt.date) ? `unsubscribeEvent('${evt.id || evt.clubId + '-' + evt.date}')` : `subscribeEvent('${evt.id || evt.clubId + '-' + evt.date}')`}">
-                ${isSubscribed(evt.id || evt.clubId + '-' + evt.date) ? 'Inscrit ✓' : isFull ? 'Complet' : "S'inscrire"}
+              <button class="btn ${isSub ? 'btn-secondary' : 'btn-orange'} btn-sm" onclick="${isSub ? `handleUnsubscribe(${evt.id})` : `handleSubscribe(${evt.id})`}">
+                ${isSub ? 'Inscrit ✓' : isFull ? 'Complet' : "S'inscrire"}
               </button>
             </div>
           </div>
@@ -225,28 +268,28 @@
       }).join('');
     };
 
-    function subscribeEvent(id) {
+    function handleSubscribe(evtId) {
       const u = ClubHub.Auth.current();
-      if (!u) { window.location.href = 'login.html'; return; }
-      if (!myEventIds.includes(id)) myEventIds.push(id);
+      if (!u) { ClubHub.toast('Connexion requise', '', 'warning'); setTimeout(() => window.location.href = 'login.html', 1200); return; }
+      if (!myEventIds.includes(evtId)) myEventIds.push(evtId);
       const userData = { ...u, events: myEventIds };
       ClubHub.STORAGE.set('current_user', userData);
       ClubHub.toast('Inscription confirmée', 'Rappel 24h avant', 'success');
       renderEvents();
     }
 
-    function unsubscribeEvent(id) {
+    function handleUnsubscribe(evtId) {
       const u = ClubHub.Auth.current();
-      myEventIds = myEventIds.filter(e => e !== id);
+      myEventIds = myEventIds.filter(e => e !== evtId);
       const userData = { ...u, events: myEventIds };
       ClubHub.STORAGE.set('current_user', userData);
       ClubHub.toast('Désinscription', '', 'info');
       renderEvents();
     }
 
-    search.addEventListener('input', renderEvents);
-    typeSel.addEventListener('change', renderEvents);
-    clubSel.addEventListener('change', renderEvents);
+    if (search) search.addEventListener('input', renderEvents);
+    if (typeSel) typeSel.addEventListener('change', renderEvents);
+    if (clubSel) clubSel.addEventListener('change', renderEvents);
     initEvents();
   </script>
 </body>

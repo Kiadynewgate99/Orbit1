@@ -111,17 +111,19 @@ function clubs_create(): void {
     if (!$name) json_err('Nom requis', 422);
 
     $slug = 'club-' . sprintf('%03d', (int)db()->query('SELECT IFNULL(MAX(id),0)+1 FROM clubs')->fetchColumn());
-    $stmt = db()->prepare('INSERT INTO clubs (slug, name, category, color, short_desc, long_desc, tags, room, president, capacity, created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?)');
+    $stmt = db()->prepare('INSERT INTO clubs (slug, name, category, color, logo, short_desc, long_desc, tags, room, president, responsible_id, capacity, created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)');
     $stmt->execute([
         $slug,
         $name,
         $in['category']      ?? 'culture',
         $in['color']         ?? '#ff4502',
+        $in['logo']          ?? null,
         $in['short_desc']    ?? '',
         $in['long_desc']     ?? null,
         json_encode($in['tags'] ?? []),
         $in['room']          ?? null,
         $in['president']     ?? null,
+        isset($in['responsible_id']) ? (int)$in['responsible_id'] : null,
         (int)($in['capacity'] ?? 50),
         (int)$u['id'],
     ]);
@@ -138,7 +140,7 @@ function clubs_update(int $id): void {
     if ($id <= 0) json_err('ID requis', 422);
     $in = input_json();
 
-    $allowed = ['name', 'category', 'color', 'short_desc', 'long_desc', 'room', 'president', 'capacity', 'status'];
+    $allowed = ['name', 'category', 'color', 'short_desc', 'long_desc', 'room', 'president', 'capacity', 'status', 'logo', 'responsible_id'];
     $sets = []; $params = [];
     foreach ($allowed as $k) {
         if (array_key_exists($k, $in)) { $sets[] = "$k = ?"; $params[] = $in[$k]; }

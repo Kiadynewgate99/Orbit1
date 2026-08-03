@@ -134,6 +134,7 @@
         const eventCount = club.events_count || club.events || 0;
         const initials = clubName.substring(0, 2).toUpperCase();
         const domainLabel = CLUBHUB.CLUB_CATEGORIES.find(c => c.id === clubDomain)?.label || clubDomain || '';
+        const logo = club.logo || null;
         return `
         <a href="club.html?id=${clubId}" class="club-card">
           <div class="club-card-header">
@@ -142,7 +143,7 @@
           </div>
           <div class="club-card-body">
             <div style="display: flex; gap: var(--s-3); margin-bottom: var(--s-3);">
-              <div class="club-card-icon" style="background: ${clubColor};">${initials}</div>
+              ${logo ? `<img src="${logo}" alt="" style="width:48px;height:48px;border-radius:4px;object-fit:cover;border:1px solid var(--black);" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><div class="club-card-icon" style="background: ${clubColor}; display:none;">${initials}</div>` : `<div class="club-card-icon" style="background: ${clubColor};">${initials}</div>`}
               <div style="flex: 1;">
                 <div class="club-card-name" style="margin-bottom: 2px;">${clubName}</div>
                 <div class="club-card-domain">${domainLabel}</div>

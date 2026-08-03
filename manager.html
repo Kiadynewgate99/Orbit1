@@ -60,6 +60,7 @@
       let myClub = null;
       let apiMembers = [];
       let apiEvents = [];
+      let agendaEvents = [];
 
       try {
         const meRes = await ClubHubAPI.me();
@@ -119,7 +120,7 @@
           </div>
           <div class="flex gap-2">
             <a href="club.html?id=${myClub.slug || myClub.id}" class="btn btn-sm" style="background: var(--white); color: var(--black);">Voir la page</a>
-            <button class="btn btn-orange btn-sm">Modifier</button>
+            <button class="btn btn-orange btn-sm" onclick="openEditClubModal()">Modifier</button>
           </div>
         </div>
       </div>
@@ -189,7 +190,13 @@
           <div class="grid grid-2" style="gap: var(--s-3);">
             ${['Ajouter membre', 'Créer événement', 'Envoyer message', 'Exporter'].map((a, i) => {
               const icons = ['plus', 'calendar', 'mail', 'download'];
-              return `<button class="btn btn-secondary" style="justify-content: flex-start; padding: var(--s-3);">
+const actions = [
+                 () => { window.location.href = 'manager.html?tab=members'; },
+                 () => { window.location.href = 'manager.html?tab=events'; },
+                 () => { window.location.href = 'manager.html?tab=comms'; },
+                 () => { window.location.href = 'manager.html?tab=export'; },
+               ];
+              return `<button class="btn btn-secondary" style="justify-content: flex-start; padding: var(--s-3);" onclick="(${actions[i].toString()})()">
                 ${CLUBHUB.ICONS[icons[i]].replace('<svg ', '<svg width="18" height="18" ')}
                 <span style="font-weight: 600;">${a}</span>
               </button>`;
@@ -225,20 +232,21 @@
             <span class="text-muted" style="font-size: var(--fs-sm);"> sur ${members.length} au total</span>
           </div>
           <div class="flex gap-2">
-            <button class="btn btn-secondary btn-sm">↓ Exporter</button>
-            <button class="btn btn-orange btn-sm">+ Ajouter un membre</button>
+            <button class="btn btn-secondary btn-sm" onclick="exportMembersCSV()">↓ Exporter CSV</button>
+            <button class="btn btn-orange btn-sm" onclick="openAddMemberModal()">+ Ajouter un membre</button>
           </div>
         </div>
 
         <div class="toolbar">
           <div class="search-input toolbar-left">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input type="text" placeholder="Rechercher un membre..." />
+            <input type="text" id="member-search" placeholder="Rechercher un membre..." oninput="filterMembers()" />
           </div>
-          <select class="select" style="max-width: 160px;">
-            <option>Tous les rôles</option>
-            <option>Bureau</option>
-            <option>Membre</option>
+          <select class="select" id="member-role" style="max-width: 160px;" onchange="filterMembers()">
+            <option value="all">Tous les roles</option>
+            <option value="President">President</option>
+            <option value="Bureau">Bureau</option>
+            <option value="Membre">Membre</option>
           </select>
         </div>
 
@@ -248,17 +256,17 @@
               <tr>
                 <th><input type="checkbox" class="checkbox" /></th>
                 <th>Membre</th>
-                <th>Filière / Niveau</th>
+                <th>Filiere / Niveau</th>
                 <th>Rejoint le</th>
-                <th>Présence</th>
-                <th>Rôle</th>
+                <th>Presentation</th>
+                <th>Role</th>
                 <th>Statut</th>
                 <th></th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="members-tbody">
               ${members.map(m => `
-                <tr>
+                <tr data-role="${m.role}" data-name="${m.name.toLowerCase()}">
                   <td><input type="checkbox" class="checkbox" /></td>
                   <td>
                     <div class="member-cell">
@@ -279,10 +287,10 @@
                       <span class="text-mono" style="font-size: var(--fs-xs); font-weight: 600;">${m.attendance}%</span>
                     </div>
                   </td>
-                  <td><span class="badge ${m.role === 'Bureau' || m.role === 'Président' || m.role === 'Vice-présidente' || m.role === 'Secrétaire' ? 'badge-orange' : ''}">${m.role}</span></td>
+                  <td><span class="badge ${m.role === 'Bureau' || m.role === 'President' ? 'badge-orange' : ''}">${m.role}</span></td>
                   <td>${m.status === 'active' ? '<span class="badge badge-lime">Actif</span>' : '<span class="badge" style="background: var(--orange); color: var(--white);">Inactif</span>'}</td>
                   <td>
-                    <button class="btn-icon">${CLUBHUB.ICONS.eye.replace('<svg ', '<svg width="14" height="14" ')}</button>
+                    <button class="btn-icon" onclick="viewMember('${m.id}')">${CLUBHUB.ICONS.eye.replace('<svg ', '<svg width="14" height="14" ')}</button>
                   </td>
                 </tr>
               `).join('')}
@@ -326,9 +334,9 @@
           </div>
           <div class="text-mono" style="font-size: 11px; margin-top: var(--s-3); color: var(--text-tertiary); font-weight: 700; letter-spacing: 0.1em;">CODE: ORBIT-A7B3-2026-0725</div>
           <div class="flex gap-2" style="justify-content: center; margin-top: var(--s-4);">
-            <button class="btn btn-primary btn-sm">Actualiser</button>
-            <button class="btn btn-secondary btn-sm">Agrandir</button>
-            <button class="btn btn-secondary btn-sm">Telecharger</button>
+            <button class="btn btn-primary btn-sm" onclick="refreshQR()">Actualiser</button>
+            <button class="btn btn-secondary btn-sm" onclick="zoomQR()">Agrandir</button>
+            <button class="btn btn-secondary btn-sm" onclick="downloadQR()">Telecharger</button>
           </div>
           <div class="grid grid-3" style="margin-top: var(--s-4); text-align: left;">
             <div class="stat-card stat-card-lime" style="text-align: center;">
@@ -368,7 +376,7 @@
             </div>
             <div class="flex gap-2">
               <button class="btn btn-secondary btn-sm" onclick="simulateScan()">Simuler un scan</button>
-              <button class="btn btn-primary btn-sm">Exporter (.csv)</button>
+              <button class="btn btn-primary btn-sm" onclick="exportMembersCSV()">Exporter (.csv)</button>
             </div>
           </div>
         </div>
@@ -379,11 +387,23 @@
         <p class="text-muted" style="margin-bottom: var(--s-3); font-size: var(--fs-sm);">Un etudiant n'a pas de telephone ? Il peut saisir le code affiche sur l'ecran du responsable.</p>
         <div class="flex gap-2">
           <input class="input" placeholder="ORBIT-XXXX-XXXX-XXXX" style="flex: 1; font-family: var(--font-mono); text-transform: uppercase;" />
-          <button class="btn btn-primary">Valider</button>
+          <button class="btn btn-primary" onclick="validateManualCode()">Valider</button>
         </div>
       </div>
 
-      <div data-script="simulateScan"></div>
+      <div class="card" style="margin-top: var(--s-5);">
+          <h3 style="font-size: var(--fs-lg); font-weight: 800; margin-bottom: var(--s-2);">Import / Export de données</h3>
+          <p class="text-muted" style="margin-bottom: var(--s-3); font-size: var(--fs-sm);">Importez des membres ou exportez les données du club.</p>
+          <div class="flex gap-2" style="flex-wrap: wrap;">
+            <button class="btn btn-orange btn-sm" onclick="document.getElementById('csv-import').click()">↑ Importer CSV</button>
+            <input type="file" id="csv-import" accept=".csv,.txt" style="display:none;" onchange="handleCSVImport(event)" />
+            <button class="btn btn-secondary btn-sm" onclick="ClubHub.toast('Export CSV lancé','','info')">↓ Exporter CSV</button>
+            <button class="btn btn-secondary btn-sm" onclick="ClubHub.toast('Export Excel lancé','','info')">↓ Exporter Excel</button>
+          </div>
+          <div id="import-status" class="text-mono" style="font-size: var(--fs-sm); margin-top: var(--s-3);"></div>
+        </div>
+
+        <div data-script="simulateScan"></div>
     `;
 
     const renderExport = () => `
@@ -393,7 +413,7 @@
           <p class="text-muted" style="font-size: var(--fs-sm); margin-bottom: var(--s-4);">Téléchargez vos données dans le format de votre choix.</p>
           <div class="flex flex-col gap-2">
             ${['Liste des membres (CSV)', 'Présences (Excel)', "Rapport d'activité (PDF)", 'Agenda (ICS)', 'API JSON'].map((ex, i) => `
-              <button class="btn btn-secondary" style="justify-content: space-between;">
+              <button class="btn btn-secondary" style="justify-content: space-between;" onclick="handleExport('${ex}')">
                 <span class="flex items-center gap-2">${CLUBHUB.ICONS.download.replace('<svg ', '<svg width="16" height="16" ')} ${ex}</span>
                 <span class="badge">${members.length}</span>
               </button>
@@ -430,14 +450,219 @@
     const content = {
       overview: renderOverview(),
       members: renderMembers(),
-      events: renderOverview(),
+      events: renderEvents(),
       attendance: renderAttendance(),
-      comms: renderOverview(),
-      stats: renderOverview(),
+      comms: renderComms(),
+      stats: renderStats(),
       export: renderExport(),
     }[tab] || renderOverview();
 
-    ClubHub.renderShell({
+    function openEditClubModal() {
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay open';
+      overlay.innerHTML = `
+        <div class="modal">
+          <div class="modal-header">
+            <h3 class="modal-title">Modifier le club</h3>
+            <button class="btn-icon" data-close>${ClubHub.icon('x', 16)}</button>
+          </div>
+          <div class="field" style="margin-bottom: var(--s-3);">
+            <label class="label">Description courte</label>
+            <input class="input" id="ec-short-desc" value="${myClub.short_desc || ''}" />
+          </div>
+          <div class="field" style="margin-bottom: var(--s-3);">
+            <label class="label">Description longue</label>
+            <textarea class="input" id="ec-long-desc" style="min-height:80px;">${myClub.longDescription || myClub.long_desc || ''}</textarea>
+          </div>
+          <div class="field" style="margin-bottom: var(--s-3);">
+            <label class="label">Lieu</label>
+            <input class="input" id="ec-location" value="${myClub.location || myClub.room || ''}" />
+          </div>
+          <div class="field" style="margin-bottom: var(--s-3);">
+            <label class="label">Réunion</label>
+            <input class="input" id="ec-meeting" value="${myClub.meeting || ''}" />
+          </div>
+          <div class="field" style="margin-bottom: var(--s-3);">
+            <label class="label">Capacité</label>
+            <input type="number" class="input" id="ec-capacity" value="${myClub.capacity || 50}" />
+          </div>
+          <div class="field" style="margin-bottom: var(--s-3);">
+            <label class="label">Photo du club</label>
+            <input type="file" id="ec-logo" accept="image/*" />
+          </div>
+          <div id="ec-err" class="text-orange" style="font-size: var(--fs-sm); margin-bottom: var(--s-3); display:none;"></div>
+          <div style="display: flex; gap: var(--s-3); justify-content: flex-end;">
+            <button class="btn btn-secondary" data-close>Annuler</button>
+            <button class="btn btn-orange" id="ec-submit">Sauvegarder</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      const close = () => overlay.remove();
+      overlay.addEventListener('click', e => {
+        if (e.target === overlay || e.target.hasAttribute('data-close')) close();
+      });
+      overlay.querySelector('#ec-submit').addEventListener('click', async () => {
+        const errBox = overlay.querySelector('#ec-err');
+        errBox.style.display = 'none';
+        const updates = {
+          short_desc: overlay.querySelector('#ec-short-desc').value.trim(),
+          long_desc: overlay.querySelector('#ec-long-desc').value.trim(),
+          room: overlay.querySelector('#ec-location').value.trim(),
+          meeting: overlay.querySelector('#ec-meeting').value.trim(),
+          capacity: parseInt(overlay.querySelector('#ec-capacity').value) || 50,
+        };
+        const logoFile = overlay.querySelector('#ec-logo').files?.[0];
+        try {
+          if (logoFile) {
+            await ClubHubAPI.upload('club', myClub.id || myClub.slug, logoFile);
+          }
+          await ClubHubAPI.updateClub(myClub.id || myClub.slug, updates);
+          ClubHub.toast('Club mis à jour', '', 'success');
+          close();
+          setTimeout(() => location.reload(), 700);
+        } catch (e) {
+          errBox.textContent = e.message;
+          errBox.style.display = 'block';
+        }
+      });
+    }
+
+    function renderEvents() {
+      const clubEvents = (agendaEvents && agendaEvents.length) ? agendaEvents : CLUBHUB.EVENTS.filter(e => e.clubId === myClub.id || e.clubId === myClub.slug);
+      return `
+        <div class="card">
+          <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3); margin-bottom: var(--s-4);">
+            <strong style="font-size: var(--fs-lg);">Événements du club</strong>
+            <button class="btn btn-orange btn-sm" onclick="ClubHub.toast('Création d\'événement lancée','','success')">+ Nouvel événement</button>
+          </div>
+          ${clubEvents.length ? `
+            <div class="flex flex-col gap-3">
+              ${clubEvents.map(e => `
+                <div class="flex items-center gap-3" style="padding: var(--s-3); background: var(--bg-elev-1); border: 1px solid var(--border-subtle); border-radius: var(--r-sm);">
+                  <div style="font-weight:700;">${e.title}</div>
+                  <span class="text-muted" style="margin-left:auto; font-size:var(--fs-xs);">${e.date} · ${e.time}</span>
+                  <span class="badge badge-orange">${e.type}</span>
+                  <span class="text-mono" style="font-size:var(--fs-xs);">${e.registered || 0}/${e.capacity || '?'} inscrits</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : '<p class="text-muted">Aucun événement pour le moment.</p>'}
+        </div>
+      `;
+    }
+
+    function renderComms() {
+      return `
+        <div class="card" style="margin-bottom: var(--s-4);">
+          <h3 style="font-size: var(--fs-lg); font-weight: 800; margin-bottom: var(--s-4);">Envoyer un message</h3>
+          <div class="field" style="margin-bottom: var(--s-3);">
+            <label class="label">Destinataires</label>
+            <select class="select" style="width:100%;">
+              <option>Tous les membres</option>
+              <option>Bureau uniquement</option>
+              <option>Membres actifs</option>
+            </select>
+          </div>
+          <div class="field" style="margin-bottom: var(--s-3);">
+            <label class="label">Sujet</label>
+            <input class="input" id="comm-subject" placeholder="Objet du message" />
+          </div>
+          <div class="field" style="margin-bottom: var(--s-4);">
+            <label class="label">Message</label>
+            <textarea class="input" id="comm-body" style="min-height:120px;" placeholder="Votre message..."></textarea>
+          </div>
+          <button class="btn btn-orange" onclick="sendComm()">Envoyer</button>
+        </div>
+        <div class="card">
+          <h3 style="font-size: var(--fs-lg); font-weight: 800; margin-bottom: var(--s-4);">Historique</h3>
+          <div class="flex flex-col gap-3">
+            <div class="activity-item">
+              <div class="activity-dot" style="background: var(--lime);"></div>
+              <div class="activity-text">
+                Message envoyé à tous les membres
+                <div class="activity-time">Hier · 14:30</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot" style="background: var(--orange);"></div>
+              <div class="activity-text">
+                Rappel : Inscriptions ouvertes
+                <div class="activity-time">25/07 · 09:00</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function sendComm() {
+      const subject = document.getElementById('comm-subject')?.value || '';
+      const body = document.getElementById('comm-body')?.value || '';
+      if (!subject || !body) {
+        ClubHub.toast('Veuillez remplir tous les champs', '', 'warning');
+        return;
+      }
+      ClubHub.toast('Message envoyé', subject, 'success');
+      document.getElementById('comm-subject').value = '';
+      document.getElementById('comm-body').value = '';
+    }
+
+    function renderStats() {
+      return `
+        <div class="stats-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: var(--s-5);">
+          <div class="stat-card stat-card-orange">
+            <div><div class="stat-label">Membres actifs</div></div>
+            <div class="stat-value">${activeMembers}</div>
+          </div>
+          <div class="stat-card stat-card-lime">
+            <div><div class="stat-label">Événements</div></div>
+            <div class="stat-value">${apiEvents.length || CLUBHUB.EVENTS.filter(e => e.clubId === myClub.id || e.clubId === myClub.slug).length}</div>
+          </div>
+          <div class="stat-card stat-card-white">
+            <div><div class="stat-label">Présence moyenne</div></div>
+            <div class="stat-value">76<span style="font-size: var(--fs-md); color: var(--text-tertiary);">%</span></div>
+          </div>
+          <div class="stat-card stat-card-white">
+            <div><div class="stat-label">Taux d'engagement</div></div>
+            <div class="stat-value">82<span style="font-size: var(--fs-md); color: var(--text-tertiary);">%</span></div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom: var(--s-5);">
+          <h3 style="font-size: var(--fs-base); font-weight: 800; margin-bottom: var(--s-4);">Inscriptions sur 6 mois</h3>
+          <div class="chart-bars">
+            ${[45, 60, 50, 75, 85, 95].map((h, i) => `
+              <div class="chart-bar-wrap">
+                <div class="chart-bar ${i % 2 === 0 ? 'orange' : ''}" style="height: ${h}%;"></div>
+                <div class="chart-bar-label">${['Fév','Mars','Avr','Mai','Juin','Juil'][i]}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="font-size: var(--fs-base); font-weight: 800; margin-bottom: var(--s-4);">Répartition par filière</h3>
+          <div class="flex flex-col gap-3" style="margin-top: var(--s-4);">
+            ${[
+              { label: 'Informatique', val: 92, color: 'var(--orange)' },
+              { label: 'STAPS', val: 88, color: 'var(--lime)' },
+              { label: 'Droit', val: 76, color: 'var(--mauve)' },
+              { label: 'Lettres', val: 71, color: 'var(--blue)' },
+              { label: 'Biologie', val: 68, color: 'var(--orange)' },
+            ].map(f => `
+              <div>
+                <div class="flex justify-between" style="margin-bottom: 4px;">
+                  <span style="font-size: var(--fs-sm); font-weight: 600;">${f.label}</span>
+                  <span class="text-mono" style="font-size: var(--fs-sm); font-weight: 700;">${f.val}%</span>
+                </div>
+                <div class="progress"><div class="progress-bar" style="width: ${f.val}%; background: ${f.color};"></div></div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+ClubHub.renderShell({
       active: tab,
       role: 'manager',
       content,
@@ -463,7 +688,83 @@
         }
       }
     }
-    })();
+
+    async function handleCSVImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const status = document.getElementById('import-status');
+      if (status) status.textContent = 'Import en cours...';
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'users');
+        const res = await ClubHubAPI.importCSV('users', file);
+        if (res.ok) {
+          if (status) status.textContent = `Import reussi: ${res.data?.imported || 0} utilisateurs importes`;
+          ClubHub.toast('Import reussi', `${res.data?.imported || 0} utilisateurs importes`, 'success');
+        } else {
+          throw new Error(res.error || 'Erreur d\'import');
+        }
+      } catch (e) {
+        if (status) status.textContent = 'Erreur: ' + e.message;
+        ClubHub.toast('Erreur', e.message, 'error');
+      }
+    }
+
+    function filterMembers() {
+      const search = document.getElementById('member-search');
+      const roleSel = document.getElementById('member-role');
+      if (!search || !roleSel) return;
+      const q = search.value.toLowerCase();
+      const role = roleSel.value;
+      document.querySelectorAll('#members-tbody tr').forEach(row => {
+        const name = row.dataset.name || '';
+        const rowRole = row.dataset.role || '';
+        const matchSearch = !q || name.includes(q);
+        const matchRole = role === 'all' || rowRole === role;
+        row.style.display = (matchSearch && matchRole) ? '' : 'none';
+      });
+    }
+
+    function exportMembersCSV() {
+      const rows = document.querySelectorAll('#members-tbody tr');
+      let csv = 'Nom,Matricule,Filiere,Niveau,Role,Statut,Presentation\n';
+      rows.forEach(row => {
+        const name = row.querySelector('.member-info strong')?.textContent || '';
+        const matricule = row.querySelector('.member-info span')?.textContent || '';
+        const filiere = row.children[2]?.textContent || '';
+        const role = row.querySelector('.badge')?.textContent || '';
+        const status = row.querySelector('.badge-lime') ? 'Actif' : 'Inactif';
+        const presence = row.querySelector('.progress-bar')?.style.width || '0%';
+        csv += `"${name}","${matricule}","${filiere}","${role}","${status}","${presence}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'membres-' + (myClub.name || 'club') + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      ClubHub.toast('CSV exporte', '', 'success');
+    }
+
+    function handleExport(type) {
+      if (type.includes('CSV')) {
+        exportMembersCSV();
+      } else if (type.includes('Excel')) {
+        ClubHub.toast('Export Excel lance', '', 'success');
+      } else if (type.includes('PDF')) {
+        ClubHub.toast('Rapport PDF genere', '', 'success');
+      } else if (type.includes('ICS')) {
+        ClubHub.toast('Agenda ICS exporte', '', 'success');
+      } else if (type.includes('JSON')) {
+        ClubHub.toast('JSON exporte', '', 'success');
+      }
+    }
+
+ClubHub.renderShell({
   </script>
 </body>
 </html>

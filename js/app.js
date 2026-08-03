@@ -79,16 +79,16 @@
   };
 
   const Auth = {
-    current() { return STORAGE.get('current_user'); },
+    current() { return CLUBHUB.STORAGE.get('current_user'); },
     isAuthenticated() { return !!this.current(); },
     login(role) {
-      const account = DEMO_ACCOUNTS.find(a => a.role === role);
+      const account = CLUBHUB.DEMO_ACCOUNTS.find(a => a.role === role);
       if (!account) return false;
       const user = { ...account, loggedInAt: new Date().toISOString() };
-      STORAGE.set('current_user', user);
+      CLUBHUB.STORAGE.set('current_user', user);
       return user;
     },
-    logout() { STORAGE.remove('current_user'); window.location.href = 'index.html'; },
+    logout() { CLUBHUB.STORAGE.remove('current_user'); window.location.href = 'index.html'; },
     require(role = null) {
       const u = this.current();
       if (!u) { window.location.href = 'login.html'; return null; }

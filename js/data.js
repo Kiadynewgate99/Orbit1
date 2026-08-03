@@ -14,19 +14,19 @@ const CLUB_CATEGORIES = [
 ];
 
 const CLUBS = [
-  { id: 'club-001', name: 'Club Informatique', domain: 'tech', icon: 'CI', color: '#ff4502', description: 'Promouvoir les compétences numériques et les projets étudiants', longDescription: 'Le Club Informatique rassemble les passionnés de technologie de l\'université. Nous organisons régulièrement des ateliers pratiques, des conférences avec des professionnels du secteur, et des hackathons inter-universitaires.', members: 87, events: 24, founded: 2018, president: 'Andry RAKOTONIAINA', email: 'info@univ-clubinfo.mg', location: 'Bâtiment C - Salle 204', meeting: 'Mercredi 18h-20h', tags: ['Python', 'IA', 'Hackathon', 'Web', 'Cybersécurité'], activities: ['Ateliers Python', 'Hackathons', 'Conférences tech', 'Projets open source'], open: true },
-  { id: 'club-002', name: 'Club Débat & Éloquence', domain: 'debats', icon: 'CD', color: '#dcb8ff', description: 'Affûter votre esprit critique et votre prise de parole', longDescription: 'Le Club Débat & Éloquence développe les capacités d\'argumentation, de persuasion et d\'écoute active de ses membres.', members: 54, events: 18, founded: 2019, president: 'Sarah ANDRIANARIVO', email: 'debate@univ.mg', location: 'Amphithéâtre B', meeting: 'Samedi 14h-17h', tags: ['Éloquence', 'Argumentation', 'Leadership', 'Rhétorique'], activities: ['Débats contradictoires', 'Concours d\'éloquence', 'Conférences'], open: true },
-  { id: 'club-003', name: 'Club Arts Martiaux', domain: 'sport', icon: 'AM', color: '#c2ff01', description: 'Karaté, judo, taekwondo. Entraînements réguliers', longDescription: 'Le Club Arts Martiaux propose la pratique de plusieurs disciplines : karaté, judo et taekwondo.', members: 42, events: 32, founded: 2017, president: 'Mamy RAZAFINDRAKOTO', email: 'martiaux@univ.mg', location: 'Dojo universitaire', meeting: 'Mardi & Jeudi 19h-21h', tags: ['Karaté', 'Judo', 'Taekwondo'], activities: ['Entraînements', 'Compétitions', 'Stages'], open: true },
-  { id: 'club-004', name: 'Club Environnement & Écologie', domain: 'environnement', icon: 'CE', color: '#c2ff01', description: 'Sensibilisation au développement durable', longDescription: 'Engagé pour la transition écologique de notre campus, le Club Environnement organise des actions concrètes.', members: 68, events: 15, founded: 2020, president: 'Naivo RAZANAMAHASOA', email: 'ecolo@univ.mg', location: 'Bâtiment A', meeting: 'Vendredi 16h-18h', tags: ['Écologie', 'Durabilité', 'Climat'], activities: ['Nettoyages', 'Plantations', 'Conférences'], open: true },
-  { id: 'club-005', name: 'Club Robotique', domain: 'tech', icon: 'CR', color: '#ff4502', description: 'Conception et programmation de robots', longDescription: 'Le Club Robotique est l\'espace idéal pour tous les passionnés de mécatronique, d\'électronique et d\'IA embarquée.', members: 36, events: 12, founded: 2019, president: 'Tiana RALAIVAO', email: 'robotique@univ.mg', location: 'Laboratoire FabLab', meeting: 'Lundi 17h-20h', tags: ['Robotique', 'Arduino', 'IA'], activities: ['Construction de robots', 'Compétitions'], open: true },
-  { id: 'club-006', name: 'Club Théâtre & Impro', domain: 'culture', icon: 'CT', color: '#dcb8ff', description: 'Expression scénique et improvisation', longDescription: 'Le Club Théâtre & Impro accueille les étudiants qui souhaitent s\'exprimer sur scène.', members: 29, events: 8, founded: 2016, president: 'Lova RAHARIMANANA', email: 'theatre@univ.mg', location: 'Théâtre universitaire', meeting: 'Mercredi 19h-22h', tags: ['Théâtre', 'Improvisation', 'Acting'], activities: ['Ateliers d\'impro', 'Pièces de théâtre'], open: true },
-  { id: 'club-007', name: 'Club Entrepreneuriat & Innovation', domain: 'entrepreneuriat', icon: 'CE', color: '#0044ff', description: 'Accompagnement des projets entrepreneuriaux', longDescription: 'Le Club Entrepreneuriat est un véritable incubateur étudiant.', members: 73, events: 21, founded: 2018, president: 'Tojo ANDRIAMANANTENA', email: 'entrepreneur@univ.mg', location: 'Maison de l\'entrepreneuriat', meeting: 'Jeudi 18h-20h', tags: ['Startup', 'Pitch', 'Business'], activities: ['Sessions pitch', 'Mentorat', 'Networking'], open: true },
-  { id: 'club-008', name: 'Club Photo & Vidéo', domain: 'culture', icon: 'CP', color: '#dcb8ff', description: 'Techniques de prise de vue, post-production', longDescription: 'Le Club Photo & Vidéo réunit les passionnés d\'image.', members: 48, events: 14, founded: 2019, president: 'Hery RASOLOFOSON', email: 'photo@univ.mg', location: 'Studio photo', meeting: 'Mardi 18h-21h', tags: ['Photographie', 'Vidéo', 'Photoshop'], activities: ['Ateliers photo', 'Expositions'], open: true },
-  { id: 'club-009', name: 'Club Musique & Chorale', domain: 'culture', icon: 'CM', color: '#dcb8ff', description: 'Pratique musicale collective', longDescription: 'Le Club Musique rassemble les musiciens amateurs et confirmés.', members: 35, events: 11, founded: 2017, president: 'Voahangy RALAIMIHOATRA', email: 'musique@univ.mg', location: 'Salle de musique', meeting: 'Lundi & Vendredi 18h-20h', tags: ['Musique', 'Chorale', 'MAO'], activities: ['Répétitions', 'Concerts'], open: true },
-  { id: 'club-010', name: 'Club Foot & Basketball', domain: 'sport', icon: 'FB', color: '#c2ff01', description: 'Entraînements et tournois', longDescription: 'Le Club Foot & Basketball propose des entraînements réguliers.', members: 92, events: 28, founded: 2015, president: 'Faly RAZANAKOTO', email: 'sport@univ.mg', location: 'Gymnase', meeting: 'Lundi, Mercredi, Vendredi 18h-20h', tags: ['Football', 'Basketball', 'Tournoi'], activities: ['Entraînements', 'Matchs', 'Tournois'], open: true },
-  { id: 'club-011', name: 'Club Bénévolat & Solidarité', domain: 'benevolat', icon: 'BS', color: '#0044ff', description: 'Actions solidaires et soutien scolaire', longDescription: 'Le Club Bénévolat & Solidarité organise des actions régulières.', members: 64, events: 22, founded: 2016, president: 'Mihary ANDRIANJATOVO', email: 'benevolat@univ.mg', location: 'Bâtiment B', meeting: 'Samedi 9h-12h', tags: ['Solidarité', 'Bénévolat'], activities: ['Soutien scolaire', 'Collectes', 'Visites'], open: true },
-  { id: 'club-012', name: 'Club Langues & Cultures', domain: 'langues', icon: 'LC', color: '#ff4502', description: 'Ateliers de conversation et échanges culturels', longDescription: 'Le Club Langues & Cultures favorise l\'ouverture internationale.', members: 81, events: 19, founded: 2018, president: 'Aina RAZAFINDRATANDRA', email: 'langues@univ.mg', location: 'Salle internationale', meeting: 'Mercredi 17h-19h', tags: ['Anglais', 'Espagnol', 'FLE'], activities: ['Ateliers langues', 'Soirées culturelles'], open: true },
-];
+   { id: 'club-001', name: 'Club Informatique', domain: 'tech', icon: 'CI', color: '#ff4502', description: 'Promouvoir les competences numeriques et les projets etudiants', longDescription: 'Le Club Informatique rassemble les passionnes de technologie de l\'universite. Nous organisons regulierement des ateliers pratiques, des conférences avec des professionnels du secteur, et des hackathons inter-universitaires.', members: 87, events: 24, founded: 2018, president: 'Andry RAZAFY', email: 'info@univ-clubinfo.mg', location: 'Bâtiment C - Salle 204', meeting: 'Mercredi 18h-20h', tags: ['Python', 'IA', 'Hackathon', 'Web', 'Cybersécurité'], activities: ['Ateliers Python', 'Hackathons', 'Conférences tech', 'Projets open source'], open: true, logo: null, responsible_id: 4 },
+   { id: 'club-002', name: 'Club Débat & Éloquence', domain: 'debats', icon: 'CD', color: '#dcb8ff', description: 'Affûter votre esprit critique et votre prise de parole', longDescription: 'Le Club Débat & Éloquence développe les capacités d\'argumentation, de persuasion et d\'écoute active.', members: 54, events: 18, founded: 2019, president: 'Sarah ANDRIANARIVO', email: 'debate@univ.mg', location: 'Amphithéâtre B', meeting: 'Samedi 14h-17h', tags: ['Éloquence', 'Argumentation', 'Leadership', 'Rhétorique'], activities: ['Débats contradictoires', 'Concours d\'éloquence', 'Conférences'], open: true, logo: null, responsible_id: 5 },
+   { id: 'club-003', name: 'Club Arts Martiaux', domain: 'sport', icon: 'AM', color: '#c2ff01', description: 'Karaté, judo, taekwondo. Entraînements réguliers', longDescription: 'Le Club Arts Martiaux propose la pratique de plusieurs disciplines : karaté, judo et taekwondo.', members: 42, events: 32, founded: 2017, president: 'Mamy RAZAFINDRAKOTO', email: 'martiaux@univ.mg', location: 'Dojo universitaire', meeting: 'Mardi & Jeudi 19h-21h', tags: ['Karaté', 'Judo', 'Taekwondo'], activities: ['Entraînements', 'Compétitions', 'Stages'], open: true, logo: null, responsible_id: 6 },
+   { id: 'club-004', name: 'Club Environnement & Écologie', domain: 'environnement', icon: 'CE', color: '#c2ff01', description: 'Sensibilisation au développement durable', longDescription: 'Engagé pour la transition écologique de notre campus, le Club Environnement organise des actions concrètes.', members: 68, events: 15, founded: 2020, president: 'Naivo RAZANAMAHASOA', email: 'ecolo@univ.mg', location: 'Bâtiment A', meeting: 'Vendredi 16h-18h', tags: ['Écologie', 'Durabilité', 'Climat'], activities: ['Nettoyages', 'Plantations', 'Conférences'], open: true, logo: null, responsible_id: 7 },
+   { id: 'club-005', name: 'Club Robotique', domain: 'tech', icon: 'CR', color: '#ff4502', description: 'Conception et programmation de robots', longDescription: 'Le Club Robotique est l\'espace idéal pour tous les passionnés de mécatronique, d\'électronique et d\'IA embarquée.', members: 36, events: 12, founded: 2019, president: 'Tiana RALAIVAO', email: 'robotique@univ.mg', location: 'Laboratoire FabLab', meeting: 'Lundi 17h-20h', tags: ['Robotique', 'Arduino', 'IA'], activities: ['Construction de robots', 'Compétitions'], open: true, logo: null, responsible_id: 8 },
+   { id: 'club-006', name: 'Club Théâtre & Impro', domain: 'culture', icon: 'CT', color: '#dcb8ff', description: 'Expression scénique et improvisation', longDescription: 'Le Club Théâtre & Impro accueille les étudiants qui souhaitent s\'exprimer sur scène.', members: 29, events: 8, founded: 2016, president: 'Lova RAHARIMANANA', email: 'theatre@univ.mg', location: 'Théâtre universitaire', meeting: 'Mercredi 19h-22h', tags: ['Théâtre', 'Improvisation', 'Acting'], activities: ['Ateliers d\'impro', 'Pièces de théâtre'], open: true, logo: null, responsible_id: 9 },
+   { id: 'club-007', name: 'Club Entrepreneuriat & Innovation', domain: 'entrepreneuriat', icon: 'CE', color: '#0044ff', description: 'Accompagnement des projets entrepreneuriaux', longDescription: 'Le Club Entrepreneuriat est un véritable incubateur étudiant.', members: 73, events: 21, founded: 2018, president: 'Tojo ANDRIAMANANTENA', email: 'entrepreneur@univ.mg', location: 'Maison de l\'entrepreneuriat', meeting: 'Jeudi 18h-20h', tags: ['Startup', 'Pitch', 'Business'], activities: ['Sessions pitch', 'Mentorat', 'Networking'], open: true, logo: null, responsible_id: 10 },
+   { id: 'club-008', name: 'Club Photo & Vidéo', domain: 'culture', icon: 'CP', color: '#dcb8ff', description: 'Techniques de prise de vue, post-production', longDescription: 'Le Club Photo & Vidéo réunit les passionnés d\'image.', members: 48, events: 14, founded: 2019, president: 'Hery RASOLOFOSON', email: 'photo@univ.mg', location: 'Studio photo', meeting: 'Mardi 18h-21h', tags: ['Photographie', 'Vidéo', 'Photoshop'], activities: ['Ateliers photo', 'Expositions'], open: true, logo: null, responsible_id: 11 },
+   { id: 'club-009', name: 'Club Musique & Chorale', domain: 'culture', icon: 'CM', color: '#dcb8ff', description: 'Pratique musicale collective', longDescription: 'Le Club Musique rassemble les musiciens amateurs et confirmés.', members: 35, events: 11, founded: 2017, president: 'Voahangy RALAIMIHOATRA', email: 'musique@univ.mg', location: 'Salle de musique', meeting: 'Lundi & Vendredi 18h-20h', tags: ['Musique', 'Chorale', 'MAO'], activities: ['Répétitions', 'Concerts'], open: true, logo: null, responsible_id: 12 },
+   { id: 'club-010', name: 'Club Foot & Basketball', domain: 'sport', icon: 'FB', color: '#c2ff01', description: 'Entraînements et tournois', longDescription: 'Le Club Foot & Basketball propose des entraînements réguliers.', members: 92, events: 28, founded: 2015, president: 'Faly RAZANAKOTO', email: 'sport@univ.mg', location: 'Gymnase', meeting: 'Lundi, Mercredi, Vendredi 18h-20h', tags: ['Football', 'Basketball', 'Tournoi'], activities: ['Entraînements', 'Matchs', 'Tournois'], open: true, logo: null, responsible_id: 13 },
+   { id: 'club-011', name: 'Club Bénévolat & Solidarité', domain: 'benevolat', icon: 'BS', color: '#0044ff', description: 'Actions solidaires et soutien scolaire', longDescription: 'Le Club Bénévolat & Solidarité organise des actions régulières.', members: 64, events: 22, founded: 2016, president: 'Mihary ANDRIANJATOVO', email: 'benevolat@univ.mg', location: 'Bâtiment B', meeting: 'Samedi 9h-12h', tags: ['Solidarité', 'Bénévolat'], activities: ['Soutien scolaire', 'Collectes', 'Visites'], open: true, logo: null, responsible_id: 14 },
+   { id: 'club-012', name: 'Club Langues & Cultures', domain: 'langues', icon: 'LC', color: '#ff4502', description: 'Ateliers de conversation et échanges culturels', longDescription: 'Le Club Langues & Cultures favorise l\'ouverture internationale.', members: 81, events: 19, founded: 2018, president: 'Aina RAZAFINDRATANDRA', email: 'langues@univ.mg', location: 'Salle internationale', meeting: 'Mercredi 17h-19h', tags: ['Anglais', 'Espagnol', 'FLE'], activities: ['Ateliers langues', 'Soirées culturelles'], open: true, logo: null, responsible_id: 15 },
+ ];
 
 const EVENTS = [
   { id: 'evt-001', title: 'Atelier Python pour débutants', clubId: 'club-001', date: '2026-07-22', time: '18:00', duration: 120, location: 'Salle C-204', type: 'Atelier', description: 'Initiation à Python : variables, boucles, fonctions.', attendees: 24, maxAttendees: 30 },
@@ -43,10 +43,25 @@ const EVENTS = [
 ];
 
 const DEMO_ACCOUNTS = [
-  { label: 'Étudiant', name: 'Mika ANDRIAMATOA', role: 'student', matricule: '2023A0025', avatar: 'MA', redirect: 'dashboard.html' },
-  { label: 'Responsable', name: 'Sarah ANDRIANARIVO', role: 'manager', matricule: '2022A0042', avatar: 'SA', redirect: 'manager.html' },
-  { label: 'Admin', name: 'Hery RAKOTONIAINA', role: 'admin', matricule: '2018A0001', avatar: 'HR', redirect: 'admin.html' },
-];
+   { label: 'Étudiant', name: 'Mika ANDRIAMATOA', role: 'student', matricule: '2023A0025', avatar: 'MA', redirect: 'dashboard.html' },
+   { label: 'Responsable', name: 'Sarah ANDRIANARIVO', role: 'manager', matricule: '2022A0042', avatar: 'SA', redirect: 'manager.html' },
+   { label: 'Admin', name: 'Hery RAKOTONIAINA', role: 'admin', matricule: '2018A0001', avatar: 'HR', redirect: 'admin.html' },
+ ];
+
+ const RESPONSIBLES = [
+   { matricule: 'R01', name: 'Andry RAZAFY', email: 'andry@clubinfo.mg', role: 'student', club: 'Club Informatique', club_id: 1, avatar: 'AR' },
+   { matricule: 'R02', name: 'Sarah RAKOTONIAINA', email: 'sarah@clubdebat.mg', role: 'student', club: 'Club Débat & Éloquence', club_id: 2, avatar: 'SR' },
+   { matricule: 'R03', name: 'Toky RASOANAIVO', email: 'toky@clubmartiaux.mg', role: 'student', club: 'Club Arts Martiaux', club_id: 3, avatar: 'TR' },
+   { matricule: 'R04', name: 'Antsa RAZAFY', email: 'antsa@clubeco.mg', role: 'student', club: 'Club Environnement & Écologie', club_id: 4, avatar: 'AN' },
+   { matricule: 'R05', name: 'Naina ANDRIA', email: 'naina@clubrobot.mg', role: 'student', club: 'Club Robotique', club_id: 5, avatar: 'NA' },
+   { matricule: 'R06', name: 'Voahangy RALA', email: 'voahangy@clubtheatre.mg', role: 'student', club: 'Club Théâtre & Impro', club_id: 6, avatar: 'VR' },
+   { matricule: 'R07', name: 'Fanja RAKOTO', email: 'fanja@clubentrep.mg', role: 'student', club: 'Club Entrepreneuriat & Innovation', club_id: 7, avatar: 'FR' },
+   { matricule: 'R08', name: 'Tiana RABE', email: 'tiana@clubphoto.mg', role: 'student', club: 'Club Photo & Vidéo', club_id: 8, avatar: 'TB' },
+   { matricule: 'R09', name: 'Lova ANDRY', email: 'lova@clubmusique.mg', role: 'student', club: 'Club Musique & Chorale', club_id: 9, avatar: 'LA' },
+   { matricule: 'R10', name: 'Mamy RAJAO', email: 'mamy@clubsport.mg', role: 'student', club: 'Club Foot & Basketball', club_id: 10, avatar: 'MR' },
+   { matricule: 'R11', name: 'Mihary RANAIVO', email: 'mihary@clubbenev.mg', role: 'student', club: 'Club Bénévolat & Solidarité', club_id: 11, avatar: 'MH' },
+   { matricule: 'R12', name: 'Niry RAZANA', email: 'niry@clublangues.mg', role: 'student', club: 'Club Langues & Cultures', club_id: 12, avatar: 'NR' },
+ ];
 
 const PERSONAS = [
   { name: 'Étudiant L1', role: 'Lycéen néo-bachelier', icon: '◈', color: 'orange', quote: 'Je veux m\'inscrire sans me déplacer, depuis mon téléphone.', needs: ['Inscription mobile', 'Découverte des clubs', 'Information centralisée'] },
@@ -115,21 +130,33 @@ const NOTIFICATIONS = [
 ];
 
 const USERS = [
-  { matricule:'MA', name:'Mika ANDRIAMATOA', filiere:'L1 Info', points: 120, avatar:'MA' },
-  { matricule:'SA', name:'Sarah ANDRIANARIVO', filiere:'L3 Info', points: 285, avatar:'SA' },
-  { matricule:'HR', name:'Hery RAKOTONIAINA', filiere:'Admin', points: 95, avatar:'HR' },
-  { matricule:'TR', name:'Toky RASOANAIVO', filiere:'L2 STAPS', points: 198, avatar:'TR' },
-  { matricule:'AR', name:'Antsa RAZAFY', filiere:'L2 SVT', points: 174, avatar:'AR' },
-  { matricule:'NA', name:'Naina ANDRIA', filiere:'M1 Info', points: 312, avatar:'NA' },
-  { matricule:'VR', name:'Voahangy RALA', filiere:'L3 Lettres', points: 156, avatar:'VR' },
-  { matricule:'FR', name:'Fanja RAKOTO', filiere:'M2 Eco', points: 245, avatar:'FR' },
-  { matricule:'TR2', name:'Tiana RABE', filiere:'L2 Info', points: 188, avatar:'TR' },
-  { matricule:'LA', name:'Lova ANDRY', filiere:'L3 Musique', points: 222, avatar:'LA' },
-  { matricule:'MR', name:'Mamy RAJAO', filiere:'L1 STAPS', points: 134, avatar:'MR' },
-  { matricule:'MR2', name:'Mihary RANAIVO', filiere:'L2 Droit', points: 167, avatar:'MR' },
-  { matricule:'NR', name:'Niry RAZANA', filiere:'L1 LEA', points: 89, avatar:'NR' },
-  { matricule:'FB', name:'Faly BEZANDRY', filiere:'M1 Info', points: 256, avatar:'FB' },
-];
+   { matricule:'MA', name:'Mika ANDRIAMATOA', filiere:'L1 Info', points: 120, avatar:'MA', id:1, role:'student' },
+   { matricule:'SA', name:'Sarah ANDRIANARIVO', filiere:'L3 Info', points: 285, avatar:'SA', id:2, role:'manager' },
+   { matricule:'HR', name:'Hery RAKOTONIAINA', filiere:'Admin', points: 95, avatar:'HR', id:3, role:'admin' },
+   { matricule:'TR', name:'Toky RASOANAIVO', filiere:'L2 STAPS', points: 198, avatar:'TR', id:4, role:'student' },
+   { matricule:'AR', name:'Antsa RAZAFY', filiere:'L2 SVT', points: 174, avatar:'AR', id:5, role:'student' },
+   { matricule:'NA', name:'Naina ANDRIA', filiere:'M1 Info', points: 312, avatar:'NA', id:6, role:'student' },
+   { matricule:'VR', name:'Voahangy RALA', filiere:'L3 Lettres', points: 156, avatar:'VR', id:7, role:'student' },
+   { matricule:'FR', name:'Fanja RAKOTO', filiere:'M2 Eco', points: 245, avatar:'FR', id:8, role:'student' },
+   { matricule:'TR2', name:'Tiana RABE', filiere:'L2 Info', points: 188, avatar:'TR', id:9, role:'student' },
+   { matricule:'LA', name:'Lova ANDRY', filiere:'L3 Musique', points: 222, avatar:'LA', id:10, role:'student' },
+   { matricule:'MR', name:'Mamy RAJAO', filiere:'L1 STAPS', points: 134, avatar:'MR', id:11, role:'student' },
+   { matricule:'MR2', name:'Mihary RANAIVO', filiere:'L2 Droit', points: 167, avatar:'MR', id:12, role:'student' },
+   { matricule:'NR', name:'Niry RAZANA', filiere:'L1 LEA', points: 89, avatar:'NR', id:13, role:'student' },
+   { matricule:'FB', name:'Faly BEZANDRY', filiere:'M1 Info', points: 256, avatar:'FB', id:14, role:'student' },
+   { matricule:'R01', name:'Andry RAZAFY', filiere:'L3 Info', points: 0, avatar:'AR', id:15, role:'student' },
+   { matricule:'R02', name:'Sarah RAKOTONIAINA', filiere:'L2 Info', points: 0, avatar:'SR', id:16, role:'student' },
+   { matricule:'R03', name:'Toky RASOANAIVO', filiere:'L2 STAPS', points: 0, avatar:'TR', id:17, role:'student' },
+   { matricule:'R04', name:'Antsa RAZAFY', filiere:'L2 SVT', points: 0, avatar:'AN', id:18, role:'student' },
+   { matricule:'R05', name:'Naina ANDRIA', filiere:'M1 Info', points: 0, avatar:'NA', id:19, role:'student' },
+   { matricule:'R06', name:'Voahangy RALA', filiere:'L3 Lettres', points: 0, avatar:'VR', id:20, role:'student' },
+   { matricule:'R07', name:'Fanja RAKOTO', filiere:'M2 Eco', points: 0, avatar:'FR', id:21, role:'student' },
+   { matricule:'R08', name:'Tiana RABE', filiere:'L2 Info', points: 0, avatar:'TB', id:22, role:'student' },
+   { matricule:'R09', name:'Lova ANDRY', filiere:'L3 Musique', points: 0, avatar:'LA', id:23, role:'student' },
+   { matricule:'R10', name:'Mamy RAJAO', filiere:'L1 STAPS', points: 0, avatar:'MR', id:24, role:'student' },
+   { matricule:'R11', name:'Mihary RANAIVO', filiere:'L2 Droit', points: 0, avatar:'MH', id:25, role:'student' },
+   { matricule:'R12', name:'Niry RAZANA', filiere:'L1 LEA', points: 0, avatar:'NR', id:26, role:'student' },
+ ];
 
 if (typeof window !== 'undefined') {
   window.CLUBHUB = window.ClubHub = { CLUB_CATEGORIES, CLUBS, EVENTS, DEMO_ACCOUNTS, PERSONAS, STORAGE, ICONS, NOTIFICATIONS, USERS };

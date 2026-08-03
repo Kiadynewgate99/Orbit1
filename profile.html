@@ -7,7 +7,44 @@
     <link rel="icon" href="assets/logo-orbit.svg" />
   <link rel="stylesheet" href="css/design-system.css" />
   <link rel="stylesheet" href="css/components.css" />
-</head>
+<style>
+    .profile-avatar-upload {
+      position: relative;
+      display: inline-block;
+    }
+    .profile-avatar-upload img {
+      width: 80px;
+      height: 80px;
+      border-radius: var(--r-sm);
+      object-fit: cover;
+      border: 2px solid var(--black);
+    }
+    .profile-avatar-upload .avatar-fallback {
+      width: 80px;
+      height: 80px;
+      border-radius: var(--r-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      font-size: 28px;
+      font-weight: 800;
+      border: 2px solid var(--black);
+    }
+    .profile-avatar-upload input[type="file"] {
+      position: absolute;
+      bottom: -8px;
+      right: -8px;
+      background: var(--orange);
+      color: var(--white);
+      border: 2px solid var(--black);
+      border-radius: var(--r-sm);
+      padding: 4px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
 <body>
   <div class="page-loader">
     <div class="loader-ring"></div>
@@ -37,7 +74,15 @@
       const content = `
         <div class="card" style="padding: var(--s-6); margin-bottom: var(--s-5);">
           <div class="flex items-center gap-4" style="flex-wrap: wrap;">
-            <div class="avatar avatar-xl avatar-orange" style="width: 80px; height: 80px; font-size: 28px;">${profileData.avatar}</div>
+            <div class="profile-avatar-upload">
+            ${profileData.avatar_url ? `
+              <img src="${profileData.avatar_url}" alt="Photo de profil" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+              <div class="avatar avatar-xl avatar-orange" style="width: 80px; height: 80px; font-size: 28px; display: none;">${profileData.avatar}</div>
+            ` : `
+              <div class="avatar avatar-xl avatar-orange" style="width: 80px; height: 80px; font-size: 28px;">${profileData.avatar}</div>
+            `}
+            <input type="file" id="profile-avatar" accept="image/*" onchange="uploadProfileAvatar(event)" />
+          </div>
             <div style="flex: 1; min-width: 200px;">
               <div class="text-mono" style="font-size: 11px; color: var(--orange); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;">PROFIL</div>
               <h2 style="font-size: var(--fs-2xl); margin: 4px 0;">${profileData.name}</h2>
@@ -137,6 +182,22 @@
         pageTitle: 'Mon profil',
         pageSubtitle: 'Gérez vos informations personnelles et préférences.',
       });
+    async function uploadProfileAvatar(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        const u = ClubHub.Auth.current();
+        const res = await ClubHubAPI.upload('user', u.id, file);
+        if (res.ok) {
+          ClubHub.toast('Photo mise à jour', '', 'success');
+          setTimeout(() => location.reload(), 500);
+        } else {
+          throw new Error(res.error || 'Erreur d\'upload');
+        }
+      } catch (e) {
+        ClubHub.toast('Erreur', e.message, 'error');
+      }
+    }
     })();
   </script>
 </body>

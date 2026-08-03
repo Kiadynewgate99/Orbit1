@@ -28,6 +28,7 @@ CREATE TABLE `users` (
   `password_hash`   VARCHAR(255) DEFAULT NULL,        -- NULL si SSO only
   `name`            VARCHAR(120) NOT NULL,
   `avatar`          VARCHAR(4)   NOT NULL,            -- 2 lettres MA, SA, HR
+  `avatar_url`      VARCHAR(255) DEFAULT NULL,        -- URL/chemin vers la photo de profil
   `role`            ENUM('student','manager','admin') NOT NULL DEFAULT 'student',
   `filiere`         VARCHAR(60)  DEFAULT NULL,
   `niveau`          VARCHAR(20)  DEFAULT NULL,
@@ -55,11 +56,13 @@ CREATE TABLE `clubs` (
   `name`            VARCHAR(120) NOT NULL,
   `category`        VARCHAR(40)  NOT NULL,             -- tech, culture, sport, ...
   `color`           VARCHAR(9)   NOT NULL DEFAULT '#FF4502',
+  `logo`            VARCHAR(255) DEFAULT NULL,         -- chemin vers l'image du club
   `short_desc`      VARCHAR(255) NOT NULL,
   `long_desc`       TEXT         DEFAULT NULL,
   `tags`            JSON         DEFAULT NULL,         -- ["Python", "IA"]
   `room`            VARCHAR(60)  DEFAULT NULL,
   `president`       VARCHAR(120) DEFAULT NULL,
+  `responsible_id`  INT UNSIGNED DEFAULT NULL,         -- utilisateur responsable du club
   `status`          ENUM('active','incubation','archived') NOT NULL DEFAULT 'active',
   `capacity`        INT          NOT NULL DEFAULT 100,
   `created_at`      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -67,7 +70,9 @@ CREATE TABLE `clubs` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_slug` (`slug`),
   KEY `idx_category` (`category`),
-  KEY `idx_status` (`status`)
+  KEY `idx_status` (`status`),
+  KEY `fk_club_responsible` (`responsible_id`),
+  CONSTRAINT `fk_club_responsible` FOREIGN KEY (`responsible_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================================
