@@ -43,7 +43,7 @@
     if (!user) throw new Error('Unauthorized');
 
     const params = new URLSearchParams(window.location.search);
-    const tab = params.get('tab') || 'overview';
+    const tab = params.get('tab') || 'dashboard';
 
     let allClubs = [];
     let allEvents = [];

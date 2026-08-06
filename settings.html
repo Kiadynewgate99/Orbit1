@@ -44,7 +44,7 @@
           <div class="card" style="position: sticky; top: 100px; padding: var(--s-3);">
             <nav style="display: flex; flex-direction: column; gap: 2px;">
               ${['Compte', 'Notifications', 'Confidentialité', 'Accessibilité', 'Langue & région'].map((s, i) => `
-                <a href="#${s.toLowerCase()}" class="sidebar-link ${i === 0 ? 'active' : ''}" style="text-decoration: none;">
+                <a href="#${s.toLowerCase()}" class="sidebar-link ${i === 0 ? '' : ''}" style="text-decoration: none;">
                   <span style="font-size: 14px;">●</span>
                   <span>${s}</span>
                 </a>

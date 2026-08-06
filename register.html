@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="css/design-system.css" />
   <link rel="stylesheet" href="css/components.css" />
   <style>
-    .reg-card { max-width: 640px; margin: var(--s-8) auto; background: var(--white); border: 2px solid var(--black); border-radius: var(--r-md); box-shadow: 8px 8px 0 var(--orange); padding: var(--s-8); }
+    .reg-card { max-width: 640px; margin: var(--s-8) auto; background: var(--bg-elev-1); border: 2px solid var(--black); border-radius: var(--r-md); box-shadow: 8px 8px 0 var(--orange); padding: var(--s-8); }
     .reg-card h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: var(--s-1); }
     .reg-card .subtitle { color: var(--text-secondary); margin-bottom: var(--s-6); font-size: var(--fs-sm); }
     .field { margin-bottom: var(--s-4); }
@@ -17,7 +17,7 @@
     .error { color: var(--orange); font-size: 12px; margin-top: 4px; font-weight: 600; }
     .success-banner { background: var(--lime); border: 2px solid var(--black); padding: var(--s-3); margin-bottom: var(--s-4); font-weight: 700; font-size: var(--fs-sm); display: none; }
     .hobbies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-2); margin-top: var(--s-2); }
-    .hobby-chip { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 2px solid var(--black); border-radius: var(--r-sm); cursor: pointer; background: var(--white); font-size: var(--fs-sm); font-weight: 600; user-select: none; transition: all 0.15s; }
+    .hobby-chip { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 2px solid var(--black); border-radius: var(--r-sm); cursor: pointer; background: var(--bg-elev-2); font-size: var(--fs-sm); font-weight: 600; user-select: none; transition: all 0.15s; }
     .hobby-chip:hover { background: var(--bg-elev-1); }
     .hobby-chip.selected { background: var(--orange); color: var(--white); }
     .hobby-chip input { display: none; }
@@ -28,10 +28,34 @@
     .step-dot { flex: 1; height: 6px; background: var(--border-subtle); border-radius: 3px; }
     .step-dot.active { background: var(--orange); }
     .step-dot.done { background: var(--lime); }
+    .nav-icon-btn-3 {
+    width: 45px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    bottom: -95px;
+    left: 887px;
+    background: var(--bg-inverse1);
+    border: none;
+    border-right: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    position: relative;
+    cursor: pointer;
+    transition: background var(--t-fast), color var(--t-fast);
+}
   </style>
 </head>
 <body>
   <div class="page-loader"><div class="loader-ring"></div><div class="loader-text">CHARGEMENT</div></div>
+  
+  <div class="nav-actions">
+              <button class="nav-icon-btn-3" id="theme-toggle" title="Basculer theme clair/sombre" onclick="ClubHub.Theme.toggle()">
+                <svg id="theme-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+                </svg>
+              </button>
+    </div>
 
   <div class="reg-card">
     <div class="flex items-center gap-2" style="margin-bottom: var(--s-6);">

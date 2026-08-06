@@ -57,11 +57,7 @@
       <div class="container">
         <div class="hero-grid">
           <div class="fade-in">
-            <h1 class="hero-title">
-              Bonjour.<br/>
-              Je suis <span class="accent">Mika</span>.<br/>
-              Je gère les <span class="lime">clubs</span>.
-            </h1>
+            <h1 class="hero-title" id="hero-title"></h1>
             <p class="hero-description">
               Plateforme de gestion centralisée pour les clubs universitaires.
               Tout simplement, sans les formulaires papier et les fichiers Excel perdus.
@@ -443,6 +439,52 @@
     ClubHub.renderNavbar('home');
     ClubHub.setupReveal();
 
+    window.addEventListener('load', () => {
+      // 1. Cacher le loader
+      if (typeof ClubHub !== 'undefined' && ClubHub.hideLoader) {
+        ClubHub.hideLoader();
+      }
+  
+      // 2. Changer le titre avec effet "machine à écrire"
+      const heroTitle = document.getElementById('hero-title');
+      if (heroTitle) {
+        const messages = [
+          `Simplifiez <br/>la gestion de vos <span class="accent">clubs</span> <br/>en toute <span class="lime">simplicité</span>.`,
+          `La plateforme <br/>tout-en-un pour vos <span class="accent">associations</span> <br/>et vos <span class="lime">membres</span>.`,
+          `Pilotez <br/>vos <span class="accent">activités</span> <br/>et vos adhésions <span class="lime">sans effort</span>.`,
+          `Gérez vos <span class="accent">clubs</span> <br/>au même endroit <br/>avec une interface <span class="lime">intuitive</span>.`
+        ];
+  
+        // Choix du message
+        const randomIndex = Math.floor(Math.random() * messages.length);
+        const targetMessage = messages[randomIndex];
+  
+        // On découpe le message en préservant les balises HTML (<br/>, <span>, etc.)
+        const tokens = targetMessage.match(/(<[^>]+>|[^<])/g) || [];
+        let currentString = '';
+        let index = 0;
+  
+        const typeNextChar = () => {
+          if (index < tokens.length) {
+            const token = tokens[index];
+            currentString += token;
+            heroTitle.innerHTML = currentString;
+            index++;
+  
+            // Si c'est une balise HTML, on l'affiche instantanément sans délai
+            const delay = token.startsWith('<') ? 0 : 40; // 40ms entre chaque lettre
+            setTimeout(typeNextChar, delay);
+          }
+        };
+  
+        typeNextChar();
+      }
+    });
+
+    // Setup animations
+    if (typeof ClubHub !== 'undefined' && ClubHub.setupReveal) {
+      ClubHub.setupReveal();
+    }
     // Compteurs
     const animateCounters = () => {
       document.querySelectorAll('[data-count]').forEach(el => {
@@ -460,7 +502,12 @@
       });
     };
     const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) { animateCounters(); obs.unobserve(e.target); } });
+      entries.forEach(e => { 
+        if (e.isIntersecting) { 
+          animateCounters();
+          obs.unobserve(e.target);
+         } 
+        });
     }, { threshold: 0.3 });
     document.querySelectorAll('[data-count]').forEach(el => obs.observe(el));
 
@@ -469,11 +516,15 @@
       el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>';
     });
     document.querySelectorAll('.public-action-btn').forEach((btn, i) => {
-      if (i === 0) btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>';
-      else btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span class="dot"></span>';
+      if (i === 0) {
+         btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>';
+      } else { 
+        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span class="dot"></span>';
+    }
     });
 
     // Clubs preview
+  if (typeof CLUBHUB !== 'undefined' && CLUBHUB.CLUBS) {  
     const previewClubs = CLUBHUB.CLUBS.slice(0, 6);
     const container = document.getElementById('clubs-preview');
     if (container) {
@@ -499,6 +550,7 @@
         </a>
       `).join('');
     }
+  }
   </script>
 </body>
 </html>

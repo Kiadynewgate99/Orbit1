@@ -115,7 +115,6 @@
   background: var(--orange);
   color: var(--white);
   padding: 0 4px;
-  border: 2px solid var(--black);
   font-size: 0.9em;
 }
 
@@ -125,7 +124,6 @@
   background: var(--lime);
   color: var(--black);
   padding: 0 4px;
-  border: 2px solid var(--black);
   font-size: 0.9em;
 }
 

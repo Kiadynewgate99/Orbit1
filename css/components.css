@@ -2,7 +2,7 @@
    ClubHub v3 - Composants (retro Webflow style)
    ========================================================================= */
 
-/* Navbar - style Webflow top bar - DARK par defaut */
+/* Navbar - style Webflow top bar - DARK par defasut */
 .navbar {
   position: sticky;
   top: 0;
@@ -88,7 +88,22 @@
   cursor: pointer;
   transition: background var(--t-fast), color var(--t-fast);
 }
-
+.nav-icon-btn-2 {
+  width: 45px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  bottom: -24px;
+  left: 346px;
+  background: var(--bg-elev-1);
+  border: none;
+  border-right: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  position: relative;
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
 .nav-icon-btn:hover { background: var(--bg-elev-1); color: var(--bg-inverse); }
 .nav-icon-btn svg { width: 18px; height: 18px; }
 
@@ -212,8 +227,8 @@
 }
 
 .sidebar-link.active {
-  background: var(--black);
-  color: var(--white);
+  background: var(--bg-inverse);
+  color: var(--bg-elev-3);
 }
 
 .sidebar-link .count {
@@ -710,7 +725,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px dashed var(--black);
+  border: 2px dashed var(--bg-inverse);
   border-radius: var(--r-md);
   color: var(--text-tertiary);
 }
