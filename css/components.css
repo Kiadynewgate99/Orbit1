@@ -204,6 +204,13 @@
 
 .sidebar-link:hover { background: var(--bg-elev-1); }
 
+.sidebar-link[href="dashboard.html"]:hover {
+  background: var(--black);
+  color: var(--white);
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0 var(--orange);
+}
+
 .sidebar-link.active {
   background: var(--black);
   color: var(--white);
@@ -445,9 +452,17 @@
   padding: var(--s-3) 0;
   border-bottom: 1px solid var(--border-subtle);
   font-size: var(--fs-sm);
+  transition: background var(--t-fast);
 }
 
 .activity-item:last-child { border-bottom: none; }
+
+.activity-item:hover {
+  background: var(--bg-elev-1);
+  margin-inline: calc(-1 * var(--s-4));
+  padding-inline: var(--s-4);
+  border-radius: var(--r-sm);
+}
 
 .activity-dot {
   width: 10px;

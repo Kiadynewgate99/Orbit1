@@ -17,7 +17,7 @@
   <div class="app-shell-mount"></div>
 
   <script src="js/data.js"></script>
-  <script src="js/api.js?v=3"></script>
+  <script src="js/api.js?v=4"></script>
   <script src="js/app.js"></script>
   <script>
     (async function () {
@@ -155,13 +155,16 @@
             <strong style="font-size: var(--fs-lg);">Gestion des clubs</strong>
             <span class="text-muted" style="font-size: var(--fs-sm);"> ${apiClubs.length} clubs · ${apiClubs.reduce((a, c) => a + (c.members_count || c.members || 0), 0)} membres</span>
           </div>
-          <button class="btn btn-orange btn-sm" onclick="openCreateClubModal()">+ Créer un club</button>
+          <div class="flex gap-2">
+            <button class="btn btn-secondary btn-sm" onclick="bulkArchiveClubs()">🗑 Archiver la sélection</button>
+            <button class="btn btn-orange btn-sm" onclick="openCreateClubModal()">+ Créer un club</button>
+          </div>
         </div>
         <div class="table-wrap">
           <table class="table">
             <thead>
               <tr>
-                <th><input type="checkbox" class="checkbox" /></th>
+                <th><input type="checkbox" class="checkbox" id="clubs-select-all" onchange="toggleAllClubs(this)" /></th>
                 <th>Club</th>
                 <th>Domaine</th>
                 <th>Responsable</th>
@@ -171,7 +174,7 @@
                 <th></th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="clubs-tbody">
               ${apiClubs.map(club => {
                 const domainLabel = CLUBHUB.CLUB_CATEGORIES.find(c => c.id === club.category || c.id === club.domain)?.label || club.category || club.domain || '';
                 const memberCount = club.members_count || club.members || 0;
@@ -179,8 +182,8 @@
                 const statusBadge = club.status === 'active' ? 'badge-lime' : club.status === 'incubation' ? 'badge-orange' : 'badge';
                 const statusLabel = club.status === 'active' ? 'Actif' : club.status === 'incubation' ? 'Incubation' : 'Archivé';
                 return `
-                <tr>
-                  <td><input type="checkbox" class="checkbox" /></td>
+                <tr data-club-id="${club.id}">
+                  <td><input type="checkbox" class="checkbox club-checkbox" value="${club.id}" /></td>
                   <td>
                     <div class="member-cell">
                       <div class="avatar" style="background: ${club.color}; color: var(--white);">${(club.name || '').substring(0, 2).toUpperCase()}</div>
@@ -225,23 +228,26 @@
 
       <div class="card">
         <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3); margin-bottom: var(--s-4);">
-          <strong style="font-size: var(--fs-lg);">Tous les utilisateurs</strong>
+          <div style="display: flex; align-items: center; gap: var(--s-3); flex: 1; min-width: 240px;">
+            <strong style="font-size: var(--fs-lg);">Tous les utilisateurs</strong>
+            <input class="input" id="users-search" placeholder="Rechercher par nom, matricule, email..." style="max-width: 320px;" oninput="filterUsersTable()" />
+          </div>
           <div class="flex gap-2">
             <button class="btn btn-orange btn-sm" onclick="document.getElementById('admin-csv-import').click()">↑ Importer CSV</button>
             <input type="file" id="admin-csv-import" accept=".csv,.txt" style="display:none;" onchange="handleAdminCSVImport(event)" />
-            <button class="btn btn-secondary btn-sm" onclick="ClubHub.toast('Export CSV lancé','','info')">↓ Exporter</button>
+            <button class="btn btn-secondary btn-sm" onclick="exportUsersCSV()">↓ Exporter</button>
           </div>
         </div>
         <div class="table-wrap">
           <table class="table">
             <thead><tr><th>Utilisateur</th><th>Email</th><th>Rôle</th><th>Filière</th><th>Dernière connexion</th><th>Statut</th></tr></thead>
-            <tbody>
+            <tbody id="users-tbody">
               ${(apiStats?.users_ranking || [
                 { matricule: 'MA', name: 'Mika ANDRIAMATOA', email: 'mika@u.fr', role: 'student', filiere: 'L1 Info', niveau: 'L1', last_login_at: new Date().toISOString(), is_active: 1 },
                 { matricule: 'SA', name: 'Sarah ANDRIANARIVO', email: 'sarah@u.fr', role: 'manager', filiere: 'L3 Info', niveau: 'L3', last_login_at: new Date(Date.now() - 7200000).toISOString(), is_active: 1 },
                 { matricule: 'HR', name: 'Hery RAKOTONIAINA', email: 'hery@u.fr', role: 'admin', filiere: 'Admin', niveau: '-', last_login_at: new Date(Date.now() - 86400000).toISOString(), is_active: 1 },
               ]).map(u => `
-                <tr>
+                <tr data-search="${(u.name + ' ' + u.matricule + ' ' + u.email).toLowerCase()}">
                   <td>
                     <div class="member-cell">
                       <div class="avatar avatar-orange">${u.avatar || u.matricule?.substring(0,2).toUpperCase() || '?'}</div>
@@ -310,15 +316,15 @@
         { created_at: '2026-07-25 09:00:00', user_name: 'Systeme', action: 'AUTO', target_type: 'cron', target_id: null, ip: '-', metadata: { job: 'send_reminders' } },
       ];
       return `
-        <div class="card">
+        <div class="card" id="audit-card">
           <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3); margin-bottom: var(--s-4);">
             <div>
               <h3 style="font-size: var(--fs-lg); font-weight: 800;">Journal d'audit</h3>
               <p class="text-muted" style="font-size: var(--fs-sm);">Toutes les actions sensibles sont loggees de maniere immutable. Conforme RGPD.</p>
             </div>
-            <div class="flex gap-2">
-              <select class="select" style="max-width: 160px;">
-                <option>Toutes actions</option>
+            <div class="flex gap-2" id="audit-filters">
+              <select class="select" id="audit-action-filter" style="max-width: 160px;">
+                <option value="">Toutes actions</option>
                 <option>LOGIN</option>
                 <option>CREATE</option>
                 <option>UPDATE</option>
@@ -326,9 +332,9 @@
                 <option>JOIN_CLUB</option>
                 <option>PRESENCE</option>
               </select>
-              <input class="input" placeholder="Rechercher utilisateur..." style="max-width: 240px;" />
-              <button class="btn btn-primary btn-sm">Filtrer</button>
-              <button class="btn btn-secondary btn-sm">Exporter .csv</button>
+              <input class="input" id="audit-search" placeholder="Rechercher utilisateur..." style="max-width: 240px;" />
+              <button class="btn btn-primary btn-sm" id="audit-filter-btn">Filtrer</button>
+              <button class="btn btn-secondary btn-sm" id="audit-export-btn">Exporter .csv</button>
             </div>
           </div>
           <table class="cdc-table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
@@ -342,7 +348,7 @@
                 <th style="padding: 10px 12px; text-align: left;">Details</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="audit-tbody">
               ${logs.map(l => `
                 <tr style="border-bottom: 1px solid var(--border-subtle);">
                   <td style="padding: 10px 12px; font-family: var(--font-mono); font-size: 12px;">${l.created_at ? l.created_at.replace('T', ' ').substring(0, 19) : '-'}</td>
@@ -356,10 +362,10 @@
             </tbody>
           </table>
           <div class="flex items-center justify-between" style="margin-top: var(--s-4); padding-top: var(--s-3); border-top: 1px solid var(--border-subtle); font-size: 12px; color: var(--text-tertiary);">
-            <div>Affichage 1-${logs.length} sur ${logs.length + 238} logs</div>
+            <div id="audit-info">Affichage 1-${logs.length} sur ${logs.length + 238} logs</div>
             <div class="flex gap-2">
-              <button class="btn btn-secondary btn-sm">Precedent</button>
-              <button class="btn btn-secondary btn-sm">Suivant</button>
+              <button class="btn btn-secondary btn-sm" id="audit-prev">Precedent</button>
+              <button class="btn btn-secondary btn-sm" id="audit-next">Suivant</button>
             </div>
           </div>
         </div>
@@ -382,7 +388,8 @@
               <strong style="display: block; font-size: var(--fs-base);">${int.name}</strong>
               <span style="font-size: 11px; color: var(--text-tertiary);">${int.desc}</span>
             </div>
-            <span class="badge ${int.status === 'Connecté' ? 'badge-lime' : int.status === 'Déconnecté' ? 'badge-orange' : 'badge-dark'}">${int.status}</span>
+            <span class="badge ${int.status === 'Connecté' || int.status === 'Configuré' ? 'badge-lime' : 'badge-orange'}" id="int-badge-${int.name.replace(/[^a-zA-Z]/g, '')}">${int.status}</span>
+            <button class="btn ${int.status === 'Connecté' || int.status === 'Configuré' ? 'btn-secondary' : 'btn-primary'} btn-sm" onclick="toggleIntegration('${int.name}')">${int.status === 'Connecté' || int.status === 'Configuré' ? 'Déconnecter' : 'Connecter'}</button>
           </div>
         `).join('')}
       </div>
@@ -415,6 +422,106 @@
       content,
       pageTitle: pageTitleMap[tab] || 'Administration',
     });
+
+    if (tab === 'audit') {
+      const allLogs = [...(apiAudit.length ? apiAudit : [
+        { created_at: '2026-07-26 14:23:12', user_name: 'Sarah ANDRIANARIVO', action: 'CREATE', target_type: 'event', target_id: 5, ip: '10.42.1.42' },
+        { created_at: '2026-07-26 13:10:55', user_name: 'Mika ANDRIAMATOA', action: 'JOIN_CLUB', target_type: 'club', target_id: 5, ip: '10.42.1.15' },
+        { created_at: '2026-07-26 11:45:01', user_name: 'Hery RAKOTONIAINA', action: 'LOGIN', target_type: 'user', target_id: 3, ip: '10.42.1.1' },
+        { created_at: '2026-07-26 10:30:42', user_name: 'Sarah ANDRIANARIVO', action: 'UPDATE', target_type: 'event', target_id: 2, ip: '10.42.1.42' },
+        { created_at: '2026-07-25 22:15:00', user_name: 'Systeme', action: 'AUTO', target_type: 'backup', target_id: null, ip: '-' },
+        { created_at: '2026-07-25 18:42:30', user_name: 'Mika ANDRIAMATOA', action: 'PRESENCE', target_type: 'event', target_id: 5, ip: '10.42.1.15' },
+        { created_at: '2026-07-25 17:00:11', user_name: 'Hery RAKOTONIAINA', action: 'DELETE', target_type: 'event', target_id: 8, ip: '10.42.1.1' },
+        { created_at: '2026-07-25 14:20:00', user_name: 'Sarah ANDRIANARIVO', action: 'LOGIN', target_type: 'user', target_id: 2, ip: '10.42.1.42' },
+        { created_at: '2026-07-25 09:00:00', user_name: 'Systeme', action: 'AUTO', target_type: 'cron', target_id: null, ip: '-', metadata: { job: 'send_reminders' } },
+      ])];
+
+      const tbody = document.getElementById('audit-tbody');
+      const info = document.getElementById('audit-info');
+      const actionFilter = document.getElementById('audit-action-filter');
+      const searchInput = document.getElementById('audit-search');
+      const filterBtn = document.getElementById('audit-filter-btn');
+      const exportBtn = document.getElementById('audit-export-btn');
+      const prevBtn = document.getElementById('audit-prev');
+      const nextBtn = document.getElementById('audit-next');
+
+      let auditPage = 1;
+      const auditPerPage = 5;
+      let filteredLogs = [...allLogs];
+
+      const renderAuditRows = (logs) => {
+        if (!tbody) return;
+        tbody.innerHTML = logs.map(l => `
+          <tr style="border-bottom: 1px solid var(--border-subtle);">
+            <td style="padding: 10px 12px; font-family: var(--font-mono); font-size: 12px;">${l.created_at ? l.created_at.replace('T', ' ').substring(0, 19) : '-'}</td>
+            <td style="padding: 10px 12px;"><strong>${l.user_name || '-'}</strong><br/><span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary);">${l.user_matricule || '-'}</span></td>
+            <td style="padding: 10px 12px;"><span class="badge ${l.action === 'DELETE' ? 'badge-orange' : l.action === 'CREATE' || l.action === 'LOGIN' ? 'badge-lime' : 'badge-dark'}">${l.action}</span></td>
+            <td style="padding: 10px 12px; font-size: 12px;">${l.target_type || ''}${l.target_id ? ' #' + l.target_id : ''}</td>
+            <td style="padding: 10px 12px; font-family: var(--font-mono); font-size: 11px;">${l.ip || '-'}</td>
+            <td style="padding: 10px 12px; font-size: 12px; color: var(--text-secondary);">${l.metadata ? JSON.stringify(l.metadata) : '—'}</td>
+          </tr>
+        `).join('');
+      };
+
+      const applyAuditFilters = () => {
+        const action = actionFilter ? actionFilter.value : '';
+        const search = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        filteredLogs = allLogs.filter(l => {
+          const matchAction = !action || l.action === action;
+          const matchSearch = !search || (l.user_name && l.user_name.toLowerCase().includes(search)) || (l.user_matricule && l.user_matricule.toLowerCase().includes(search));
+          return matchAction && matchSearch;
+        });
+        auditPage = 1;
+        const start = 0;
+        const end = auditPerPage;
+        renderAuditRows(filteredLogs.slice(start, end));
+        if (info) info.textContent = `Affichage 1-${Math.min(end, filteredLogs.length)} sur ${filteredLogs.length} logs`;
+      };
+
+      if (filterBtn) filterBtn.addEventListener('click', applyAuditFilters);
+      if (searchInput) searchInput.addEventListener('keyup', e => { if (e.key === 'Enter') applyAuditFilters(); });
+
+      if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+          const header = 'Horodatage,Utilisateur,Action,Cible,IP,Details\n';
+          const rows = filteredLogs.map(l => `${l.created_at || ''},"${l.user_name || ''}","${l.action || ''}","${l.target_type || ''}${l.target_id ? ' #' + l.target_id : ''}","${l.ip || ''}","${l.metadata ? JSON.stringify(l.metadata) : ''}"`);
+          const csv = header + rows.join('\n');
+          const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'audit.csv';
+          a.click();
+          URL.revokeObjectURL(url);
+          ClubHub.toast('Export CSV', 'Telechargement lance', 'success');
+        });
+      }
+
+      if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+          if (auditPage > 1) {
+            auditPage--;
+            const start = (auditPage - 1) * auditPerPage;
+            const end = start + auditPerPage;
+            renderAuditRows(filteredLogs.slice(start, end));
+            if (info) info.textContent = `Affichage ${start + 1}-${Math.min(end, filteredLogs.length)} sur ${filteredLogs.length} logs`;
+          }
+        });
+      }
+
+      if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+          const maxPage = Math.ceil(filteredLogs.length / auditPerPage);
+          if (auditPage < maxPage) {
+            auditPage++;
+            const start = (auditPage - 1) * auditPerPage;
+            const end = start + auditPerPage;
+            renderAuditRows(filteredLogs.slice(start, end));
+            if (info) info.textContent = `Affichage ${start + 1}-${Math.min(end, filteredLogs.length)} sur ${filteredLogs.length} logs`;
+          }
+        });
+      }
+    }
 
     function openCreateClubModal() {
       const overlay = document.createElement('div');
@@ -501,7 +608,185 @@
         errBox.style.display = 'block';
       }
     }
-    })();
+
+    function exportUsersCSV() {
+      const rows = (apiStats?.users_ranking || []).map(u => [u.matricule, u.name, u.email, u.role, u.filiere || '', u.niveau || '', u.is_active ? 'Actif' : 'Inactif', u.last_login_at ? new Date(u.last_login_at).toLocaleDateString('fr-FR') : ''].join(','));
+      const header = 'Matricule,Nom,Email,Rôle,Filière,Niveau,Statut,Dernière connexion\n';
+      const csv = header + rows.join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'utilisateurs.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+      ClubHub.toast('Export CSV', 'Téléchargement lancé', 'success');
+    }
+
+    function bulkArchiveClubs() {
+      const checkboxes = document.querySelectorAll('#clubs-tbody .checkbox:checked');
+      if (!checkboxes.length) { ClubHub.toast('Aucun club sélectionné', '', 'warning'); return; }
+      ClubHub.confirm('Archiver les clubs', `Archiver ${checkboxes.length} club(s) ?`, async () => {
+        try {
+          const promises = Array.from(checkboxes).map(cb => {
+            const row = cb.closest('tr');
+            const id = row?.dataset?.clubId;
+            return id ? ClubHubAPI.deleteClub(id).catch(() => null) : Promise.resolve(null);
+          });
+          await Promise.all(promises);
+          ClubHub.toast('Clubs archivés', '', 'success');
+          setTimeout(() => location.reload(), 600);
+        } catch (e) {
+          ClubHub.toast('Erreur', e.message, 'error');
+        }
+      });
+    }
+
+    function toggleIntegration(name) {
+      ClubHub.toast('Intégration', `${name} : bascule de l'état simulée (démo)`, 'info');
+    }
+
+    function filterUsersTable() {
+      const q = (document.getElementById('users-search')?.value || '').toLowerCase();
+      const rows = document.querySelectorAll('#users-tbody tr');
+      rows.forEach(row => {
+        const text = row.dataset.search || '';
+        row.style.display = text.includes(q) ? '' : 'none';
+      });
+    }
+
+    function toggleAllClubs(master) {
+      document.querySelectorAll('.club-checkbox').forEach(cb => cb.checked = master.checked);
+    }
+
+    function bulkArchiveClubs() {
+      const checkboxes = document.querySelectorAll('.club-checkbox:checked');
+      if (!checkboxes.length) { ClubHub.toast('Aucun club sélectionné', '', 'warning'); return; }
+      ClubHub.confirm('Archiver les clubs', `Archiver ${checkboxes.length} club(s) ?`, async () => {
+        try {
+          const promises = Array.from(checkboxes).map(cb => {
+            const id = cb.value;
+            return id ? ClubHubAPI.deleteClub(id).catch(() => null) : Promise.resolve(null);
+          });
+          await Promise.all(promises);
+          ClubHub.toast('Clubs archivés', '', 'success');
+          setTimeout(() => location.reload(), 600);
+        } catch (e) {
+          ClubHub.toast('Erreur', e.message, 'error');
+        }
+      });
+    }
+
+    if (tab === 'audit') {
+      const allLogs = [...(apiAudit.length ? apiAudit : [
+        { created_at: '2026-07-26 14:23:12', user_name: 'Sarah ANDRIANARIVO', action: 'CREATE', target_type: 'event', target_id: 5, ip: '10.42.1.42' },
+        { created_at: '2026-07-26 13:10:55', user_name: 'Mika ANDRIAMATOA', action: 'JOIN_CLUB', target_type: 'club', target_id: 5, ip: '10.42.1.15' },
+        { created_at: '2026-07-26 11:45:01', user_name: 'Hery RAKOTONIAINA', action: 'LOGIN', target_type: 'user', target_id: 3, ip: '10.42.1.1' },
+        { created_at: '2026-07-26 10:30:42', user_name: 'Sarah ANDRIANARIVO', action: 'UPDATE', target_type: 'event', target_id: 2, ip: '10.42.1.42' },
+        { created_at: '2026-07-25 22:15:00', user_name: 'Systeme', action: 'AUTO', target_type: 'backup', target_id: null, ip: '-' },
+        { created_at: '2026-07-25 18:42:30', user_name: 'Mika ANDRIAMATOA', action: 'PRESENCE', target_type: 'event', target_id: 5, ip: '10.42.1.15' },
+        { created_at: '2026-07-25 17:00:11', user_name: 'Hery RAKOTONIAINA', action: 'DELETE', target_type: 'event', target_id: 8, ip: '10.42.1.1' },
+        { created_at: '2026-07-25 14:20:00', user_name: 'Sarah ANDRIANARIVO', action: 'LOGIN', target_type: 'user', target_id: 2, ip: '10.42.1.42' },
+        { created_at: '2026-07-25 09:00:00', user_name: 'Systeme', action: 'AUTO', target_type: 'cron', target_id: null, ip: '-', metadata: { job: 'send_reminders' } },
+      ])];
+
+      const tbody = document.getElementById('audit-tbody');
+      const info = document.getElementById('audit-info');
+      const actionFilter = document.getElementById('audit-action-filter');
+      const searchInput = document.getElementById('audit-search');
+      const filterBtn = document.getElementById('audit-filter-btn');
+      const exportBtn = document.getElementById('audit-export-btn');
+      const prevBtn = document.getElementById('audit-prev');
+      const nextBtn = document.getElementById('audit-next');
+
+      let auditPage = 1;
+      const auditPerPage = 5;
+      let filteredLogs = [...allLogs];
+
+      const renderAuditRows = (logs) => {
+        if (!tbody) return;
+        tbody.innerHTML = logs.map(l => `
+          <tr style="border-bottom: 1px solid var(--border-subtle);">
+            <td style="padding: 10px 12px; font-family: var(--font-mono); font-size: 12px;">${l.created_at ? l.created_at.replace('T', ' ').substring(0, 19) : '-'}</td>
+            <td style="padding: 10px 12px;"><strong>${l.user_name || '-'}</strong><br/><span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary);">${l.user_matricule || '-'}</span></td>
+            <td style="padding: 10px 12px;"><span class="badge ${l.action === 'DELETE' ? 'badge-orange' : l.action === 'CREATE' || l.action === 'LOGIN' ? 'badge-lime' : 'badge-dark'}">${l.action}</span></td>
+            <td style="padding: 10px 12px; font-size: 12px;">${l.target_type || ''}${l.target_id ? ' #' + l.target_id : ''}</td>
+            <td style="padding: 10px 12px; font-family: var(--font-mono); font-size: 11px;">${l.ip || '-'}</td>
+            <td style="padding: 10px 12px; font-size: 12px; color: var(--text-secondary);">${l.metadata ? JSON.stringify(l.metadata) : '—'}</td>
+          </tr>
+        `).join('');
+      };
+
+      const applyAuditFilters = () => {
+        const action = actionFilter ? actionFilter.value : '';
+        const search = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        filteredLogs = allLogs.filter(l => {
+          const matchAction = !action || l.action === action;
+          const matchSearch = !search || (l.user_name && l.user_name.toLowerCase().includes(search)) || (l.user_matricule && l.user_matricule.toLowerCase().includes(search));
+          return matchAction && matchSearch;
+        });
+        auditPage = 1;
+        const start = 0;
+        const end = auditPerPage;
+        renderAuditRows(filteredLogs.slice(start, end));
+        if (info) info.textContent = `Affichage 1-${Math.min(end, filteredLogs.length)} sur ${filteredLogs.length} logs`;
+      };
+
+      if (filterBtn) filterBtn.addEventListener('click', applyAuditFilters);
+      if (searchInput) searchInput.addEventListener('keyup', e => { if (e.key === 'Enter') applyAuditFilters(); });
+
+      if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+          const header = 'Horodatage,Utilisateur,Action,Cible,IP,Details\n';
+          const rows = filteredLogs.map(l => `${l.created_at || ''},"${l.user_name || ''}","${l.action || ''}","${l.target_type || ''}${l.target_id ? ' #' + l.target_id : ''}","${l.ip || ''}","${l.metadata ? JSON.stringify(l.metadata) : ''}"`);
+          const csv = header + rows.join('\n');
+          const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'audit.csv';
+          a.click();
+          URL.revokeObjectURL(url);
+          ClubHub.toast('Export CSV', 'Telechargement lance', 'success');
+        });
+      }
+
+      const updateAuditInfo = () => {
+        const start = (auditPage - 1) * auditPerPage + 1;
+        const end = Math.min(auditPage * auditPerPage, filteredLogs.length);
+        if (info) info.textContent = `Affichage ${start}-${end} sur ${filteredLogs.length} logs`;
+      };
+
+      if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+          if (auditPage > 1) {
+            auditPage--;
+            const start = (auditPage - 1) * auditPerPage;
+            const end = start + auditPerPage;
+            renderAuditRows(filteredLogs.slice(start, end));
+            updateAuditInfo();
+          }
+        });
+      }
+
+      if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+          const maxPage = Math.ceil(filteredLogs.length / auditPerPage);
+          if (auditPage < maxPage) {
+            auditPage++;
+            const start = (auditPage - 1) * auditPerPage;
+            const end = start + auditPerPage;
+            renderAuditRows(filteredLogs.slice(start, end));
+            updateAuditInfo();
+          }
+        });
+      }
+
+      const initialEnd = Math.min(auditPerPage, filteredLogs.length);
+      renderAuditRows(filteredLogs.slice(0, initialEnd));
+      if (info) info.textContent = `Affichage 1-${initialEnd} sur ${filteredLogs.length} logs`;
+    }
+  })();
   </script>
 </body>
 </html>

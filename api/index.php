@@ -14,20 +14,22 @@ $path = $_GET['route'] ?? '';
 $path = preg_replace('#^/+|/+$#', '', $path);
 
 $map = [
-    'login'         => 'login.php',
-    'logout'        => 'logout.php',
-    'register'      => 'register.php',
-    'me'            => 'me.php',
-    'clubs'         => 'clubs.php',
-    'events'        => 'events.php',
-    'inscriptions'  => 'inscriptions.php',
-    'notifications' => 'notifications.php',
-    'stats'         => 'stats.php',
-    'search'        => 'search.php',
-    'export'        => 'export.php',
-    'audit'         => 'audit.php',
-    'upload'        => 'upload.php',
-    'import'        => 'import.php',
+    'login'          => 'login.php',
+    'logout'         => 'logout.php',
+    'register'       => 'register.php',
+    'me'             => 'me.php',
+    'clubs'          => 'clubs.php',
+    'events'         => 'events.php',
+    'inscriptions'   => 'inscriptions.php',
+    'notifications'  => 'notifications.php',
+    'stats'          => 'stats.php',
+    'search'         => 'search.php',
+    'export'         => 'export.php',
+    'audit'          => 'audit.php',
+    'upload'         => 'upload.php',
+    'import'         => 'import.php',
+    'recommend'      => 'recommend.php',
+    'club_members'   => 'club_members.php',
 ];
 
 if ($path === '' || $path === 'health') {

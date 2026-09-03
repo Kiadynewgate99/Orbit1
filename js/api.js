@@ -43,10 +43,13 @@
     }
     const r = await fetch(url, opts);
     if (!r.ok) {
-      const j = await r.json().catch(() => ({}));
-      throw new Error(j.error || ('HTTP ' + r.status));
+      const text = await r.text();
+      let msg;
+      try { msg = JSON.parse(text).error; } catch { msg = text || ('HTTP ' + r.status); }
+      throw new Error(msg);
     }
-    return r.json();
+    const text = await r.text();
+    try { return JSON.parse(text); } catch { throw new Error('Reponse serveur invalide (non-JSON).'); }
   }
 
   // -------- MOCK FETCH (fallback dev uniquement, ?api=off) -----
@@ -139,27 +142,39 @@
     markAllRead:      ()                        => request('POST', 'notifications.php?read_all=1'),
      markRead:         (id)                      => request('POST', 'notifications.php?id=' + id + '&read=1'),
 
-    stats:    ()                                => request('GET', 'stats.php'),
+stats:    ()                                => request('GET', 'stats.php'),
 
-     search:   (q)                              => request('GET', 'search.php?q=' + encodeURIComponent(q)),
-     audit:    ()                                => request('GET', 'audit.php'),
+      search:   (q)                              => request('GET', 'search.php?q=' + encodeURIComponent(q)),
+      audit:    ()                                => request('GET', 'audit.php'),
 
-     upload:   (type, id, fileData)               => {
-       const form = new FormData();
-       form.append('file', fileData);
-       form.append('type', type);
-       form.append('id', id);
-       const opts = { method: 'POST', headers: { 'Authorization': 'Bearer ' + token() }, body: form };
-       return fetch('upload.php', opts).then(r => r.json());
-     },
+      recommend: (userId = null)                 => {
+        const qs = userId ? '?user_id=' + userId : '';
+        return request('GET', 'recommend.php' + qs);
+      },
 
-     importCSV: (type, fileData)                  => {
-       const form = new FormData();
-       form.append('file', fileData);
-       form.append('type', type);
-       const opts = { method: 'POST', headers: { 'Authorization': 'Bearer ' + token() }, body: form };
-       return fetch('import.php', opts).then(r => r.json());
-     },
+      clubMembers: (clubId)                      => request('GET', 'club_members.php?club_id=' + clubId),
+
+      exportCsv: (type, params = '')             => {
+        const url = 'api/export.php?type=' + type + (params ? '&' + params : '');
+        window.open(url, '_blank');
+      },
+
+      upload:   (type, id, fileData)               => {
+        const form = new FormData();
+        form.append('file', fileData);
+        form.append('type', type);
+        form.append('id', id);
+        const opts = { method: 'POST', headers: { 'Authorization': 'Bearer ' + token() }, body: form };
+        return fetch('api/upload.php', opts).then(r => r.json());
+      },
+
+      importCSV: (type, fileData)                  => {
+        const form = new FormData();
+        form.append('file', fileData);
+        form.append('type', type);
+        const opts = { method: 'POST', headers: { 'Authorization': 'Bearer ' + token() }, body: form };
+        return fetch('api/import.php', opts).then(r => r.json());
+      },
 
      users:    (params = {})                     => {
        const qs = new URLSearchParams(params).toString();

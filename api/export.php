@@ -1,9 +1,12 @@
 <?php
 /**
- * ClubHub v1.0.0 - /api/export.php
- * Genere un rapport PDF (en fait HTML imprimable en PDF) pour un club
- * GET /api/export.php?type=club&id=2
- * GET /api/export.php?type=stats
+ * Orbit v1.0.0 - /api/export.php
+ * GET /api/export.php?type=club&id=2&format=pdf  -> rapport HTML imprimable
+ * GET /api/export.php?type=club&id=2&format=csv  -> liste des membres en CSV
+ * GET /api/export.php?type=events&format=csv    -> liste de tous les events en CSV
+ * GET /api/export.php?type=presences&event_id=5 -> presences d'un event en CSV
+ * GET /api/export.php?type=users&format=csv     -> liste des users en CSV (admin)
+ * GET /api/export.php?type=stats                -> stats globales JSON
  */
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/auth.php';
@@ -11,8 +14,81 @@ require_once __DIR__ . '/auth.php';
 send_headers();
 $u = require_auth();
 
-$type = get_str('type', 'club');
-$id = get_int('id');
+$type   = get_str('type', 'club');
+$id     = get_int('id');
+$format = get_str('format', 'pdf');
+
+function csv_out(string $filename, array $headers, array $rows): void {
+    while (ob_get_level()) ob_end_clean();
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    $out = fopen('php://output', 'w');
+    fwrite($out, "\xEF\xBB\xBF");
+    fputcsv($out, $headers);
+    foreach ($rows as $r) fputcsv($out, $r);
+    fclose($out);
+    exit;
+}
+
+if ($format === 'csv') {
+    if ($type === 'club' && $id > 0) {
+        $stmt = db()->prepare('SELECT u.matricule, u.name, u.email, u.filiere, u.niveau, i.role_in_club, i.joined_at
+                               FROM inscriptions i JOIN users u ON u.id = i.user_id
+                               WHERE i.club_id = ? AND i.status = "active" ORDER BY u.name');
+        $stmt->execute([$id]);
+        $rows = array_map(fn($r) => [
+            $r['matricule'], $r['name'], $r['email'], $r['filiere'], $r['niveau'], $r['role_in_club'], $r['joined_at']
+        ], $stmt->fetchAll());
+        csv_out('club-' . $id . '-membres-' . date('Ymd') . '.csv',
+                ['Matricule', 'Nom', 'Email', 'Filiere', 'Niveau', 'Role', 'Inscription'],
+                $rows);
+    }
+
+    if ($type === 'events') {
+        if ($u['role'] === 'manager') {
+            $stmt = db()->prepare('SELECT e.id, e.title, e.date, e.time, e.duration_min, e.room, e.type, e.registered, e.capacity, c.name AS club
+                                   FROM events e JOIN clubs c ON c.id = e.club_id
+                                   WHERE e.club_id = ? ORDER BY e.date');
+            $stmt->execute([(int)$u['managed_club_id']]);
+        } else {
+            $stmt = db()->query('SELECT e.id, e.title, e.date, e.time, e.duration_min, e.room, e.type, e.registered, e.capacity, c.name AS club
+                                  FROM events e JOIN clubs c ON c.id = e.club_id ORDER BY e.date');
+        }
+        $rows = array_map(fn($r) => [
+            $r['id'], $r['title'], $r['date'], $r['time'], $r['duration_min'], $r['room'], $r['type'], $r['registered'], $r['capacity'], $r['club']
+        ], $stmt->fetchAll());
+        csv_out('events-' . date('Ymd') . '.csv',
+                ['ID', 'Titre', 'Date', 'Heure', 'Duree_min', 'Salle', 'Type', 'Inscrits', 'Capacite', 'Club'],
+                $rows);
+    }
+
+    if ($type === 'presences') {
+        $event_id = get_int('event_id');
+        if ($event_id <= 0) json_err('event_id requis', 422);
+        $stmt = db()->prepare('SELECT u.matricule, u.name, u.email, p.status, p.method, p.checked_at
+                               FROM presences p JOIN users u ON u.id = p.user_id
+                               WHERE p.event_id = ? ORDER BY p.checked_at DESC');
+        $stmt->execute([$event_id]);
+        $rows = array_map(fn($r) => [
+            $r['matricule'], $r['name'], $r['email'], $r['status'], $r['method'], $r['checked_at']
+        ], $stmt->fetchAll());
+        csv_out('presences-event-' . $event_id . '-' . date('Ymd') . '.csv',
+                ['Matricule', 'Nom', 'Email', 'Statut', 'Methode', 'Checked_at'],
+                $rows);
+    }
+
+    if ($type === 'users' && $u['role'] === 'admin') {
+        $rows = db()->query('SELECT matricule, name, email, role, filiere, niveau, points, is_active, last_login_at FROM users ORDER BY name')->fetchAll();
+        $out = array_map(fn($r) => [
+            $r['matricule'], $r['name'], $r['email'], $r['role'], $r['filiere'], $r['niveau'], $r['points'], $r['is_active'], $r['last_login_at']
+        ], $rows);
+        csv_out('users-' . date('Ymd') . '.csv',
+                ['Matricule', 'Nom', 'Email', 'Role', 'Filiere', 'Niveau', 'Points', 'Actif', 'Derniere_connexion'],
+                $out);
+    }
+
+    json_err('Type CSV inconnu ou non autorise', 422);
+}
 
 if ($type === 'club' && $id > 0) {
     $stmt = db()->prepare('SELECT * FROM clubs WHERE id = ?');
@@ -32,7 +108,7 @@ if ($type === 'club' && $id > 0) {
     $events->execute([$id]);
 
     $pres_count = (int)db()->query('SELECT COUNT(*) FROM presences p JOIN events e ON e.id = p.event_id WHERE e.club_id = ' . (int)$id)->fetchColumn();
-    $mem_count = (int)$db_members = (int)$members->rowCount();
+    $mem_count = (int)$members->rowCount();
 
     header('Content-Type: text/html; charset=utf-8');
     ?>

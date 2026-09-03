@@ -149,7 +149,7 @@
   const renderSidebar = (active = '', role = 'student') => {
     const links = {
       student: [
-        { section: 'PRINCIPAL' },
+        { section: 'PRINCIPALE' },
         { id: 'dashboard', label: 'Tableau de bord', icon: 'home', href: 'dashboard.html' },
         { id: 'clubs', label: 'Mes clubs', icon: 'layers', href: 'dashboard.html?tab=clubs' },
         { id: 'events', label: 'Mes événements', icon: 'calendar', href: 'dashboard.html?tab=events' },

@@ -123,7 +123,7 @@
   <div class="app-shell-mount"></div>
 
   <script src="js/data.js"></script>
-  <script src="js/api.js?v=3"></script>
+  <script src="js/api.js?v=4"></script>
   <script src="js/app.js"></script>
   <script>
     window.addEventListener('load', () => ClubHub.hideLoader());
@@ -161,11 +161,41 @@
     const dayNames = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
     const shortDayNames = ['L','M','M','J','V','S','D'];
 
-    function getEventsForDay(year, month, day) {
-      return agendaEvents.filter(e => {
-        const d = new Date(e.date + 'T00:00:00');
-        return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
+    function detectConflicts(events) {
+      const conflicts = [];
+      const byDate = {};
+      events.forEach(e => {
+        const d = e.date || '';
+        if (!byDate[d]) byDate[d] = [];
+        byDate[d].push(e);
       });
+      Object.values(byDate).forEach(dayEvents => {
+        for (let i = 0; i < dayEvents.length; i++) {
+          for (let j = i + 1; j < dayEvents.length; j++) {
+            const a = dayEvents[i];
+            const b = dayEvents[j];
+            const aStart = timeToMin(a.time);
+            const aEnd = aStart + (a.duration_min || 120);
+            const bStart = timeToMin(b.time);
+            const bEnd = bStart + (b.duration_min || 120);
+            if (aStart < bEnd && bStart < aEnd) {
+              conflicts.push({ eventA: a, eventB: b, date: a.date });
+            }
+          }
+        }
+      });
+      return conflicts;
+    }
+
+    function timeToMin(timeStr) {
+      if (!timeStr) return 0;
+      const parts = timeStr.split(':');
+      return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+    }
+
+    function formatTime(timeStr) {
+      if (!timeStr) return '';
+      return timeStr.substring(0, 5);
     }
 
     function getClubName(clubId) {
@@ -208,28 +238,17 @@
         const diff = (d - new Date(today.getFullYear(), today.getMonth(), today.getDate())) / (1000*60*60*24);
         return diff >= 0 && diff <= 7;
       }).length;
-      const conflicts = new Set();
-      monthEvents.forEach((a, i) => {
-        monthEvents.forEach((b, j) => {
-          if (i >= j) return;
-          if (a.date === b.date) {
-            const ta = a.time.split(':'), tb = b.time.split(':');
-            const ma = parseInt(ta[0])*60 + parseInt(ta[1]);
-            const mb = parseInt(tb[0])*60 + parseInt(tb[1]);
-            const durA = (a.duration_min || 120);
-            const durB = (b.duration_min || 120);
-            if (ma < mb + durB && mb < ma + durA) conflicts.add(`${a.id}-${b.id}`);
-          }
-        });
-      });
+const conflicts = detectConflicts(monthEvents);
 
-      let html = `
-      <div class="card" style="margin-bottom: var(--s-5); padding: var(--s-5);">
-        <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3);">
-          <div>
-            <div class="text-mono" style="font-size: 11px; color: var(--orange); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;">AGENDA</div>
-            <strong style="font-size: var(--fs-2xl);">${monthNames[currentMonth]} ${currentYear}</strong>
-            <span class="text-muted" style="font-size: var(--fs-sm);"> · ${monthEvents.length} événement${monthEvents.length > 1 ? 's' : ''}</span>
+       let html = `
+       <div class="card" style="margin-bottom: var(--s-5); padding: var(--s-5);">
+         <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3);">
+           <div>
+             <div class="text-mono" style="font-size: 11px; color: var(--orange); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;">AGENDA</div>
+             <strong style="font-size: var(--fs-2xl);">${monthNames[currentMonth]} ${currentYear}</strong>
+             <span class="text-muted" style="font-size: var(--fs-sm);"> · ${monthEvents.length} événement${monthEvents.length > 1 ? 's' : ''}</span>
+             ${conflicts.length > 0 ? `<span style="background: var(--orange); color: var(--white); padding: 2px 8px; border-radius: 3px; font-size: 10px; font-weight: 700; margin-left: var(--s-2);">${conflicts.length} conflit${conflicts.length > 1 ? 's' : ''}</span>` : ''}
+           </div>
           </div>
           <div class="flex gap-2">
             <button class="btn btn-secondary btn-sm" onclick="goToday()">Aujourd'hui</button>
@@ -278,8 +297,8 @@
         </div>
         <div class="card" style="text-align: center; background: var(--orange); color: var(--white);">
           <div class="text-mono" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: var(--white);">Conflits</div>
-          <div class="text-mono" style="font-size: var(--fs-3xl); color: var(--white); margin: var(--s-2) 0; font-weight: 900;">${conflicts.size}</div>
-          <div style="font-size: var(--fs-sm); color: var(--white);">chevauchement${conflicts.size > 1 ? 's' : ''} détecté${conflicts.size > 1 ? 's' : ''}</div>
+<div class="text-mono" style="font-size: var(--fs-3xl); color: var(--white); margin: var(--s-2) 0; font-weight: 900;">${conflicts.length}</div>
+           <div style="font-size: var(--fs-sm); color: var(--white);">chevauchement${conflicts.length > 1 ? 's' : ''} détecté${conflicts.length > 1 ? 's' : ''}</div>
         </div>
       </div>
       `;

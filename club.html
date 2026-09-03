@@ -64,13 +64,14 @@
   <div class="app-shell-mount"></div>
 
   <script src="js/data.js"></script>
-  <script src="js/api.js?v=3"></script>
+  <script src="js/api.js?v=4"></script>
   <script src="js/app.js"></script>
   <script>
     window.addEventListener('load', () => ClubHub.hideLoader());
 
 const params = new URLSearchParams(window.location.search);
     const clubId = params.get('id') || 'club-001';
+    const user = ClubHub.Auth.current();
 
     const localFallback = CLUBHUB.CLUBS.find(c => c.id === clubId || String(c.id) === String(clubId)) || CLUBHUB.CLUBS[0];
 
@@ -139,7 +140,7 @@ const params = new URLSearchParams(window.location.search);
               <span class="badge" style="background: var(--bg-elev-1); color: var(--text-primary); border-color: var(--border-default);">${club.members} membres</span>
               <span class="badge" style="background: var(--bg-elev-1); color: var(--text-primary); border-color: var(--border-default);">${club.events} événements / an</span>
               <span class="badge" style="background: var(--bg-elev-1); color: var(--text-primary); border-color: var(--border-default);">Depuis ${club.founded}</span>
-              ${responsibleUser ? `<span class="responsible-badge">👤 ${responsibleUser.name}</span>` : ''}
+              ${responsibleUser ? `<span class="responsible-badge">${responsibleUser.name}</span>` : ''}
             </div>
             <div class="flex gap-3">
               <button class="btn btn-orange btn-lg" onclick="joinClub('${club.id}')">+ S'inscrire au club</button>
@@ -239,20 +240,28 @@ const params = new URLSearchParams(window.location.search);
 
           <div class="tab-panel" data-panel="members" style="display:none;">
             <div class="card">
-              <h2 style="font-size: var(--fs-xl); font-weight: 800; margin-bottom: var(--s-4);">Membres du club (${club.members})</h2>
-              ${allMembers.length ? `
-                <div class="flex flex-col gap-2">
-                  ${allMembers.map(m => `
-                    <div class="member-row">
-                      <div class="avatar" style="background: ${club.color}; color: var(--white);">${(m.avatar || m.name || '?').substring(0,2).toUpperCase()}</div>
-                      <div class="member-info">
-                        <div class="member-name">${m.name}</div>
-                        <div class="member-role">${m.role_in_club === 'president' ? 'Président' : m.role_in_club === 'bureau' ? 'Bureau' : (m.filiere || 'Membre')}</div>
-                      </div>
-                    </div>
-                  `).join('')}
+              <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3); margin-bottom: var(--s-4);">
+                <h2 style="font-size: var(--fs-xl); font-weight: 800; margin: 0;">Membres du club (${club.members})</h2>
+                <div class="flex gap-2">
+                  <input type="search" id="member-search" class="input" style="width: 220px;" placeholder="Rechercher un membre..." oninput="filterMembers()" />
+                  <a href="api/export.php?type=club&id=${clubId}&format=csv" class="btn btn-secondary btn-sm" style="text-decoration: none;">↓ Export CSV</a>
                 </div>
-              ` : `<p class="text-muted">La liste des membres n'est disponible qu'en mode connecté au backend.</p>`}
+              </div>
+              <div id="members-list">
+                ${allMembers.length ? `
+                  <div class="flex flex-col gap-2">
+                    ${allMembers.map(m => `
+                      <div class="member-row" data-name="${m.name.toLowerCase()}" data-matricule="${m.matricule.toLowerCase()}">
+                        <div class="avatar" style="background: ${club.color}; color: var(--white);">${(m.avatar || m.name || '?').substring(0,2).toUpperCase()}</div>
+                        <div class="member-info">
+                          <div class="member-name">${m.name} <span class="text-mono" style="font-size: 10px; color: var(--text-tertiary);">${m.matricule || ''}</span></div>
+                          <div class="member-role">${m.role_in_club === 'president' ? 'Président' : m.role_in_club === 'bureau' ? 'Bureau' : (m.filiere || 'Membre')}</div>
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                ` : `<p class="text-muted">La liste des membres n'est disponible qu'en mode connecté au backend.</p>`}
+              </div>
             </div>
           </div>
         </div>
@@ -350,6 +359,15 @@ const params = new URLSearchParams(window.location.search);
     function switchTab(tab) {
       document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
       document.querySelectorAll('.tab-panel').forEach(p => p.style.display = p.dataset.panel === tab ? '' : 'none');
+    }
+
+    function filterMembers() {
+      const q = (document.getElementById('member-search')?.value || '').toLowerCase();
+      document.querySelectorAll('#members-list .member-row').forEach(row => {
+        const name = row.dataset.name || '';
+        const mat = row.dataset.matricule || '';
+        row.style.display = (name.includes(q) || mat.includes(q)) ? '' : 'none';
+      });
     }
 
     async function joinClub(clubId) {

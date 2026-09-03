@@ -34,7 +34,7 @@
   <div class="app-shell-mount"></div>
 
   <script src="js/data.js"></script>
-  <script src="js/api.js?v=3"></script>
+  <script src="js/api.js?v=4"></script>
   <script src="js/app.js"></script>
   <script>
     window.addEventListener('load', () => ClubHub.hideLoader());
@@ -48,17 +48,20 @@
     let allClubs = [];
     let allEvents = [];
     let apiStats = null;
+    let recommendations = null;
 
     async function init() {
       try {
-        const [clubsRes, eventsRes, statsRes] = await Promise.all([
+        const [clubsRes, eventsRes, statsRes, recRes] = await Promise.all([
           ClubHubAPI.myClubs(),
           ClubHubAPI.events(),
           ClubHubAPI.stats(),
+          ClubHubAPI.recommend(),
         ]);
         allClubs = clubsRes.data || [];
         allEvents = eventsRes.data || [];
         apiStats = statsRes.data || {};
+        recommendations = recRes.data || null;
       } catch (e) {
         allClubs = CLUBHUB.CLUBS.filter(c => user.clubs?.includes(c.id));
         allEvents = CLUBHUB.EVENTS.filter(e => user.events?.includes(e.id));
@@ -195,7 +198,7 @@
             </div>
           </div>
 
-          <div class="suggestion-card">
+          <div class="suggestion-card" id="suggestion-card">
             <div class="flex items-center gap-3" style="margin-bottom: var(--s-3);">
               <div style="width: 36px; height: 36px; border-radius: var(--r-sm); background: var(--black); color: var(--lime); display: flex; align-items: center; justify-content: center;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
@@ -205,10 +208,10 @@
                 <span style="font-size: 11px; font-weight: 600;">Basé sur vos centres d'intérêt</span>
               </div>
             </div>
-            <p style="font-size: var(--fs-sm); color: var(--text-primary); line-height: 1.5; margin-bottom: var(--s-3); font-weight: 500;">
-              Le <strong>Club Langues & Cultures</strong> propose un atelier de japonais qui pourrait vous intéresser.
+            <p id="suggestion-text" style="font-size: var(--fs-sm); color: var(--text-primary); line-height: 1.5; margin-bottom: var(--s-3); font-weight: 500;">
+              Chargement des suggestions...
             </p>
-            <a href="club.html?id=club-012" class="btn btn-dark btn-sm btn-full">Découvrir le club</a>
+            <a id="suggestion-link" href="clubs.html" class="btn btn-dark btn-sm btn-full" style="display:none;">Découvrir le club</a>
           </div>
 
           <div class="card" style="margin-top: var(--s-4); background: var(--black); color: var(--white);">
@@ -347,16 +350,35 @@
       </div>
     `;
 
-    const content = tab === 'clubs' ? renderClubs() : tab === 'events' ? renderEvents() : renderOverview();
-
-    ClubHub.renderShell({
-      active: tab,
-      role: 'student',
-      content,
-      pageTitle: pageTitleMap[tab] || 'Tableau de bord',
-    });
+    function render() {
+      const content = tab === 'clubs' ? renderClubs() : tab === 'events' ? renderEvents() : renderOverview();
+      ClubHub.renderShell({
+        active: tab,
+        role: 'student',
+        content,
+        pageTitle: pageTitleMap[tab] || 'Tableau de bord',
+      });
+      if (tab === 'overview') updateSuggestion();
+    }
 
     init();
+
+    function updateSuggestion() {
+      const textEl = document.getElementById('suggestion-text');
+      const linkEl = document.getElementById('suggestion-link');
+      if (!textEl || !linkEl) return;
+      if (recommendations && recommendations.recommendations && recommendations.recommendations.length > 0) {
+        const rec = recommendations.recommendations[0];
+        const reasons = (rec.reasons || []).slice(0, 2).join(' et ');
+        textEl.innerHTML = `Le <strong>${rec.name}</strong> correspond à vos centres d'intérêt${reasons ? ' (' + reasons + ')' : ''}.`;
+        linkEl.href = `club.html?id=${rec.slug || rec.id}`;
+        linkEl.style.display = '';
+      } else {
+        textEl.innerHTML = 'Le <strong>Club Langues & Cultures</strong> propose un atelier de japonais qui pourrait vous intéresser.';
+        linkEl.href = 'club.html?id=club-012';
+        linkEl.style.display = '';
+      }
+    }
 
     async function leaveClub(clubId) {
       ClubHub.confirm('Quitter le club', 'Êtes-vous sûr de vouloir quitter ce club ?', async () => {

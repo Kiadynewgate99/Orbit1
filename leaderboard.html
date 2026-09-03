@@ -34,7 +34,7 @@
   <div class="page-loader"><div class="loader-ring"></div><div class="loader-text">CHARGEMENT</div></div>
   <div class="app-shell-mount"></div>
   <script src="js/data.js"></script>
-  <script src="js/api.js?v=3"></script>
+  <script src="js/api.js?v=4"></script>
   <script src="js/app.js"></script>
   <script>
     (async function () {
@@ -109,7 +109,7 @@
             </div>
             <div class="stat-card stat-card-white" style="text-align: center;">
               <div class="stat-label">Pour le top 3</div>
-              <div class="stat-value">+${Math.max(0, top3[2].points - myPoints + 1)}</div>
+              <div class="stat-value">+${(top3[2] ? Math.max(0, top3[2].points - myPoints + 1) : '-')}</div>
               <span class="stat-trend">points necessaires</span>
             </div>
           </div>
@@ -118,7 +118,7 @@
         <div class="card" style="margin-top: var(--s-5);">
           <h2 style="font-size: var(--fs-lg); font-weight: 800; margin-bottom: var(--s-4);">Podium</h2>
           <div class="lb-podium">
-            ${podiumOrder.map((u, i) => `
+            ${podiumOrder.filter(Boolean).map((u, i) => `
               <div class="lb-podium-item ${podiumClass[i]}">
                 <div class="lb-podium-rank">${podiumRank[i]}</div>
                 <div class="lb-podium-avatar">${u.avatar}</div>

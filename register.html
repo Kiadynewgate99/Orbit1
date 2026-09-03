@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inscription - Orbit</title>
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <style>
+    .reg-card { max-width: 640px; margin: var(--s-8) auto; background: var(--white); border: 2px solid var(--black); border-radius: var(--r-md); box-shadow: 8px 8px 0 var(--orange); padding: var(--s-8); }
+    .reg-card h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: var(--s-1); }
+    .reg-card .subtitle { color: var(--text-secondary); margin-bottom: var(--s-6); font-size: var(--fs-sm); }
+    .field { margin-bottom: var(--s-4); }
+    .field label { display: block; font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-tertiary); margin-bottom: 4px; }
+    .field .input { width: 100%; }
+    .field-2col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); }
+    .error { color: var(--orange); font-size: 12px; margin-top: 4px; font-weight: 600; }
+    .success-banner { background: var(--lime); border: 2px solid var(--black); padding: var(--s-3); margin-bottom: var(--s-4); font-weight: 700; font-size: var(--fs-sm); display: none; }
+    .hobbies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-2); margin-top: var(--s-2); }
+    .hobby-chip { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 2px solid var(--black); border-radius: var(--r-sm); cursor: pointer; background: var(--white); font-size: var(--fs-sm); font-weight: 600; user-select: none; transition: all 0.15s; }
+    .hobby-chip:hover { background: var(--bg-elev-1); }
+    .hobby-chip.selected { background: var(--orange); color: var(--white); }
+    .hobby-chip input { display: none; }
+    .hobby-chip .hobby-label { flex: 1; }
+    .step { display: none; }
+    .step.active { display: block; }
+    .stepper { display: flex; gap: var(--s-2); margin-bottom: var(--s-6); }
+    .step-dot { flex: 1; height: 6px; background: var(--border-subtle); border-radius: 3px; }
+    .step-dot.active { background: var(--orange); }
+    .step-dot.done { background: var(--lime); }
+  </style>
+</head>
+<body>
+  <div class="page-loader"><div class="loader-ring"></div><div class="loader-text">CHARGEMENT</div></div>
+
+  <div class="reg-card">
+    <div class="flex items-center gap-2" style="margin-bottom: var(--s-6);">
+      <svg viewBox="0 0 32 32" width="40" height="40" fill="none">
+        <rect width="32" height="32" rx="6" fill="#FF4502"/>
+        <circle cx="16" cy="16" r="4" fill="#FFFFFF"/>
+        <ellipse cx="16" cy="16" rx="13" ry="5" stroke="#FFFFFF" stroke-width="2" transform="rotate(-30 16 16)"/>
+      </svg>
+      <span style="font-size: 20px; font-weight: 800;">Orbit<span style="color: var(--orange);">.</span></span>
+    </div>
+
+    <h1>Rejoindre Orbit</h1>
+    <p class="subtitle">3 etapes, 2 minutes. Tes centres d'interet nous aident a te recommander les bons clubs.</p>
+
+    <div class="stepper">
+      <div class="step-dot active" id="dot-1"></div>
+      <div class="step-dot" id="dot-2"></div>
+      <div class="step-dot" id="dot-3"></div>
+    </div>
+
+    <div class="success-banner" id="ok-banner">Compte cree ! Redirection vers ton dashboard...</div>
+    <div id="err-msg" class="error" style="margin-bottom: var(--s-3);"></div>
+
+    <form id="reg-form">
+      <div class="step active" id="step-1">
+        <div class="field-2col">
+          <div class="field">
+            <label>Matricule</label>
+            <input class="input" id="matricule" placeholder="MA" maxlength="10" required style="text-transform: uppercase; font-family: var(--font-mono);" />
+          </div>
+          <div class="field">
+            <label>Nom complet</label>
+            <input class="input" id="name" placeholder="Mika ANDRIAMATOA" required />
+          </div>
+        </div>
+        <div class="field">
+          <label>Email universitaire</label>
+          <input class="input" id="email" type="email" placeholder="prenom.nom@u.fr" required />
+        </div>
+        <div class="field-2col">
+          <div class="field">
+            <label>Mot de passe</label>
+            <input class="input" id="password" type="password" placeholder="6 caracteres min." minlength="6" required />
+          </div>
+          <div class="field">
+            <label>Confirmation</label>
+            <input class="input" id="password2" type="password" placeholder="Retape-le" minlength="6" required />
+          </div>
+        </div>
+        <div class="field-2col">
+          <div class="field">
+            <label>Filiere</label>
+            <select class="input" id="filiere">
+              <option>L1 Info</option><option>L2 Info</option><option>L3 Info</option>
+              <option>M1 Info</option><option>M2 Info</option>
+              <option>L1 STAPS</option><option>L1 Droit</option>
+              <option>L1 LEA</option><option>L1 Lettres</option>
+              <option>L1 SVT</option><option>L1 Eco-Gestion</option>
+              <option>Autre</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Niveau</label>
+            <select class="input" id="niveau">
+              <option>L1</option><option>L2</option><option>L3</option><option>M1</option><option>M2</option><option>Doctorat</option>
+            </select>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary" style="width: 100%; padding: var(--s-4); font-weight: 800;" onclick="gotoStep(2)">Suivant : mes centres d'interet →</button>
+      </div>
+
+      <div class="step" id="step-2">
+        <h2 style="font-size: var(--fs-xl); font-weight: 800; margin-bottom: var(--s-2);">Tes centres d'interet</h2>
+        <p style="font-size: var(--fs-sm); color: var(--text-secondary); margin-bottom: var(--s-4);">Selectionne 3 a 6 centres. L'algo de recommandation cosinus s'en servira pour te suggerer les bons clubs.</p>
+        <div class="hobbies-grid" id="hobbies-grid"></div>
+        <div class="flex gap-2" style="margin-top: var(--s-6);">
+          <button type="button" class="btn btn-secondary" style="flex: 1; padding: var(--s-3);" onclick="gotoStep(1)">← Retour</button>
+          <button type="button" class="btn btn-primary" style="flex: 2; padding: var(--s-3); font-weight: 800;" onclick="gotoStep(3)">Suivant : confirmation →</button>
+        </div>
+      </div>
+
+      <div class="step" id="step-3">
+        <div class="card" style="background: var(--bg-elev-1); border: 1px solid var(--black); margin-bottom: var(--s-4);">
+          <h3 style="font-size: var(--fs-md); font-weight: 800; margin-bottom: var(--s-3);">Recapitulatif</h3>
+          <div id="recap"></div>
+        </div>
+        <label style="display: flex; align-items: flex-start; gap: 8px; font-size: var(--fs-sm); margin-bottom: var(--s-4); cursor: pointer;">
+          <input type="checkbox" id="rgpd" style="margin-top: 4px;" />
+          <span>J'accepte que mes donnees soient traitees conformement au RGPD. Je peux supprimer mon compte a tout moment.</span>
+        </label>
+        <div class="flex gap-2">
+          <button type="button" class="btn btn-secondary" style="flex: 1; padding: var(--s-3);" onclick="gotoStep(2)">← Retour</button>
+          <button type="submit" class="btn btn-primary" style="flex: 2; padding: var(--s-3); font-weight: 800;">Creer mon compte Orbit</button>
+        </div>
+      </div>
+    </form>
+
+    <p style="text-align: center; margin-top: var(--s-6); font-size: var(--fs-sm); color: var(--text-secondary);">
+      Deja un compte ? <a href="login.html" style="color: var(--orange); font-weight: 700;">Se connecter</a>
+    </p>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    window.addEventListener('load', () => ClubHub.hideLoader());
+
+    const HOBBIES = [
+      { id: 'tech',           label: 'Technologie & code' },
+      { id: 'sport',          label: 'Sport & athletisme' },
+      { id: 'culture',        label: 'Culture & arts' },
+      { id: 'musique',        label: 'Musique & chant' },
+      { id: 'debats',         label: 'Debats & eloquence' },
+      { id: 'environnement',  label: 'Environnement' },
+      { id: 'entrepreneuriat',label: 'Entrepreneuriat' },
+      { id: 'benevolat',      label: 'Benevolat' },
+      { id: 'langues',        label: 'Langues' },
+      { id: 'photo',          label: 'Photo & video' },
+      { id: 'gastronomie',    label: 'Gastronomie' },
+      { id: 'jeux',           label: 'Jeux & esports' },
+    ];
+    let selectedHobbies = [];
+
+    function renderHobbies() {
+      document.getElementById('hobbies-grid').innerHTML = HOBBIES.map(h => `
+        <label class="hobby-chip ${selectedHobbies.includes(h.id) ? 'selected' : ''}" data-hobby="${h.id}">
+          <input type="checkbox" value="${h.id}" ${selectedHobbies.includes(h.id) ? 'checked' : ''} />
+          <span class="hobby-label">${h.label}</span>
+        </label>
+      `).join('');
+      document.querySelectorAll('.hobby-chip').forEach(c => {
+        c.addEventListener('click', e => {
+          e.preventDefault();
+          const id = c.dataset.hobby;
+          if (selectedHobbies.includes(id)) selectedHobbies = selectedHobbies.filter(x => x !== id);
+          else selectedHobbies.push(id);
+          renderHobbies();
+        });
+      });
+    }
+    renderHobbies();
+
+    function gotoStep(n) {
+      const errBox = document.getElementById('err-msg');
+      errBox.textContent = '';
+
+      if (n === 2) {
+        const m = document.getElementById('matricule').value.trim();
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const p1 = document.getElementById('password').value;
+        const p2 = document.getElementById('password2').value;
+        if (!m || !name || !email) { errBox.textContent = 'Tous les champs sont requis.'; return; }
+        if (p1 !== p2) { errBox.textContent = 'Les mots de passe ne correspondent pas.'; return; }
+        if (p1.length < 6) { errBox.textContent = 'Mot de passe : 6 caracteres minimum.'; return; }
+      }
+      if (n === 3) {
+        if (selectedHobbies.length < 1) {
+          errBox.textContent = 'Selectionne au moins 1 centre d\'interet (idealement 3+).';
+          gotoStep(2);
+          return;
+        }
+        const data = collectData();
+        document.getElementById('recap').innerHTML = `
+          <div class="flex items-center gap-2" style="padding: 6px 0;"><strong style="min-width: 100px;">Matricule :</strong> ${data.matricule}</div>
+          <div class="flex items-center gap-2" style="padding: 6px 0;"><strong style="min-width: 100px;">Nom :</strong> ${data.name}</div>
+          <div class="flex items-center gap-2" style="padding: 6px 0;"><strong style="min-width: 100px;">Email :</strong> ${data.email}</div>
+          <div class="flex items-center gap-2" style="padding: 6px 0;"><strong style="min-width: 100px;">Filiere :</strong> ${data.filiere} (${data.niveau})</div>
+          <div style="padding: 6px 0;"><strong style="display: block; margin-bottom: 4px;">Centres d'interet (${data.hobbies.length}) :</strong>
+            <div class="flex gap-1" style="flex-wrap: wrap;">
+              ${data.hobbies.map(h => `<span style="background: var(--orange); color: var(--white); padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: 700;">${HOBBIES.find(x => x.id === h).label}</span>`).join('')}
+            </div>
+          </div>
+        `;
+      }
+      [1,2,3].forEach(i => {
+        document.getElementById('step-' + i).classList.toggle('active', i === n);
+        document.getElementById('dot-' + i).classList.toggle('active', i === n);
+        document.getElementById('dot-' + i).classList.toggle('done', i < n);
+      });
+    }
+
+    function collectData() {
+      return {
+        matricule: document.getElementById('matricule').value.trim().toUpperCase(),
+        name:      document.getElementById('name').value.trim(),
+        email:     document.getElementById('email').value.trim(),
+        password:  document.getElementById('password').value,
+        filiere:   document.getElementById('filiere').value,
+        niveau:    document.getElementById('niveau').value,
+        hobbies:   selectedHobbies,
+      };
+    }
+
+    document.getElementById('reg-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const errBox = document.getElementById('err-msg');
+      const okBox = document.getElementById('ok-banner');
+      errBox.textContent = '';
+      okBox.style.display = 'none';
+
+      if (!document.getElementById('rgpd').checked) { errBox.textContent = 'Vous devez accepter la politique RGPD.'; return; }
+
+      const data = collectData();
+      const isLive = ClubHubAPI.isLive();
+
+      try {
+        if (isLive) {
+          const j = await ClubHubAPI.register(data);
+          if (!j.ok) throw new Error(j.error);
+          localStorage.setItem('clubhub_token', j.data.token);
+          localStorage.setItem('clubhub_current_user', JSON.stringify(j.data.user));
+        } else {
+          if (localStorage.getItem('orbit_user_' + data.matricule)) {
+            throw new Error('Ce matricule existe deja (mode demo)');
+          }
+          const u = {
+            matricule: data.matricule,
+            name: data.name,
+            email: data.email,
+            filiere: data.filiere,
+            niveau: data.niveau,
+            avatar: data.name.substring(0, 2).toUpperCase(),
+            role: 'student',
+            hobbies: data.hobbies,
+            clubs: [],
+            events: [],
+            managedClub: null,
+            loggedInAt: new Date().toISOString(),
+          };
+          localStorage.setItem('orbit_user_' + data.matricule, JSON.stringify(u));
+          localStorage.setItem('clubhub_current_user', JSON.stringify(u));
+        }
+        okBox.textContent = 'Compte cree ! Redirection vers ton dashboard...';
+        okBox.style.display = 'block';
+        setTimeout(() => window.location.href = 'dashboard.html', 1200);
+      } catch (e) {
+        errBox.textContent = e.message;
+      }
+    });
+  </script>
+</body>
+</html>

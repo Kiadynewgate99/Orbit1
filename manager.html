@@ -45,7 +45,7 @@
   <div class="app-shell-mount"></div>
 
   <script src="js/data.js"></script>
-  <script src="js/api.js?v=3"></script>
+  <script src="js/api.js?v=4"></script>
   <script src="js/app.js"></script>
   <script>
     (async function () {
@@ -75,6 +75,7 @@
             ClubHubAPI.myClubs(),
           ]);
           apiEvents = eventsRes.data || [];
+          agendaEvents = apiEvents;
           apiMembers = (inscriptionsRes.data || []).filter(i => (i.club_id == myClub.id || i.club_id == myClub.slug) && i.status === 'active');
         }
       } catch (e) {
@@ -528,13 +529,131 @@ const actions = [
       });
     }
 
+    function openCreateEventModal() {
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay open';
+      const today = new Date().toISOString().split('T')[0];
+      overlay.innerHTML = `
+        <div class="modal">
+          <div class="modal-header">
+            <h3 class="modal-title">Nouvel événement</h3>
+            <button class="btn-icon" data-close>${ClubHub.icon('x', 16)}</button>
+          </div>
+          <div class="field" style="margin-bottom: var(--s-3);">
+            <label class="label">Titre</label>
+            <input class="input" id="evt-title" placeholder="Ex: Atelier Python" />
+          </div>
+          <div class="grid grid-2" style="gap: var(--s-3); margin-bottom: var(--s-3);">
+            <div class="field">
+              <label class="label">Type</label>
+              <select class="select" id="evt-type">
+                <option>Atelier</option>
+                <option>Conference</option>
+                <option>Debat</option>
+                <option>Spectacle</option>
+                <option>Action</option>
+                <option>Competition</option>
+                <option>Tournoi</option>
+                <option>Networking</option>
+                <option>Culturel</option>
+                <option>Entrainement</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="label">Catégorie</label>
+              <select class="select" id="evt-category">
+                <option value="CI">Club Info</option>
+                <option value="CE">Club Event</option>
+                <option value="CT">Club Culture</option>
+                <option value="CM">Club Musique</option>
+                <option value="FB">Foot / Basket</option>
+                <option value="LC">Langues & Cultures</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-2" style="gap: var(--s-3); margin-bottom: var(--s-3);">
+            <div class="field">
+              <label class="label">Date</label>
+              <input class="input" id="evt-date" type="date" value="${today}" />
+            </div>
+            <div class="field">
+              <label class="label">Heure</label>
+              <input class="input" id="evt-time" type="time" value="18:00" />
+            </div>
+          </div>
+          <div class="grid grid-2" style="gap: var(--s-3); margin-bottom: var(--s-3);">
+            <div class="field">
+              <label class="label">Durée (min)</label>
+              <input class="input" id="evt-duration" type="number" value="120" />
+            </div>
+            <div class="field">
+              <label class="label">Lieu</label>
+              <input class="input" id="evt-room" placeholder="Salle / FabLab" />
+            </div>
+          </div>
+          <div class="field" style="margin-bottom: var(--s-4);">
+            <label class="label">Description</label>
+            <textarea class="input" id="evt-desc" placeholder="Description de l'événement..."></textarea>
+          </div>
+          <div id="evt-err" class="text-orange" style="font-size: var(--fs-sm); margin-bottom: var(--s-3); display:none;"></div>
+          <div style="display: flex; gap: var(--s-3); justify-content: flex-end;">
+            <button class="btn btn-secondary" data-close>Annuler</button>
+            <button class="btn btn-orange" id="evt-submit">Créer l'événement</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      const close = () => overlay.remove();
+      overlay.addEventListener('click', e => {
+        if (e.target === overlay || e.target.hasAttribute('data-close')) close();
+      });
+      overlay.querySelector('#evt-submit').addEventListener('click', async () => {
+        const errBox = overlay.querySelector('#evt-err');
+        errBox.style.display = 'none';
+        const title = overlay.querySelector('#evt-title').value.trim();
+        const type = overlay.querySelector('#evt-type').value;
+        const category = overlay.querySelector('#evt-category').value;
+        const date = overlay.querySelector('#evt-date').value;
+        const time = overlay.querySelector('#evt-time').value;
+        const duration = parseInt(overlay.querySelector('#evt-duration').value) || 120;
+        const room = overlay.querySelector('#evt-room').value.trim();
+        const description = overlay.querySelector('#evt-desc').value.trim();
+        if (!title || !date || !time) {
+          errBox.textContent = 'Titre, date et heure sont requis.';
+          errBox.style.display = 'block';
+          return;
+        }
+        try {
+          const res = await ClubHubAPI.createEvent({
+            club_id: myClub.id || myClub.slug,
+            title, type, category, date, time,
+            duration_min: duration,
+            room: room || null,
+            description: description || null,
+          });
+          if (res.ok) {
+            ClubHub.toast('Événement créé', '', 'success');
+            close();
+            const fresh = await ClubHubAPI.events({ club_id: myClub.id || myClub.slug });
+            agendaEvents = fresh.data || [];
+            render();
+          } else {
+            throw new Error(res.error || 'Erreur lors de la création');
+          }
+        } catch (e) {
+          errBox.textContent = e.message;
+          errBox.style.display = 'block';
+        }
+      });
+    }
+
     function renderEvents() {
       const clubEvents = (agendaEvents && agendaEvents.length) ? agendaEvents : CLUBHUB.EVENTS.filter(e => e.clubId === myClub.id || e.clubId === myClub.slug);
       return `
         <div class="card">
           <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: var(--s-3); margin-bottom: var(--s-4);">
             <strong style="font-size: var(--fs-lg);">Événements du club</strong>
-            <button class="btn btn-orange btn-sm" onclick="ClubHub.toast('Création d\'événement lancée','','success')">+ Nouvel événement</button>
+            <button class="btn btn-orange btn-sm" onclick="openCreateEventModal()">+ Nouvel événement</button>
           </div>
           ${clubEvents.length ? `
             <div class="flex flex-col gap-3">
@@ -764,7 +883,7 @@ ClubHub.renderShell({
       }
     }
 
-ClubHub.renderShell({
-  </script>
+  })();
+</script>
 </body>
 </html>

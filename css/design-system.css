@@ -9,6 +9,22 @@
    ========================================================================== */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
+@font-face {
+  font-family: 'NeueMachina';
+  src: url('../font/NeueMachina-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GearsOfPeace';
+  src: url('../font/GearsOfPeace.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 
 /* ==========================================================================
    2. DESIGN TOKENS (light theme = défaut)
@@ -74,8 +90,8 @@
   --r-full: 9999px;
 
   /* Typographie */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-display: 'Inter', system-ui, sans-serif;
+  --font-sans: 'NeueMachina', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-display: 'NeueMachina', 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   --fs-xs: 11px;
@@ -679,6 +695,35 @@ ul, ol { list-style: none; }
   background: rgb(255 255 255 / 0.2);
 }
 
+.stat-card {
+  cursor: pointer;
+}
+
+.stat-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--lift-shadow);
+}
+
+.welcome-card {
+  cursor: pointer;
+  transition: transform var(--t-base), box-shadow var(--t-base);
+}
+
+.welcome-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--orange);
+}
+
+.suggestion-card {
+  cursor: pointer;
+  transition: transform var(--t-base), box-shadow var(--t-base);
+}
+
+.suggestion-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--black);
+}
+
 
 /* ==========================================================================
    15. COMPOSANTS — CHARTS
@@ -1094,10 +1139,28 @@ ul, ol { list-style: none; }
   border-color: var(--border-default);
   box-shadow: 4px 4px 0 var(--orange);
 }
+[data-theme="dark"] .welcome-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--orange);
+}
 [data-theme="dark"] .suggestion-card {
   background: var(--lime);
   color: var(--black);
   border-color: var(--black);
+}
+[data-theme="dark"] .suggestion-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--black);
+}
+[data-theme="dark"] .stat-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--orange);
+}
+
+/* Sidebar */
+[data-theme="dark"] .sidebar {
+  background: var(--black);
+  border-color: var(--border-default);
 }
 
 /* Footer & landing */

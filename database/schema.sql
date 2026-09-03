@@ -35,6 +35,7 @@ CREATE TABLE `users` (
   `lang`            VARCHAR(5)   NOT NULL DEFAULT 'fr',
   `theme`           VARCHAR(20)  NOT NULL DEFAULT 'retro',
   `accessibility`   JSON         DEFAULT NULL,
+  `hobbies`         JSON         DEFAULT NULL,           -- ["sport","musique","tech",...]
   `managed_club_id` INT UNSIGNED DEFAULT NULL,
   `points`          INT          NOT NULL DEFAULT 0,
   `created_at`      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -45,6 +46,27 @@ CREATE TABLE `users` (
   UNIQUE KEY `uniq_email` (`email`),
   KEY `idx_role` (`role`),
   KEY `idx_managed_club` (`managed_club_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================================
+-- 1b. HOBBIES (centres d'interet utilisateur, sert a la reco)
+-- =============================================================
+CREATE TABLE `hobbies` (
+  `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `slug`  VARCHAR(40)  NOT NULL,
+  `label` VARCHAR(80)  NOT NULL,
+  `emoji` VARCHAR(8)   DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_slug` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `user_hobbies` (
+  `user_id`   INT UNSIGNED NOT NULL,
+  `hobby_id`  INT UNSIGNED NOT NULL,
+  `weight`    TINYINT      NOT NULL DEFAULT 1,
+  PRIMARY KEY (`user_id`, `hobby_id`),
+  CONSTRAINT `fk_uh_user`  FOREIGN KEY (`user_id`)  REFERENCES `users`  (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_uh_hobby` FOREIGN KEY (`hobby_id`) REFERENCES `hobbies` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================================
